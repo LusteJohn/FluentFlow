@@ -1,16 +1,27 @@
+import { useContext } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { Easing, useAnimatedStyle, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  withDelay,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { Image } from 'expo-image';
-import { useContext } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors, Spacing } from '@/constants/theme';
 import { TabBarContext } from '@/components/app-tabs';
 
-export default function HomeScreen() {
+export default function OnboardingScreen({
+  onGetStarted,
+  onSignIn,
+}: {
+  onGetStarted?: () => void;
+  onSignIn?: () => void;
+}) {
   const { setIsTabBarHidden } = useContext(TabBarContext);
 
   useFocusEffect(() => {
@@ -61,46 +72,67 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: Colors.light.surfaceDim }]}>
-      <SafeAreaView style={styles.safeArea}>
-        <Animated.View style={[styles.blob, styles.blob1, { backgroundColor: Colors.light.primaryFixedDim }, blob1Style]} />
-        <Animated.View style={[styles.blob, styles.blob2, { backgroundColor: Colors.light.surfaceVariant }, blob2Style]} />
+      <Animated.View
+        style={[
+          styles.blob,
+          styles.blob1,
+          { backgroundColor: Colors.light.primaryFixedDim },
+          blob1Style,
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.blob,
+          styles.blob2,
+          { backgroundColor: Colors.light.surfaceVariant },
+          blob2Style,
+        ]}
+      />
 
-        <ThemedView style={styles.content}>
-          <Animated.View style={[styles.imageContainer, bounceStyle]}>
-            <Image
-              source={require('@/assets/images/splash.png')}
-              style={styles.mascotImage}
-              contentFit="contain"
-            />
-          </Animated.View>
+      <ThemedView style={styles.content}>
+        <Animated.View style={[styles.imageContainer, bounceStyle]}>
+          <Image
+            source={require('@/assets/images/splash.png')}
+            style={styles.mascotImage}
+            contentFit="contain"
+          />
+        </Animated.View>
 
-          <ThemedView style={styles.textContainer}>
-            <ThemedText type="title" style={[styles.headline, { color: Colors.light.primary }]}>
-              Master English{'\n'}in Context
-            </ThemedText>
-            <ThemedText type="default" style={[styles.bodyText, { color: Colors.light.onSurfaceVariant }]}>
-              Learn vocabulary through real-world situations and interactive exercises.
-            </ThemedText>
-          </ThemedView>
-
-          <ThemedView style={styles.actions}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.primaryButton,
-                pressed && styles.primaryButtonPressed,
-              ]}>
-              <ThemedText type="default" style={styles.primaryButtonText}>
-                Get Started
-              </ThemedText>
-            </Pressable>
-            <Pressable style={styles.secondaryButton}>
-              <ThemedText type="default" style={styles.secondaryButtonText}>
-                Sign In
-              </ThemedText>
-            </Pressable>
-          </ThemedView>
+        <ThemedView style={styles.textContainer}>
+          <ThemedText type="title" style={[styles.headline, { color: Colors.light.primary }]}>
+            Master English{'\n'}in Context
+          </ThemedText>
+          <ThemedText
+            type="default"
+            style={[styles.bodyText, { color: Colors.light.onSurfaceVariant }]}
+          >
+            Learn vocabulary through real-world situations and interactive exercises.
+          </ThemedText>
         </ThemedView>
-      </SafeAreaView>
+
+        <ThemedView style={styles.actions}>
+          <Pressable
+            onPress={onGetStarted}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && styles.primaryButtonPressed,
+            ]}>
+            <ThemedText type="default" style={styles.primaryButtonText}>
+              Get Started
+            </ThemedText>
+          </Pressable>
+          <Pressable
+            onPress={onSignIn}
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              pressed && styles.secondaryButtonPressed,
+            ]}>
+            <ThemedText type="default" style={styles.secondaryButtonText}>
+              Sign In
+            </ThemedText>
+          </Pressable>
+        </ThemedView>
+      </ThemedView>
     </ThemedView>
   );
 }
@@ -109,9 +141,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: 'hidden',
-  },
-  safeArea: {
-    flex: 1,
   },
   blob: {
     position: 'absolute',
@@ -211,6 +240,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.light.outlineVariant,
+  },
+  secondaryButtonPressed: {
+    backgroundColor: Colors.light.surfaceContainer,
   },
   primaryButtonText: {
     color: Colors.light.onPrimary,
