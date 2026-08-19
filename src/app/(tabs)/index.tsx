@@ -117,19 +117,13 @@ export default function HomeScreen() {
 
           <ThemedView style={styles.actions}>
             <Pressable
-              onPress={() => router.push("/auth/registerStudent")}
+              onPress={() => router.replace("/pages/homepage")}
               style={({ pressed }) => [
                 styles.primaryButton,
                 pressed && styles.primaryButtonPressed,
-              ]}
-            >
+              ]}>
               <ThemedText type="default" style={styles.primaryButtonText}>
                 Get Started
-              </ThemedText>
-            </Pressable>
-            <Pressable style={styles.secondaryButton}>
-              <ThemedText type="default" style={styles.secondaryButtonText}>
-                Sign In
               </ThemedText>
             </Pressable>
           </ThemedView>
