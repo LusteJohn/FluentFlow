@@ -35,7 +35,7 @@ export default function AppTabs() {
       {!isHome && (
         <TabList asChild>
           <CustomTabList>
-            <TabTrigger name="home" href="/" asChild>
+            <TabTrigger name="home" href="/index" asChild>
               <TabButton>Home</TabButton>
             </TabTrigger>
             <TabTrigger name="explore" href="/explore" asChild>

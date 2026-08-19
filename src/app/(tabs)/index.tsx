@@ -1,16 +1,22 @@
-import { Pressable, StyleSheet } from 'react-native';
-import { useFocusEffect } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { Easing, useAnimatedStyle, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
-import { Image } from 'expo-image';
-import { useContext } from 'react';
+import { Image } from "expo-image";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useContext } from "react";
+import { Pressable, StyleSheet } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming
+} from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing } from '@/constants/theme';
-import { TabBarContext } from '@/components/app-tabs';
+import { TabBarContext } from "@/components/app-tabs";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Colors } from "@/constants/theme";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { setIsTabBarHidden } = useContext(TabBarContext);
 
   useFocusEffect(() => {
@@ -22,7 +28,7 @@ export default function HomeScreen() {
     const progress = withRepeat(
       withTiming(1, { duration: 7000, easing: Easing.inOut(Easing.quad) }),
       -1,
-      true
+      true,
     );
     return {
       transform: [
@@ -37,7 +43,7 @@ export default function HomeScreen() {
     const progress = withRepeat(
       withTiming(1, { duration: 7000, easing: Easing.inOut(Easing.quad) }),
       -1,
-      true
+      true,
     );
     return {
       transform: [
@@ -52,7 +58,7 @@ export default function HomeScreen() {
     const progress = withRepeat(
       withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.quad) }),
       -1,
-      true
+      true,
     );
     return {
       transform: [{ translateY: progress * -20 }],
@@ -60,35 +66,63 @@ export default function HomeScreen() {
   });
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor: Colors.light.surfaceDim }]}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: Colors.light.surfaceDim }]}
+    >
       <SafeAreaView style={styles.safeArea}>
-        <Animated.View style={[styles.blob, styles.blob1, { backgroundColor: Colors.light.primaryFixedDim }, blob1Style]} />
-        <Animated.View style={[styles.blob, styles.blob2, { backgroundColor: Colors.light.surfaceVariant }, blob2Style]} />
+        <Animated.View
+          style={[
+            styles.blob,
+            styles.blob1,
+            { backgroundColor: Colors.light.primaryFixedDim },
+            blob1Style,
+          ]}
+        />
+        <Animated.View
+          style={[
+            styles.blob,
+            styles.blob2,
+            { backgroundColor: Colors.light.surfaceVariant },
+            blob2Style,
+          ]}
+        />
 
         <ThemedView style={styles.content}>
           <Animated.View style={[styles.imageContainer, bounceStyle]}>
             <Image
-              source={require('@/assets/images/splash.png')}
+              source={require("@/assets/images/splash.png")}
               style={styles.mascotImage}
               contentFit="contain"
             />
           </Animated.View>
 
           <ThemedView style={styles.textContainer}>
-            <ThemedText type="title" style={[styles.headline, { color: Colors.light.primary }]}>
-              Master English{'\n'}in Context
+            <ThemedText
+              type="title"
+              style={[styles.headline, { color: Colors.light.primary }]}
+            >
+              Master English{"\n"}in Context
             </ThemedText>
-            <ThemedText type="default" style={[styles.bodyText, { color: Colors.light.onSurfaceVariant }]}>
-              Learn vocabulary through real-world situations and interactive exercises.
+            <ThemedText
+              type="default"
+              style={[
+                styles.bodyText,
+                { color: Colors.light.onSurfaceVariant },
+              ]}
+            >
+              Learn vocabulary through real-world situations and interactive
+              exercises.
             </ThemedText>
           </ThemedView>
 
           <ThemedView style={styles.actions}>
             <Pressable
+              onPress={() => router.push("/auth/registerStudent")}
               style={({ pressed }) => [
                 styles.primaryButton,
                 pressed && styles.primaryButtonPressed,
-              ]}>
+              ]}
+            >
               <ThemedText type="default" style={styles.primaryButtonText}>
                 Get Started
               </ThemedText>
@@ -108,43 +142,43 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   safeArea: {
     flex: 1,
   },
   blob: {
-    position: 'absolute',
+    position: "absolute",
     borderRadius: 9999,
     opacity: 0.5,
   },
   blob1: {
     width: 384,
     height: 384,
-    top: '-10%',
-    left: '-10%',
+    top: "-10%",
+    left: "-10%",
   },
   blob2: {
     width: 480,
     height: 480,
-    bottom: '-10%',
-    right: '-10%',
+    bottom: "-10%",
+    right: "-10%",
   },
   content: {
     flex: 1,
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 24,
     paddingVertical: 32,
     maxWidth: 448,
-    alignSelf: 'center',
-    width: '100%',
+    alignSelf: "center",
+    width: "100%",
   },
   imageContainer: {
     marginBottom: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   mascotImage: {
     width: 256,
@@ -156,38 +190,38 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   textContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
-    width: '100%',
+    width: "100%",
   },
   headline: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 12,
     fontSize: 32,
     lineHeight: 40,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   bodyText: {
-    textAlign: 'center',
+    textAlign: "center",
     maxWidth: 280,
     fontSize: 18,
     lineHeight: 26,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   actions: {
-    width: '100%',
+    width: "100%",
     gap: 12,
-    marginTop: 'auto',
+    marginTop: "auto",
   },
   primaryButton: {
-    width: '100%',
+    width: "100%",
     backgroundColor: Colors.light.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
     gap: 8,
     borderBottomWidth: 3,
     borderBottomColor: Colors.light.primaryContainer,
@@ -202,13 +236,13 @@ const styles = StyleSheet.create({
     transform: [{ translateY: 3 }],
   },
   secondaryButton: {
-    width: '100%',
+    width: "100%",
     backgroundColor: Colors.light.surface,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: Colors.light.outlineVariant,
   },
@@ -216,12 +250,12 @@ const styles = StyleSheet.create({
     color: Colors.light.onPrimary,
     fontSize: 18,
     lineHeight: 26,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   secondaryButtonText: {
     color: Colors.light.primary,
     fontSize: 18,
     lineHeight: 26,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
