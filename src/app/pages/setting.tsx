@@ -6,6 +6,7 @@ import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { importJourneyData } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
+import AppHeader from "../(tabs)/header";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function SettingsPage() {
 
   return (
     <ThemedView style={styles.container}>
+      <AppHeader />
       <View style={styles.content}>
         <ThemedText type="subtitle" style={styles.title}>
           Settings
@@ -53,6 +55,7 @@ export default function SettingsPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.light.surface,
   },
   content: {
     flex: 1,

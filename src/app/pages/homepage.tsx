@@ -5,12 +5,14 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import NavBar from "../(tabs)/navBar";
+import AppHeader from "../(tabs)/header";
 
 export default function HomePage() {
   const router = useRouter();
 
   return (
     <ThemedView style={styles.container}>
+      <AppHeader />
       <View style={styles.content}>
         <ThemedText type="title" style={styles.title}>
           Welcome Home
@@ -34,6 +36,7 @@ export default function HomePage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.light.surface,
   },
   content: {
     flex: 1,

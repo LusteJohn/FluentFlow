@@ -9,6 +9,7 @@ import { Colors } from "@/constants/theme";
 import { getAllJourneys } from "@/backend/Journey";
 import { getDatabase } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
+import AppHeader from "../(tabs)/header";
 
 interface Journey {
   journey_id: number;
@@ -67,28 +68,7 @@ export default function JourneyPage() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <ThemedText type="smallBold" style={styles.avatarText}>
-                U
-              </ThemedText>
-            </View>
-            <View style={styles.levelBadge}>
-              <ThemedText type="labelSm" style={styles.levelText}>
-                L3
-              </ThemedText>
-            </View>
-          </View>
-          <ThemedText type="displayMobile" style={styles.headerTitle}>
-            Lumina Learning
-          </ThemedText>
-        </View>
-        <View style={styles.notificationButton}>
-          <ThemedText style={styles.notificationIcon}>🔔</ThemedText>
-        </View>
-      </View>
+      <AppHeader />
 
       <ScrollView
         style={styles.scrollView}
@@ -225,75 +205,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.surface,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 12,
-    backgroundColor: Colors.light.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.outlineVariant,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  avatarContainer: {
-    position: "relative",
-    width: 40,
-    height: 40,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.light.primaryContainer,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.light.primaryFixed,
-  },
-  avatarText: {
-    color: Colors.light.onPrimaryContainer,
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  levelBadge: {
-    position: "absolute",
-    bottom: -4,
-    right: -4,
-    backgroundColor: Colors.light.secondaryContainer,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: Colors.light.surface,
-  },
-  levelText: {
-    color: Colors.light.onSecondaryContainer,
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  headerTitle: {
-    color: Colors.light.primary,
-    fontSize: 20,
-    fontWeight: "700",
-    letterSpacing: -0.01,
-  },
-  notificationButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.light.surfaceContainerLow,
-  },
-  notificationIcon: {
-    fontSize: 20,
   },
   scrollView: {
     flex: 1,
