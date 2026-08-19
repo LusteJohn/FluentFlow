@@ -26,6 +26,18 @@ export default function NavBar() {
           styles.button,
           pressed && styles.buttonPressed,
         ]}
+        onPress={() => router.push("/pages/journey")}
+      >
+        <ThemedText type="default" style={styles.buttonText}>
+          Journey
+        </ThemedText>
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.button,
+          pressed && styles.buttonPressed,
+        ]}
         onPress={() => router.push("/pages/setting")}
       >
         <ThemedText type="default" style={styles.buttonText}>
