@@ -1,6 +1,7 @@
 import { seedJourneys } from "@/backend/Journey";
 import { seedTopics } from "@/backend/Topic";
 import { seedTopicIntros } from "@/backend/TopicIntro";
+import { seedTopicVocabulary } from "@/backend/TopicVocabulary";
 import { Platform } from "react-native";
 
 let SQLite: any = null;
@@ -50,8 +51,13 @@ export async function getDatabase() {
         )
 
         await db.runAsync(
-          "CREATE TABLE IF NOT EXISTS topic_vocabulary (topic_vocabulary_id INTEGER PRIMARY KEY AUTOINCREMENT, topic_id INTEGER NOT NULL, word TEXT NOT NULL, definition TEXT NOT NULL, example_sentence TEXT NOT NULL, image TEXT, order_index INTEGER, FOREIGN KEY(topic_id) REFERENCES topics(topic_id))"
+          "CREATE TABLE IF NOT EXISTS topic_vocabulary (topic_vocabulary_id INTEGER PRIMARY KEY AUTOINCREMENT, topic_id INTEGER NOT NULL, word TEXT NOT NULL, part_of_speech TEXT, definition TEXT NOT NULL, example_sentence TEXT NOT NULL, image TEXT, order_index INTEGER, FOREIGN KEY(topic_id) REFERENCES topics(topic_id))"
         )
+
+        try {
+          await db.runAsync("ALTER TABLE topic_vocabulary ADD COLUMN part_of_speech TEXT");
+        } catch (e) {
+        }
 
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS exercises (exercise_id INTEGER PRIMARY KEY AUTOINCREMENT, topic_id INTEGER NOT NULL, level TEXT NOT NULL CHECK (level IN ('beginner', 'intermediate', 'advanced')), type TEXT NOT NULL CHECK (type IN ('sentence_builder', 'spelling', 'fill_blank_spelling')), prompt TEXT NOT NULL, context_sentence TEXT, order_index INTEGER, FOREIGN KEY(topic_id) REFERENCES topics(topic_id))"
@@ -85,4 +91,9 @@ export async function importTopicData() {
 export async function importTopicIntroData() {
   const db = await getDatabase();
   await seedTopicIntros(db);
+}
+
+export async function importTopicVocabularyData() {
+  const db = await getDatabase();
+  await seedTopicVocabulary(db);
 }
