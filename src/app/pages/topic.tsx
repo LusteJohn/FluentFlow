@@ -10,6 +10,7 @@ import { Colors } from "@/constants/theme";
 import { getJourneyById } from "@/backend/Journey";
 import { getTopicsByJourneyId } from "@/backend/Topic";
 import { getTopicIntrosByTopicId } from "@/backend/TopicIntro";
+import { getTopicVocabularyByTopicId } from "@/backend/TopicVocabulary";
 import { getDatabase } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
@@ -36,6 +37,17 @@ interface TopicIntro {
   topic_id: number;
   intro_text: string;
   example_sentence: string;
+}
+
+interface TopicVocabulary {
+  topic_vocabulary_id: number;
+  topic_id: number;
+  word: string;
+  part_of_speech: string;
+  definition: string;
+  example_sentence: string;
+  image: string | null;
+  order_index: number;
 }
 
 const JOURNEY_BG_IMAGES: Record<number, any> = {
@@ -68,6 +80,8 @@ export default function TopicPage() {
   const [journey, setJourney] = useState<Journey | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [topicIntros, setTopicIntros] = useState<Record<number, TopicIntro>>({});
+  const [expandedTopic, setExpandedTopic] = useState<number | null>(null);
+  const [topicVocabulary, setTopicVocabulary] = useState<Record<number, TopicVocabulary[]>>({});
 
   useFocusEffect(
     useCallback(() => {
@@ -105,6 +119,30 @@ export default function TopicPage() {
     }, [journey_id]),
   );
 
+  const handleViewDetails = async (topicId: number) => {
+    if (expandedTopic === topicId) {
+      setExpandedTopic(null);
+      return;
+    }
+
+    if (topicVocabulary[topicId]) {
+      setExpandedTopic(topicId);
+      return;
+    }
+
+    try {
+      const db = await getDatabase();
+      const vocabList = await getTopicVocabularyByTopicId(db, topicId);
+      setTopicVocabulary((prev) => ({
+        ...prev,
+        [topicId]: vocabList ?? [],
+      }));
+      setExpandedTopic(topicId);
+    } catch (error) {
+      console.error("Failed to load vocabulary", error);
+    }
+  };
+
   const bgImage = journey ? JOURNEY_BG_IMAGES[journey.journey_id] : null;
 
   return (
@@ -113,8 +151,7 @@ export default function TopicPage() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-      >
+        contentContainerStyle={styles.scrollContent}>
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
             <ThemedText style={styles.pageTitle}>
@@ -169,8 +206,7 @@ export default function TopicPage() {
                       style={[
                         styles.exampleIcon,
                         { backgroundColor: iconColor.bg },
-                      ]}
-                    >
+                      ]}>
                       <SymbolView
                         name={iconName as any}
                         size={20}
@@ -197,9 +233,13 @@ export default function TopicPage() {
                           {intro.example_sentence}
                         </ThemedText>
                       </View>
-                      <Pressable style={styles.viewDetailsButton}>
+                      <Pressable
+                        style={styles.viewDetailsButton}
+                        onPress={() => handleViewDetails(topic.topic_id)}>
                         <ThemedText style={styles.viewDetailsButtonText}>
-                          View Details
+                          {expandedTopic === topic.topic_id
+                            ? "Hide Details"
+                            : "View Details"}
                         </ThemedText>
                         <SymbolView
                           name={{
@@ -208,9 +248,40 @@ export default function TopicPage() {
                             web: "arrow_forward_ios",
                           } as any}
                           size={16}
-                          tintColor={Colors.light.primary}
+                          tintColor={Colors.light.onPrimaryContainer}
                         />
                       </Pressable>
+
+                      {expandedTopic === topic.topic_id &&
+                        topicVocabulary[topic.topic_id] && (
+                          <View style={styles.vocabularySection}>
+                            <ThemedText style={styles.vocabularySectionTitle}>
+                              Vocabulary
+                            </ThemedText>
+                            {topicVocabulary[topic.topic_id].map((vocab) => (
+                              <View
+                                key={vocab.topic_vocabulary_id}
+                                style={styles.vocabularyItem}>
+                                <View style={styles.vocabularyItemHeader}>
+                                  <ThemedText style={styles.vocabularyWord}>
+                                    {vocab.word}
+                                  </ThemedText>
+                                  <View style={styles.vocabularyPosBadge}>
+                                    <ThemedText style={styles.vocabularyPos}>
+                                      {vocab.part_of_speech}
+                                    </ThemedText>
+                                  </View>
+                                </View>
+                                <ThemedText style={styles.vocabularyDefinition}>
+                                  {vocab.definition}
+                                </ThemedText>
+                                <ThemedText style={styles.vocabularyExample}>
+                                  {vocab.example_sentence}
+                                </ThemedText>
+                              </View>
+                            ))}
+                          </View>
+                        )}
                     </>
                   )}
                 </View>
@@ -400,6 +471,65 @@ const styles = StyleSheet.create({
     color: Colors.light.onPrimaryContainer,
     fontSize: 13,
     fontWeight: "600",
+  },
+  vocabularySection: {
+    width: "100%",
+    gap: 12,
+    marginTop: 4,
+  },
+  vocabularySectionTitle: {
+    color: Colors.light.onSurface,
+    fontSize: 16,
+    fontWeight: "600",
+    lineHeight: 22,
+  },
+  vocabularyItem: {
+    backgroundColor: Colors.light.surfaceContainerLowest,
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.surfaceContainer,
+    marginBottom: 12,
+  },
+  vocabularyItemHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 4,
+  },
+  vocabularyWord: {
+    color: Colors.light.primary,
+    fontSize: 18,
+    fontWeight: "700",
+    lineHeight: 24,
+  },
+  vocabularyPosBadge: {
+    backgroundColor: Colors.light.secondaryContainer,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  vocabularyPos: {
+    color: Colors.light.onSecondaryContainer,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 16,
+  },
+  vocabularyDefinition: {
+    color: Colors.light.onSurfaceVariant,
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+  vocabularyExample: {
+    color: Colors.light.onSurface,
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: "italic",
+    opacity: 0.8,
+    marginTop: 4,
   },
   practiceSection: {
     alignItems: "center",

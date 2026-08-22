@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { importJourneyData, importTopicData, importTopicIntroData } from "@/database/database";
+import { importJourneyData, importTopicData, importTopicIntroData, importTopicVocabularyData } from "@/database/database";
 import AlertDialog from "@/components/alert-dialog";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
@@ -25,11 +25,12 @@ export default function SettingsPage() {
       await importJourneyData();
       await importTopicData();
       await importTopicIntroData();
+      await importTopicVocabularyData();
       setDialog({
         type: "success",
         title: "Import Succeeded",
         message:
-          "Journey, topic, and topic intro data imported successfully!",
+          "Journey, topic, topic intro, and topic vocabulary data imported successfully!",
       });
     } catch (error: any) {
       setDialog({
@@ -64,7 +65,7 @@ export default function SettingsPage() {
             </ThemedText>
           </Pressable>
           <ThemedText type="small" style={styles.hint}>
-            This will insert default journey, topic, and topic intro records if none exist.
+            This will insert default journey, topic, topic intro, and topic vocabulary records if none exist.
           </ThemedText>
         </View>
       </View>
