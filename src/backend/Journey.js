@@ -2,10 +2,11 @@ import { SEED_JOURNEYS } from "@/data/seed-journey";
 
 export async function createJourney(db, journey) {
   const result = await db.runAsync(
-    "INSERT INTO journeys (title, description, icon, order_index) VALUES (?, ?, ?, ?)",
+    "INSERT INTO journeys (title, description, icon, bg_image, order_index) VALUES (?, ?, ?, ?, ?)",
     journey.title,
     journey.description,
     journey.icon,
+    journey.bg_image,
     journey.order_index,
   );
   const journeyId = result.lastInsertRowId;
@@ -44,6 +45,10 @@ export async function updateJourney(db, journeyId, updates) {
   if (updates.icon !== undefined) {
     fields.push("icon = ?");
     values.push(updates.icon);
+  }
+  if (updates.bg_image !== undefined) {
+    fields.push("bg_image = ?");
+    values.push(updates.bg_image);
   }
   if (updates.order_index !== undefined) {
     fields.push("order_index = ?");
