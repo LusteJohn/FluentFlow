@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
-import { useFocusEffect } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -39,6 +39,7 @@ const JOURNEY_BG_IMAGES: Record<number, any> = {
 };
 
 export default function JourneyPage() {
+  const router = useRouter();
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -104,7 +105,16 @@ export default function JourneyPage() {
             const bgImage = JOURNEY_BG_IMAGES[journey.journey_id];
 
             return (
-              <View key={journey.journey_id} style={styles.pathNodeContainer}>
+              <Pressable
+                key={journey.journey_id}
+                style={({ pressed }) => [
+                  styles.pathNodeContainer,
+                  !isLocked && pressed && { opacity: 0.9 },
+                ]}
+                onPress={() =>
+                  !isLocked &&
+                  router.push(`/pages/topic?journey_id=${journey.journey_id}`)
+                }>
                 <View
                   style={[
                     styles.pathNode,
@@ -201,7 +211,7 @@ export default function JourneyPage() {
                     )}
                   </View>
                 </View>
-              </View>
+              </Pressable>
             );
           })}
         </View>

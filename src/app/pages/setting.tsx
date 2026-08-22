@@ -1,24 +1,43 @@
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { importJourneyData, importTopicData, importTopicIntroData } from "@/database/database";
+import AlertDialog from "@/components/alert-dialog";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const [dialog, setDialog] = useState<null | {
+    type: "success" | "error";
+    title: string;
+    message: string;
+  }>(null);
+
+  const closeDialog = () => setDialog(null);
 
   const handleImportData = async () => {
     try {
       await importJourneyData();
       await importTopicData();
       await importTopicIntroData();
-      Alert.alert("Success", "Journey, topic, and topic intro data imported successfully!");
+      setDialog({
+        type: "success",
+        title: "Import Succeeded",
+        message:
+          "Journey, topic, and topic intro data imported successfully!",
+      });
     } catch (error: any) {
-      Alert.alert("Error", error?.message ?? "Failed to import data. Please try again.");
+      setDialog({
+        type: "error",
+        title: "Import Failed",
+        message:
+          error?.message ?? "Failed to import data. Please try again.",
+      });
     }
   };
 
@@ -50,6 +69,16 @@ export default function SettingsPage() {
         </View>
       </View>
       <NavBar />
+
+      {dialog && (
+        <AlertDialog
+          visible={true}
+          type={dialog.type}
+          title={dialog.title}
+          message={dialog.message}
+          onConfirm={closeDialog}
+        />
+      )}
     </ThemedView>
   );
 }
