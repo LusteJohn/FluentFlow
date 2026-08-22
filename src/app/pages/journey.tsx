@@ -16,6 +16,7 @@ interface Journey {
   title: string;
   description: string;
   icon: string;
+  bg_image: string;
   order_index: number;
 }
 
@@ -26,6 +27,15 @@ const JOURNEY_IMAGES: Record<string, any> = {
   "At Coffee Shop": require("@/assets/images/journey/at_coffee_shop.png"),
   "At Market": require("@/assets/images/journey/at_market.png"),
   "At Store": require("@/assets/images/journey/at_store.png"),
+};
+
+const JOURNEY_BG_IMAGES: Record<number, any> = {
+  1: require("@/assets/images/journey/at_home_bg.png"),
+  2: require("@/assets/images/journey/at_school_bg.png"),
+  3: require("@/assets/images/journey/at_restaurant_bg.png"),
+  4: require("@/assets/images/journey/at_coffee_shop_bg.png"),
+  5: require("@/assets/images/journey/at_market_bg.png"),
+  6: require("@/assets/images/journey/at_store_bg.png"),
 };
 
 export default function JourneyPage() {
@@ -91,6 +101,7 @@ export default function JourneyPage() {
             const isLocked = index > inProgressIndex && inProgressIndex >= 0;
             const nodeSize = isInProgress ? 80 : 64;
             const iconSize = isInProgress ? 40 : 32;
+            const bgImage = JOURNEY_BG_IMAGES[journey.journey_id];
 
             return (
               <View key={journey.journey_id} style={styles.pathNodeContainer}>
@@ -132,28 +143,28 @@ export default function JourneyPage() {
                     isInProgress && styles.nodeCardActive,
                     isLocked && styles.nodeCardLocked,
                   ]}>
-                  {isInProgress && (
+                  {isInProgress && bgImage && (
                     <View style={styles.cardImagePlaceholder}>
                       <Image
-                        source={JOURNEY_IMAGES[journey.title]}
+                        source={bgImage}
                         style={styles.cardImage}
                         contentFit="cover"
                       />
                     </View>
                   )}
-                  {isCompleted && (
+                  {isCompleted && bgImage && (
                     <View style={[styles.cardImagePlaceholder, styles.cardImageCompleted]}>
                       <Image
-                        source={JOURNEY_IMAGES[journey.title]}
+                        source={bgImage}
                         style={[styles.cardImage, styles.cardImageCompletedInner]}
                         contentFit="cover"
                       />
                     </View>
                   )}
-                  {isLocked && (
+                  {isLocked && bgImage && (
                     <View style={[styles.cardImagePlaceholder, styles.cardImageLocked]}>
                       <Image
-                        source={JOURNEY_IMAGES[journey.title]}
+                        source={bgImage}
                         style={[styles.cardImage, styles.cardImageLockedInner]}
                         contentFit="cover"
                       />

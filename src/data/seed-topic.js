@@ -1,0 +1,223 @@
+export const SEED_TOPICS = [
+    // Journey 1: At Home
+    {
+        topic_id: 1,
+        journey_id: 1,
+        title: 'Daily Routines',
+        grammar_focus: 'Present Simple Tense',
+        order_index: 1,
+    },
+    {
+        topic_id: 2,
+        journey_id: 1,
+        title: 'Household Objects',
+        grammar_focus: 'Preposition of Place',
+        order_index: 2,
+    },
+    {
+        topic_id: 3,
+        journey_id: 1,
+        title: 'Family',
+        grammar_focus: 'Possessive Adjectives & Pronouns',
+        order_index: 3,
+    },
+    {
+        topic_id: 4,
+        journey_id: 1,
+        title: 'Household Chores',
+        grammar_focus: 'Present Continuous Tense',
+        order_index: 4,
+    },
+    {
+        topic_id: 5,
+        journey_id: 1,
+        title: 'Giving Instructions',
+        grammar_focus: 'Imperative Sentences',
+        order_index: 5,
+    },
+
+    // Journey 2: At School
+    {
+        topic_id: 6,
+        journey_id: 2,
+        title: 'Sentence Structure',
+        grammar_focus: 'Subject-Verb Agreement',
+        order_index: 1,
+    },
+    {
+        topic_id: 7,
+        journey_id: 2,
+        title: 'Asking Questions',
+        grammar_focus: 'Wh-Questions & Question Formation',
+        order_index: 2,
+    },
+    {
+        topic_id: 8,
+        journey_id: 2,
+        title: 'School Subjects',
+        grammar_focus: 'Articles (a / an / the)',
+        order_index: 3,
+    },
+    {
+        topic_id: 9,
+        journey_id: 2,
+        title: 'Talking About Ability',
+        grammar_focus: 'Modal Verbs (can / must / should)',
+        order_index: 4,
+    },
+    {
+        topic_id: 10,
+        journey_id: 2,
+        title: 'Future Plans',
+        grammar_focus: 'Future Simple Tense (will / going to)',
+        order_index: 5,
+    },
+
+    // Journey 3: At Restaurant
+    {
+        topic_id: 11,
+        journey_id: 3,
+        title: 'Making Requests',
+        grammar_focus: 'Modal Verbs (would like / could / may)',
+        order_index: 1,
+    },
+    {
+        topic_id: 12,
+        journey_id: 3,
+        title: 'Ordering Food',
+        grammar_focus: 'Countable/Uncountable Nouns & Quantifiers',
+        order_index: 2,
+    },
+    {
+        topic_id: 13,
+        journey_id: 3,
+        title: 'Describing Dishes',
+        grammar_focus: 'Order of Adjectives',
+        order_index: 3,
+    },
+    {
+        topic_id: 14,
+        journey_id: 3,
+        title: 'Giving Opinions',
+        grammar_focus: 'Linking Words (and / but / because)',
+        order_index: 4,
+    },
+    {
+        topic_id: 15,
+        journey_id: 3,
+        title: 'Sequencing an Order',
+        grammar_focus: 'Sequence Connectors (first, then, after that)',
+        order_index: 5,
+    },
+
+    // Journey 4: At Coffee Shop
+    {
+        topic_id: 16,
+        journey_id: 4,
+        title: 'Polite Expressions',
+        grammar_focus: 'Conditionals (if / would)',
+        order_index: 1,
+    },
+    {
+        topic_id: 17,
+        journey_id: 4,
+        title: 'Expressing Preferences',
+        grammar_focus: 'Adjectives',
+        order_index: 2,
+    },
+    {
+        topic_id: 18,
+        journey_id: 4,
+        title: 'Small Talk',
+        grammar_focus: 'Present Perfect Tense',
+        order_index: 3,
+    },
+    {
+        topic_id: 19,
+        journey_id: 4,
+        title: 'Making Suggestions',
+        grammar_focus: "Modal Verbs (shall / let's / why don't we)",
+        order_index: 4,
+    },
+    {
+        topic_id: 20,
+        journey_id: 4,
+        title: 'Describing People',
+        grammar_focus: 'Adjectives of Personality',
+        order_index: 5,
+    },
+
+    // Journey 5: At Market
+    {
+        topic_id: 21,
+        journey_id: 5,
+        title: 'Comparing Products',
+        grammar_focus: 'Comparatives & Superlatives',
+        order_index: 1,
+    },
+    {
+        topic_id: 22,
+        journey_id: 5,
+        title: 'Prices & Quantities',
+        grammar_focus: 'Numbers & Quantity Expressions',
+        order_index: 2,
+    },
+    {
+        topic_id: 23,
+        journey_id: 5,
+        title: 'Bargaining',
+        grammar_focus: 'Question Tags',
+        order_index: 3,
+    },
+    {
+        topic_id: 24,
+        journey_id: 5,
+        title: 'Asking for Directions',
+        grammar_focus: 'Prepositions of Movement',
+        order_index: 4,
+    },
+    {
+        topic_id: 25,
+        journey_id: 5,
+        title: 'Describing Objects',
+        grammar_focus: 'Size, Shape & Material Adjectives',
+        order_index: 5,
+    },
+
+    // Journey 6: At Store
+    {
+        topic_id: 26,
+        journey_id: 6,
+        title: 'Past Purchases',
+        grammar_focus: 'Past Simple Tense',
+        order_index: 1,
+    },
+    {
+        topic_id: 27,
+        journey_id: 6,
+        title: 'Shopping Habits',
+        grammar_focus: 'Adverbs of Frequency & Manner',
+        order_index: 2,
+    },
+    {
+        topic_id: 28,
+        journey_id: 6,
+        title: 'Returns & Complaints',
+        grammar_focus: 'Past Continuous Tense',
+        order_index: 3,
+    },
+    {
+        topic_id: 29,
+        journey_id: 6,
+        title: 'Trying On Clothes',
+        grammar_focus: 'Reflexive Pronouns',
+        order_index: 4,
+    },
+    {
+        topic_id: 30,
+        journey_id: 6,
+        title: 'Giving Reasons',
+        grammar_focus: 'Conjunctions (so / because / since)',
+        order_index: 5,
+    },
+]

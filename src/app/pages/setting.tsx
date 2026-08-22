@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { importJourneyData } from "@/database/database";
+import { importJourneyData, importTopicData, importTopicIntroData } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
 
@@ -14,7 +14,9 @@ export default function SettingsPage() {
   const handleImportData = async () => {
     try {
       await importJourneyData();
-      Alert.alert("Success", "Journey data imported successfully!");
+      await importTopicData();
+      await importTopicIntroData();
+      Alert.alert("Success", "Journey, topic, and topic intro data imported successfully!");
     } catch (error: any) {
       Alert.alert("Error", error?.message ?? "Failed to import data. Please try again.");
     }
@@ -39,11 +41,11 @@ export default function SettingsPage() {
             ]}
             onPress={handleImportData}>
             <ThemedText type="default" style={styles.buttonText}>
-              Import Journey Data
+              Import All Data
             </ThemedText>
           </Pressable>
           <ThemedText type="small" style={styles.hint}>
-            This will insert default journey records if none exist.
+            This will insert default journey, topic, and topic intro records if none exist.
           </ThemedText>
         </View>
       </View>
