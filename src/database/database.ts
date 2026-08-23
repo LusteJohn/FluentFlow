@@ -3,6 +3,7 @@ import { seedTopics } from "@/backend/Topic";
 import { seedTopicIntros } from "@/backend/TopicIntro";
 import { seedTopicVocabulary } from "@/backend/TopicVocabulary";
 import { seedExercises } from "@/backend/TopicExercise";
+import { seedExerciseTokens } from "@/backend/ExerciseTokens";
 import { Platform } from "react-native";
 
 let SQLite: any = null;
@@ -68,6 +69,10 @@ export async function getDatabase() {
           "CREATE TABLE IF NOT EXISTS exercise_answers (answer_id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id INTEGER NOT NULL, answer_text TEXT NOT NULL, is_primary INTEGER DEFAULT 0, match_type TEXT DEFAULT 'exact' CHECK (match_type IN ('exact', 'case_insensitive', 'fuzzy')), FOREIGN KEY (exercise_id) REFERENCES exercises(exercise_id))"
         )
 
+        await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS exercise_tokens (exercise_token_id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id INTEGER NOT NULL, token TEXT NOT NULL, correct_position INTEGER NOT NULL, FOREIGN KEY (exercise_id) REFERENCES exercises(exercise_id))"
+        )
+
         return db;
       } catch (error) {
         dbPromise = null;
@@ -102,4 +107,9 @@ export async function importTopicVocabularyData() {
 export async function importExerciseData() {
   const db = await getDatabase();
   await seedExercises(db);
+}
+
+export async function importExerciseTokenData() {
+  const db = await getDatabase();
+  await seedExerciseTokens(db);
 }

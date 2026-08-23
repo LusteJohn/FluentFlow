@@ -7,7 +7,10 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { getTopicById } from "@/backend/Topic";
-import { getExercisesByTopicIdAndLevel } from "@/backend/TopicExercise";
+import {
+  getExercisesByTopicIdAndLevel,
+  seedExercises,
+} from "@/backend/TopicExercise";
 import { getDatabase } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
@@ -19,6 +22,14 @@ interface Exercise {
   type: string;
   prompt: string;
   context_sentence: string | null;
+  order_index: number;
+}
+
+interface Topic {
+  topic_id: number;
+  journey_id: number;
+  title: string;
+  grammar_focus: string;
   order_index: number;
 }
 
@@ -80,10 +91,21 @@ const EXERCISE_TYPE_LABELS: Record<string, string> = {
   sentence_builder: "Sentence Builder",
 };
 
+const JOURNEY_ICONS: Record<number, any> = {
+  1: { ios: "house.fill", android: "home", web: "home" },
+  2: { ios: "book.fill", android: "school", web: "school" },
+  3: { ios: "cart.fill", android: "restaurant_menu", web: "restaurant_menu" },
+  4: { ios: "cup.fill", android: "coffee", web: "coffee" },
+  5: { ios: "cart.fill", android: "shopping_cart", web: "shopping_cart" },
+  6: { ios: "cart.fill", android: "storefront", web: "storefront" },
+};
+
 export default function ExercisePage() {
   const { topic_id } = useLocalSearchParams<{ topic_id: string }>();
+  const topicId = topic_id;
   const router = useRouter();
   const [topicTitle, setTopicTitle] = useState<string>("Exercises");
+  const [journeyId, setJourneyId] = useState<number | null>(null);
   const [expandedLevel, setExpandedLevel] = useState<string | null>(null);
   const [exercisesByLevel, setExercisesByLevel] = useState<
     Record<string, Exercise[]>
@@ -98,9 +120,10 @@ export default function ExercisePage() {
         try {
           const db = await getDatabase();
           const topicId = parseInt(topic_id ?? "1", 10);
-          const topic = await getTopicById(db, topicId);
+          const topic = (await getTopicById(db, topicId)) as Topic | null;
           if (isActive) {
             setTopicTitle(topic?.title ?? "Exercises");
+            setJourneyId(topic?.journey_id ?? null);
           }
         } catch (error) {
           console.error("Failed to load exercise page", error);
@@ -116,25 +139,28 @@ export default function ExercisePage() {
   );
 
   const handleViewExercises = async (level: string) => {
-    if (expandedLevel === level) {
-      setExpandedLevel(null);
-      return;
-    }
-
-    if (exercisesByLevel[level]) {
-      setExpandedLevel(level);
-      return;
-    }
-
     setLoadingLevel(level);
     try {
       const db = await getDatabase();
       const topicId = parseInt(topic_id ?? "1", 10);
-      const list = await getExercisesByTopicIdAndLevel(db, topicId, level);
-      setExercisesByLevel((prev) => ({
-        ...prev,
-        [level]: list ?? [],
-      }));
+      let exercises: Exercise[] =
+        (await getExercisesByTopicIdAndLevel(db, topicId, level)) ?? [];
+
+      if (exercises.length === 0) {
+        await seedExercises(db);
+        exercises = (await getExercisesByTopicIdAndLevel(db, topicId, level)) ?? [];
+      }
+
+      const firstExercise = exercises[0];
+
+      if (firstExercise) {
+        router.push(
+          `/pages/exercise-session?exercise_id=${firstExercise.exercise_id}` as any,
+        );
+        return;
+      }
+
+      setExercisesByLevel((prev) => ({ ...prev, [level]: exercises }));
       setExpandedLevel(level);
     } catch (error) {
       console.error("Failed to load exercises", error);
@@ -174,11 +200,7 @@ export default function ExercisePage() {
         <View style={styles.introSection}>
           <View style={styles.iconContainer}>
             <SymbolView
-              name={{
-                ios: "flight.deployment.fill",
-                android: "flight_takeoff",
-                web: "flight_takeoff",
-              } as any}
+              name={JOURNEY_ICONS[journeyId ?? 1]}
               size={48}
               tintColor={Colors.light.primary}
             />
@@ -344,6 +366,20 @@ export default function ExercisePage() {
                                     <ThemedText style={styles.exerciseContext}>
                                       {exercise.context_sentence}
                                     </ThemedText>
+                                  )}
+                                  {exercise.type === "sentence_builder" && (
+                                    <Pressable
+                                      style={styles.startExerciseButton}
+                                      onPress={() =>
+                                        router.push(
+                                          `/pages/exercise-session?exercise_id=${exercise.exercise_id}&topic_id=${topicId}` as any,
+                                        )
+                                      }
+                                    >
+                                      <ThemedText style={styles.startExerciseButtonText}>
+                                        Start
+                                      </ThemedText>
+                                    </Pressable>
                                   )}
                                 </View>
                               );
@@ -619,5 +655,53 @@ const styles = StyleSheet.create({
     color: Colors.light.onSurfaceVariant,
     textAlign: "center",
     paddingVertical: 12,
+  },
+  tokensContainer: {
+    marginTop: 8,
+    gap: 6,
+  },
+  tokensLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.light.onSurfaceVariant,
+    marginBottom: 4,
+  },
+  tokensScrollContent: {
+    gap: 8,
+    alignItems: "center",
+  },
+  tokenChip: {
+    backgroundColor: Colors.light.surfaceContainerHigh,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.light.surfaceContainer,
+  },
+  tokenText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.light.onSurface,
+  },
+  startExerciseButton: {
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    borderBottomWidth: 3,
+    borderBottomColor: Colors.light.primaryContainer,
+    shadowColor: Colors.light.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  startExerciseButtonText: {
+    color: Colors.light.onPrimary,
+    fontSize: 16,
+    fontWeight: "600",
+    letterSpacing: 0.5,
   },
 });

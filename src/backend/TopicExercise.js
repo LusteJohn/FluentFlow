@@ -95,10 +95,8 @@ export async function deleteExercise(db, exerciseId) {
 }
 
 export async function seedExercises(db) {
-  const existing = await db.getFirstAsync(
-    "SELECT COUNT(*) as count FROM exercises",
-  );
-  if ((existing?.count ?? 0) > 0) return;
+  await db.runAsync("DELETE FROM exercise_tokens");
+  await db.runAsync("DELETE FROM exercises");
 
   for (const exercise of SEED_EXERCISES) {
     await createExercise(db, exercise);
