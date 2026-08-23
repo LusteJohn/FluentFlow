@@ -155,6 +155,19 @@ export default function TopicPage() {
         contentContainerStyle={styles.scrollContent}>
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
+            <Pressable
+              style={styles.backButton}
+              onPress={() => router.push("/pages/journey")}>
+              <SymbolView
+                name={{
+                  ios: "chevron.left",
+                  android: "arrow_back_ios",
+                  web: "arrow_back_ios",
+                } as any}
+                size={24}
+                tintColor={Colors.light.onSurface}
+              />
+            </Pressable>
             <ThemedText style={styles.pageTitle}>
               {journey?.title ?? "Grammar Guide"}
             </ThemedText>
@@ -345,11 +358,21 @@ const styles = StyleSheet.create({
     marginTop: 24,
     gap: 16,
   },
-  titleRow: {
+   titleRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingRight: 8,
+    gap: 12,
+  },
+   backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+    backgroundColor: Colors.light.surfaceContainerLow,
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
   },
   pageTitle: {
     color: Colors.light.onSurface,
