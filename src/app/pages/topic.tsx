@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 
 import { ThemedText } from "@/components/themed-text";
@@ -77,6 +77,7 @@ const TOPIC_ICON_COLORS = [
 
 export default function TopicPage() {
   const { journey_id } = useLocalSearchParams<{ journey_id: string }>();
+  const router = useRouter();
   const [journey, setJourney] = useState<Journey | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [topicIntros, setTopicIntros] = useState<Record<number, TopicIntro>>({});
@@ -233,25 +234,55 @@ export default function TopicPage() {
                           {intro.example_sentence}
                         </ThemedText>
                       </View>
-                      <Pressable
-                        style={styles.viewDetailsButton}
-                        onPress={() => handleViewDetails(topic.topic_id)}>
-                        <ThemedText style={styles.viewDetailsButtonText}>
-                          {expandedTopic === topic.topic_id
-                            ? "Hide Details"
-                            : "View Details"}
-                        </ThemedText>
-                        <SymbolView
-                          name={{
-                            ios: "chevron.right",
-                            android: "arrow_forward_ios",
-                            web: "arrow_forward_ios",
-                          } as any}
-                          size={16}
-                          tintColor={Colors.light.onPrimaryContainer}
-                        />
-                      </Pressable>
-
+                      <View style={styles.actionButtonsRow}>
+                        <Pressable
+                          style={styles.viewDetailsButton}
+                          onPress={() => handleViewDetails(topic.topic_id)}>
+                          <ThemedText style={styles.viewDetailsButtonText}>
+                            {expandedTopic === topic.topic_id
+                              ? "Hide Details"
+                              : "View Details"}
+                          </ThemedText>
+                          <SymbolView
+                            name={{
+                              ios:
+                                expandedTopic === topic.topic_id
+                                  ? "chevron.down"
+                                  : "chevron.right",
+                              android:
+                                expandedTopic === topic.topic_id
+                                  ? "arrow_drop_down"
+                                  : "arrow_forward_ios",
+                              web:
+                                expandedTopic === topic.topic_id
+                                  ? "arrow_drop_down"
+                                  : "arrow_forward_ios",
+                            } as any}
+                            size={16}
+                            tintColor={Colors.light.onPrimaryContainer}
+                          />
+                        </Pressable>
+                        <Pressable
+                          style={styles.startPracticeButton}
+                          onPress={() =>
+                            router.push(
+                              `/pages/exercise?topic_id=${topic.topic_id}` as any,
+                            )
+                          }>
+                          <ThemedText style={styles.startPracticeButtonText}>
+                            Start Practice
+                          </ThemedText>
+                          <SymbolView
+                            name={{
+                              ios: "arrow.forward",
+                              android: "arrow_forward",
+                              web: "arrow_forward",
+                            } as any}
+                            size={16}
+                            tintColor={Colors.light.onPrimaryContainer}
+                          />
+                        </Pressable>
+                      </View>
                       {expandedTopic === topic.topic_id &&
                         topicVocabulary[topic.topic_id] && (
                           <View style={styles.vocabularySection}>
@@ -290,23 +321,7 @@ export default function TopicPage() {
           </View>
         </View>
 
-        <View style={styles.practiceSection}>
-          <Pressable style={styles.practiceButton}>
-            <ThemedText style={styles.practiceButtonText}>
-              Start Practice
-            </ThemedText>
-            <SymbolView
-              name={{
-                ios: "arrow.forward",
-                android: "arrow_forward",
-                web: "arrow_forward",
-              } as any}
-              size={20}
-              tintColor={Colors.light.onPrimary}
-            />
-          </Pressable>
-        </View>
-      </ScrollView>
+       </ScrollView>
 
       <NavBar />
     </ThemedView>
@@ -461,7 +476,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    alignSelf: "flex-start",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
@@ -469,6 +483,28 @@ const styles = StyleSheet.create({
   },
   viewDetailsButtonText: {
     color: Colors.light.onPrimaryContainer,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  actionButtonsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    width: "100%",
+    marginTop: 8,
+  },
+  startPracticeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    flex: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: Colors.light.secondaryContainer,
+  },
+  startPracticeButtonText: {
+    color: Colors.light.onSecondaryContainer,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -529,27 +565,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontStyle: "italic",
     opacity: 0.8,
-    marginTop: 4,
-  },
-  practiceSection: {
-    alignItems: "center",
-    marginTop: 8,
-  },
-  practiceButton: {
-    backgroundColor: Colors.light.primary,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 16,
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.light.primaryContainer,
-  },
-  practiceButtonText: {
-    color: Colors.light.onPrimary,
-    fontSize: 16,
-    fontWeight: "600",
+     marginTop: 4,
   },
 });

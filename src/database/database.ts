@@ -2,6 +2,7 @@ import { seedJourneys } from "@/backend/Journey";
 import { seedTopics } from "@/backend/Topic";
 import { seedTopicIntros } from "@/backend/TopicIntro";
 import { seedTopicVocabulary } from "@/backend/TopicVocabulary";
+import { seedExercises } from "@/backend/TopicExercise";
 import { Platform } from "react-native";
 
 let SQLite: any = null;
@@ -96,4 +97,9 @@ export async function importTopicIntroData() {
 export async function importTopicVocabularyData() {
   const db = await getDatabase();
   await seedTopicVocabulary(db);
+}
+
+export async function importExerciseData() {
+  const db = await getDatabase();
+  await seedExercises(db);
 }

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { importJourneyData, importTopicData, importTopicIntroData, importTopicVocabularyData } from "@/database/database";
+import { importJourneyData, importTopicData, importTopicIntroData, importTopicVocabularyData, importExerciseData } from "@/database/database";
 import AlertDialog from "@/components/alert-dialog";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
@@ -22,10 +22,11 @@ export default function SettingsPage() {
 
   const handleImportData = async () => {
     try {
-      await importJourneyData();
-      await importTopicData();
-      await importTopicIntroData();
-      await importTopicVocabularyData();
+          await importJourneyData();
+          await importTopicData();
+          await importTopicIntroData();
+          await importTopicVocabularyData();
+          await importExerciseData();
       setDialog({
         type: "success",
         title: "Import Succeeded",

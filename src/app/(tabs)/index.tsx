@@ -67,7 +67,7 @@ export default function HomeScreen() {
 
   return (
     <ThemedView
-      style={[styles.container, { backgroundColor: Colors.light.surfaceDim }]}
+      style={[styles.container, { backgroundColor: Colors.light.surface }]}
     >
       <SafeAreaView style={styles.safeArea}>
         <Animated.View
