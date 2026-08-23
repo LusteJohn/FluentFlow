@@ -10,7 +10,7 @@ import Animated, {
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/hooks/use-theme";
 
-type AlertDialogType = "success" | "error";
+type AlertDialogType = "success" | "error" | "warning";
 
 type AlertDialogProps = {
   visible: boolean;
@@ -18,10 +18,13 @@ type AlertDialogProps = {
   title: string;
   message: string;
   confirmText?: string;
+  cancelText?: string;
   onConfirm: () => void;
+  onCancel?: () => void;
 };
 
 const SUCCESS_COLOR = "#1ca65a";
+const WARNING_COLOR = "#ca8a04";
 
 export default function AlertDialog({
   visible,
@@ -29,12 +32,18 @@ export default function AlertDialog({
   title,
   message,
   confirmText = "OK",
+  cancelText,
   onConfirm,
+  onCancel,
 }: AlertDialogProps) {
   const theme = useTheme();
 
   const accentColor =
-    type === "success" ? SUCCESS_COLOR : theme.error;
+    type === "success"
+      ? SUCCESS_COLOR
+      : type === "warning"
+        ? WARNING_COLOR
+        : theme.error;
   const borderColor = `${accentColor}cc`;
 
   const iconName =
@@ -44,18 +53,24 @@ export default function AlertDialog({
           android: "check_circle",
           web: "check_circle",
         }
-      : {
-          ios: "xmark.circle.fill",
-          android: "error",
-          web: "error",
-        };
+      : type === "warning"
+        ? {
+            ios: "exclamationmark.triangle.fill",
+            android: "warning",
+            web: "warning",
+          }
+        : {
+            ios: "xmark.circle.fill",
+            android: "error",
+            web: "error",
+          };
 
   return (
     <Modal
       transparent
       visible={visible}
       animationType="none"
-      onRequestClose={onConfirm}
+      onRequestClose={onCancel ?? onConfirm}
       hardwareAccelerated
     >
       <View style={styles.overlay}>
@@ -117,6 +132,21 @@ export default function AlertDialog({
                   {confirmText}
                 </ThemedText>
               </Pressable>
+              {cancelText && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.cancelButton,
+                    pressed && styles.buttonPressed,
+                  ]}
+                  onPress={onCancel ?? onConfirm}
+                >
+                  <ThemedText
+                    style={[styles.cancelButtonText, { color: theme.onSurfaceVariant }]}
+                  >
+                    {cancelText}
+                  </ThemedText>
+                </Pressable>
+              )}
             </View>
           </Animated.View>
         </View>
@@ -185,9 +215,25 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     transform: [{ translateY: 3 }],
   },
-  buttonText: {
+   buttonText: {
     fontSize: 16,
     fontWeight: "600",
+    lineHeight: 22,
+  },
+   cancelButton: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.08)",
+    minWidth: 120,
+    width: "100%",
+  },
+   cancelButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
     lineHeight: 22,
   },
 });
