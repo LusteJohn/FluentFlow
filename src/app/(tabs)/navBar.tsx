@@ -9,17 +9,22 @@ const NAV_ITEMS = [
   {
     label: "Homepage",
     route: "/pages/homepage",
-    name: { ios: "house.fill", android: "home", web: "home" },
+    name: { ios: "house.fill", android: "home", web: "home", },
   },
   {
     label: "Journey",
     route: "/pages/journey",
-    name: { ios: "map.fill", android: "map", web: "map" },
+    name: { ios: "map.fill", android: "map", web: "map", },
+  },
+  {
+    label: "Exercise",
+    route: "/pages/exercise",
+    name: { ios: "book.fill", android: "menu_book", web: "menu_book", },
   },
   {
     label: "Settings",
     route: "/pages/setting",
-    name: { ios: "gearshape.fill", android: "settings", web: "settings" },
+    name: { ios: "gearshape.fill", android: "settings", web: "settings", },
   },
 ];
 
