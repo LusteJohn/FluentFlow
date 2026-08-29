@@ -37,36 +37,36 @@ const LEVEL_META: Record<string, {
     title: "Beginner",
     description: "Basic vocabulary & simple phrases. Checking in and finding your gate.",
     icon: { ios: "checkmark.circle", android: "check_circle", web: "check_circle" },
-    iconBg: Colors.light.secondaryFixedDim,
-    iconColor: Colors.light.onSecondaryContainer,
-    badgeColor: Colors.light.onSecondaryContainer,
+    iconBg: "#dcfce7",
+    iconColor: "#166534",
+    badgeColor: "#166534",
     badgeText: "Completed",
-    badgeBg: Colors.light.secondaryContainer,
-    progressColor: Colors.light.onPrimaryContainer,
+    badgeBg: "#bbf7d0",
+    progressColor: "#22c55e",
     activeDots: 3,
   },
   intermediate: {
     title: "Intermediate",
     description: "Conversational dialogues. Handling delays, lost baggage, and security questions.",
     icon: { ios: "play.fill", android: "play_arrow", web: "play_arrow" },
-    iconBg: Colors.light.onPrimaryContainer,
-    iconColor: Colors.light.primaryContainer,
-    badgeColor: Colors.light.onPrimaryContainer,
+    iconBg: "#dcfce7",
+    iconColor: "#166534",
+    badgeColor: "#166534",
     badgeText: "Current",
-    badgeBg: Colors.light.onPrimaryContainer,
-    progressColor: Colors.light.onPrimaryContainer,
+    badgeBg: "#dcfce7",
+    progressColor: "#22c55e",
     activeDots: 2,
   },
   advanced: {
     title: "Advanced",
     description: "Complex dialogues & technical terms. Negotiating upgrades and resolving disputes.",
     icon: { ios: "checkmark.circle", android: "check_circle", web: "check_circle" },
-    iconBg: Colors.light.secondaryFixedDim,
-    iconColor: Colors.light.onSecondaryContainer,
-    badgeColor: Colors.light.onSecondaryContainer,
+    iconBg: "#dcfce7",
+    iconColor: "#166534",
+    badgeColor: "#166534",
     badgeText: "Available",
-    badgeBg: Colors.light.secondaryContainer,
-    progressColor: Colors.light.onPrimaryContainer,
+    badgeBg: "#bbf7d0",
+    progressColor: "#22c55e",
     activeDots: 2,
   },
 };
@@ -151,7 +151,7 @@ export default function ExercisePage() {
             <SymbolView
               name={JOURNEY_ICONS[journeyId ?? 1]}
               size={48}
-              tintColor={Colors.light.primary}
+              tintColor="#22c55e"
             />
           </View>
           <ThemedText style={styles.introTitle}>Select Difficulty</ThemedText>
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.outlineVariant,
   },
   pageTitle: {
-    color: Colors.light.primary,
+    color: "#22c55e",
     fontSize: 22,
     fontWeight: "700",
     lineHeight: 28,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.light.surfaceContainer,
     overflow: "hidden",
-    shadowColor: Colors.light.primary,
+    shadowColor: "#22c55e",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -347,8 +347,8 @@ const styles = StyleSheet.create({
   },
   levelCardActive: {
     borderWidth: 2,
-    borderColor: Colors.light.primary,
-    backgroundColor: Colors.light.primaryContainer,
+    borderColor: "#22c55e",
+    backgroundColor: "#dcfce7",
   },
   levelCardHeader: {
     flexDirection: "row",
@@ -418,21 +418,21 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.light.surfaceContainer,
   },
   viewButton: {
-    backgroundColor: Colors.light.primaryContainer,
+    backgroundColor: "#22c55e",
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     borderBottomWidth: 2,
-    borderBottomColor: Colors.light.primary,
+    borderBottomColor: "#166534",
   },
   viewButtonPressed: {
     borderBottomWidth: 0,
     transform: [{ translateY: 2 }],
   },
   viewButtonText: {
-    color: Colors.light.onPrimaryContainer,
+    color: "#ffffff",
     fontSize: 14,
     fontWeight: "600",
     lineHeight: 20,
