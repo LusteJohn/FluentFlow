@@ -105,8 +105,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.surfaceContainerLowest,
   },
   letterBoxCorrect: {
-    borderColor: "#22c55e",
-    backgroundColor: "#dcfce7",
+    borderColor: Colors.light.primary,
+    backgroundColor: Colors.light.primaryContainer,
   },
   letterBoxIncorrect: {
     borderColor: Colors.light.error,

@@ -393,7 +393,7 @@ export default function ExerciseListPage() {
                       <ThemedText
                         style={[
                           styles.exerciseType,
-                           { color: "#22c55e" },
+                           { color: Colors.light.secondaryContainer },
                         ]}
                       >
                         {typeLabel}
@@ -541,7 +541,7 @@ export default function ExerciseListPage() {
                 <SymbolView
                   name={{ ios: "chevron.left", android: "arrow_back_ios", web: "arrow_back_ios" } as any}
                   size={28}
-                  tintColor={currentExerciseIndex === 0 ? Colors.light.onSurfaceVariant : "#22c55e"}
+                   tintColor={currentExerciseIndex === 0 ? Colors.light.onSurfaceVariant : Colors.light.primary}
                 />
               </Pressable>
               <Pressable
@@ -555,7 +555,7 @@ export default function ExerciseListPage() {
                 <SymbolView
                   name={{ ios: "chevron.right", android: "arrow_forward_ios", web: "arrow_forward_ios" } as any}
                   size={28}
-                  tintColor={currentExerciseIndex === exercises.length - 1 ? Colors.light.onSurfaceVariant : "#22c55e"}
+                   tintColor={currentExerciseIndex === exercises.length - 1 ? Colors.light.onSurfaceVariant : Colors.light.primary}
                 />
               </Pressable>
             </View>
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.outlineVariant,
   },
   pageTitle: {
-    color: "#22c55e",
+    color: Colors.light.primary,
     fontSize: 22,
     fontWeight: "700",
     lineHeight: 28,
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: Colors.light.surfaceContainer,
-     shadowColor: "#22c55e",
+     shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -725,21 +725,21 @@ const styles = StyleSheet.create({
   arrangedWordBox: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: "#dcfce7",
+    backgroundColor: "#fff4e5",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#22c55e",
+    borderColor: Colors.light.secondaryContainer,
     marginRight: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   arrangedWordText: {
-    color: "#166534",
+    color: "#6f5100",
     fontSize: 16,
     fontWeight: "500",
   },
   submitButton: {
-    backgroundColor: "#22c55e",
+    backgroundColor: Colors.light.primary,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
@@ -759,14 +759,14 @@ const styles = StyleSheet.create({
     color: Colors.light.onSurfaceVariant,
   },
   successBanner: {
-    backgroundColor: "#22c55e",
+    backgroundColor: Colors.light.primary,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginTop: 8,
   },
   successBannerText: {
-    color: "#ffffff",
+    color: Colors.light.onPrimary,
     fontSize: 14,
     fontWeight: "600",
   },

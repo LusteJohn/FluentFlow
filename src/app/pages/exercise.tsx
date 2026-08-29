@@ -37,36 +37,36 @@ const LEVEL_META: Record<string, {
     title: "Beginner",
     description: "Basic vocabulary & simple phrases. Checking in and finding your gate.",
     icon: { ios: "checkmark.circle", android: "check_circle", web: "check_circle" },
-    iconBg: "#dcfce7",
-    iconColor: "#166534",
-    badgeColor: "#166534",
+    iconBg: "#fff4e5",
+    iconColor: "#795900",
+    badgeColor: "#6f5100",
     badgeText: "Completed",
-    badgeBg: "#bbf7d0",
-    progressColor: "#22c55e",
+    badgeBg: Colors.light.secondaryContainer,
+    progressColor: Colors.light.primary,
     activeDots: 3,
   },
   intermediate: {
     title: "Intermediate",
     description: "Conversational dialogues. Handling delays, lost baggage, and security questions.",
     icon: { ios: "play.fill", android: "play_arrow", web: "play_arrow" },
-    iconBg: "#dcfce7",
-    iconColor: "#166534",
-    badgeColor: "#166534",
+    iconBg: "#fff4e5",
+    iconColor: "#0058be",
+    badgeColor: "#6f5100",
     badgeText: "Current",
-    badgeBg: "#dcfce7",
-    progressColor: "#22c55e",
+    badgeBg: Colors.light.secondaryContainer,
+    progressColor: Colors.light.primary,
     activeDots: 2,
   },
   advanced: {
     title: "Advanced",
     description: "Complex dialogues & technical terms. Negotiating upgrades and resolving disputes.",
     icon: { ios: "checkmark.circle", android: "check_circle", web: "check_circle" },
-    iconBg: "#dcfce7",
-    iconColor: "#166534",
-    badgeColor: "#166534",
+    iconBg: "#fff4e5",
+    iconColor: "#795900",
+    badgeColor: "#6f5100",
     badgeText: "Available",
-    badgeBg: "#bbf7d0",
-    progressColor: "#22c55e",
+    badgeBg: Colors.light.secondaryContainer,
+    progressColor: Colors.light.primary,
     activeDots: 2,
   },
 };
@@ -151,7 +151,7 @@ export default function ExercisePage() {
             <SymbolView
               name={JOURNEY_ICONS[journeyId ?? 1]}
               size={48}
-              tintColor="#22c55e"
+              tintColor={Colors.light.secondaryContainer}
             />
           </View>
           <ThemedText style={styles.introTitle}>Select Difficulty</ThemedText>
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.outlineVariant,
   },
   pageTitle: {
-    color: "#22c55e",
+    color: Colors.light.primary,
     fontSize: 22,
     fontWeight: "700",
     lineHeight: 28,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.light.surfaceContainer,
     overflow: "hidden",
-    shadowColor: "#22c55e",
+    shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -347,8 +347,8 @@ const styles = StyleSheet.create({
   },
   levelCardActive: {
     borderWidth: 2,
-    borderColor: "#22c55e",
-    backgroundColor: "#dcfce7",
+    borderColor: Colors.light.secondaryContainer,
+    backgroundColor: "#fff4e5",
   },
   levelCardHeader: {
     flexDirection: "row",
@@ -418,21 +418,21 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.light.surfaceContainer,
   },
   viewButton: {
-    backgroundColor: "#22c55e",
+    backgroundColor: Colors.light.primary,
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     borderBottomWidth: 2,
-    borderBottomColor: "#166534",
+    borderBottomColor: Colors.light.primary,
   },
   viewButtonPressed: {
     borderBottomWidth: 0,
     transform: [{ translateY: 2 }],
   },
   viewButtonText: {
-    color: "#ffffff",
+    color: Colors.light.onPrimary,
     fontSize: 14,
     fontWeight: "600",
     lineHeight: 20,

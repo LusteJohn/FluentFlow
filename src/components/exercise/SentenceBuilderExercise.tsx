@@ -106,15 +106,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   wordBoxSelected: {
-    backgroundColor: Colors.light.primaryContainer,
-    borderColor: "#22c55e",
+    backgroundColor: Colors.light.secondaryContainer,
+    borderColor: Colors.light.primary,
   },
   tokenText: {
     fontSize: 14,
     color: Colors.light.onSurface,
   },
   tokenTextSelected: {
-    color: "#166534",
+    color: Colors.light.primary,
     fontWeight: "600",
   },
   arrangedWordsContainer: {
@@ -128,16 +128,16 @@ const styles = StyleSheet.create({
   arrangedWordBox: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: Colors.light.primaryContainer,
+    backgroundColor: "#fff4e5",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#22c55e",
+    borderColor: Colors.light.secondaryContainer,
     marginRight: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   arrangedWordText: {
-    color: "#166534",
+    color: "#6f5100",
     fontSize: 16,
     fontWeight: "500",
   },
