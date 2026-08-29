@@ -1,12 +1,13 @@
 import { Image } from "expo-image";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { useContext } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { SymbolView } from "expo-symbols";
 import Animated, {
   Easing,
   useAnimatedStyle,
   withRepeat,
-  withTiming
+  withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -54,9 +55,24 @@ export default function HomeScreen() {
     };
   });
 
+  const blob3Style = useAnimatedStyle(() => {
+    const progress = withRepeat(
+      withTiming(1, { duration: 7000, easing: Easing.inOut(Easing.quad) }),
+      -1,
+      true,
+    );
+    return {
+      transform: [
+        { translateX: progress * -15 },
+        { translateY: progress * 15 },
+        { scale: 1 + progress * 0.05 },
+      ],
+    };
+  });
+
   const bounceStyle = useAnimatedStyle(() => {
     const progress = withRepeat(
-      withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.quad) }),
+      withTiming(1, { duration: 5000, easing: Easing.inOut(Easing.quad) }),
       -1,
       true,
     );
@@ -72,22 +88,34 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.safeArea}>
         <Animated.View
           style={[
-            styles.blob,
-            styles.blob1,
+            styles.ambientShape,
+            styles.ambientShape1,
             { backgroundColor: Colors.light.primaryFixedDim },
             blob1Style,
           ]}
         />
         <Animated.View
           style={[
-            styles.blob,
-            styles.blob2,
-            { backgroundColor: Colors.light.surfaceVariant },
+            styles.ambientShape,
+            styles.ambientShape2,
+            { backgroundColor: Colors.light.secondaryFixed },
             blob2Style,
           ]}
         />
+        <Animated.View
+          style={[
+            styles.ambientShape,
+            styles.ambientShape3,
+            { backgroundColor: Colors.light.surfaceVariant },
+            blob3Style,
+          ]}
+        />
 
-        <ThemedView style={styles.content}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <Animated.View style={[styles.imageContainer, bounceStyle]}>
             <Image
               source={require("@/assets/images/splash.png")}
@@ -96,15 +124,13 @@ export default function HomeScreen() {
             />
           </Animated.View>
 
-          <ThemedView style={styles.textContainer}>
+          <View style={styles.textContainer}>
             <ThemedText
-              type="title"
               style={[styles.headline, { color: Colors.light.primary }]}
             >
               Master English{"\n"}in Context
             </ThemedText>
             <ThemedText
-              type="default"
               style={[
                 styles.bodyText,
                 { color: Colors.light.onSurfaceVariant },
@@ -113,21 +139,50 @@ export default function HomeScreen() {
               Learn vocabulary through real-world situations and interactive
               exercises.
             </ThemedText>
-          </ThemedView>
+          </View>
 
-          <ThemedView style={styles.actions}>
+          <View style={styles.actions}>
             <Pressable
               onPress={() => router.replace("/pages/homepage")}
               style={({ pressed }) => [
                 styles.primaryButton,
                 pressed && styles.primaryButtonPressed,
-              ]}>
-              <ThemedText type="default" style={styles.primaryButtonText}>
-                Get Started
-              </ThemedText>
+              ]}
+            >
+              <ThemedText style={styles.primaryButtonText}>Get Started</ThemedText>
+              <SymbolView
+                name={{
+                  ios: "arrow_right",
+                  android: "arrow_forward",
+                  web: "arrow_forward",
+                }}
+                size={20}
+                tintColor={Colors.light.onPrimary}
+              />
             </Pressable>
-          </ThemedView>
-        </ThemedView>
+
+            <Pressable
+              onPress={() => router.replace("/pages/homepage")}
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                pressed && styles.secondaryButtonPressed,
+              ]}
+            >
+              <ThemedText style={styles.secondaryButtonText}>Sign In</ThemedText>
+            </Pressable>
+          </View>
+
+          <View style={styles.footerNote}>
+            <ThemedText
+              style={[
+                styles.footerText,
+                { color: Colors.light.outline },
+              ]}
+            >
+              Start your journey today
+            </ThemedText>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </ThemedView>
   );
@@ -140,39 +195,45 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    position: "relative",
   },
-  blob: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    gap: 32,
+  },
+  ambientShape: {
     position: "absolute",
     borderRadius: 9999,
     opacity: 0.5,
   },
-  blob1: {
-    width: 384,
-    height: 384,
+  ambientShape1: {
+    width: 400,
+    height: 400,
     top: "-10%",
-    left: "-10%",
+    left: "-15%",
   },
-  blob2: {
-    width: 480,
-    height: 480,
-    bottom: "-10%",
+  ambientShape2: {
+    width: 350,
+    height: 350,
+    top: "20%",
     right: "-10%",
   },
-  content: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    maxWidth: 448,
-    alignSelf: "center",
-    width: "100%",
+  ambientShape3: {
+    width: 500,
+    height: 500,
+    bottom: "-10%",
+    left: "10%",
   },
   imageContainer: {
-    marginBottom: 32,
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 32,
   },
   mascotImage: {
     width: 256,
@@ -187,13 +248,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 32,
     width: "100%",
+    gap: 12,
   },
   headline: {
     textAlign: "center",
-    marginBottom: 12,
-    fontSize: 32,
-    lineHeight: 40,
+    fontSize: 24,
+    lineHeight: 32,
     fontWeight: "700",
+    letterSpacing: -0.24,
   },
   bodyText: {
     textAlign: "center",
@@ -210,9 +272,9 @@ const styles = StyleSheet.create({
   primaryButton: {
     width: "100%",
     backgroundColor: Colors.light.primary,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 16,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
@@ -229,27 +291,41 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     transform: [{ translateY: 3 }],
   },
+  primaryButtonText: {
+    color: Colors.light.onPrimary,
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: "600",
+  },
   secondaryButton: {
     width: "100%",
     backgroundColor: Colors.light.surface,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 16,
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
     borderColor: Colors.light.outlineVariant,
   },
-  primaryButtonText: {
-    color: Colors.light.onPrimary,
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: "500",
+  secondaryButtonPressed: {
+    backgroundColor: Colors.light.surfaceContainer,
+    transform: [{ translateY: 2 }],
   },
   secondaryButtonText: {
     color: Colors.light.primary,
     fontSize: 18,
     lineHeight: 26,
-    fontWeight: "500",
+    fontWeight: "600",
+  },
+  footerNote: {
+    width: "100%",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  footerText: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
   },
 });
