@@ -1,8 +1,8 @@
 import { SEED_EXERCISES } from "@/data/seed-exercises";
 
 export async function createExercise(db, exercise) {
-  const result = await db.runAsync(
-    "INSERT INTO exercises (topic_id, level, type, prompt, context_sentence, order_index) VALUES (?, ?, ?, ?, ?, ?)",
+  const created = await db.getFirstAsync(
+    "INSERT INTO exercises (topic_id, level, type, prompt, context_sentence, order_index) VALUES (?, ?, ?, ?, ?, ?) RETURNING *",
     exercise.topic_id,
     exercise.level,
     exercise.type,
@@ -10,8 +10,6 @@ export async function createExercise(db, exercise) {
     exercise.context_sentence ?? null,
     exercise.order_index ?? null,
   );
-  const exerciseId = result.lastInsertRowId;
-  const created = await getExerciseById(db, exerciseId);
   if (!created) throw new Error("Failed to create exercise");
   return created;
 }

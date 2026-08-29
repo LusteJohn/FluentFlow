@@ -1,8 +1,8 @@
 import { SEED_TOPIC_VOCABULARY } from "@/data/seed-topic-vocabulary";
 
 export async function createTopicVocabulary(db, topicVocabulary) {
-  const result = await db.runAsync(
-    "INSERT INTO topic_vocabulary (topic_id, word, part_of_speech, definition, example_sentence, image, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  const created = await db.getFirstAsync(
+    "INSERT INTO topic_vocabulary (topic_id, word, part_of_speech, definition, example_sentence, image, order_index) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *",
     topicVocabulary.topic_id,
     topicVocabulary.word,
     topicVocabulary.part_of_speech,
@@ -11,8 +11,6 @@ export async function createTopicVocabulary(db, topicVocabulary) {
     topicVocabulary.image,
     topicVocabulary.order_index,
   );
-  const topicVocabularyId = result.lastInsertRowId;
-  const created = await getTopicVocabularyById(db, topicVocabularyId);
   if (!created) throw new Error("Failed to create topic vocabulary");
   return created;
 }

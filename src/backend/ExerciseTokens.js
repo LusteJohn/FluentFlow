@@ -1,14 +1,12 @@
 import { SEED_EXERCISE_TOKENS } from "@/data/seed-exercise-token";
 
 export async function createExerciseToken(db, exerciseToken) {
-  const result = await db.runAsync(
-    "INSERT INTO exercise_tokens (exercise_id, token, correct_position) VALUES (?, ?, ?)",
+  const created = await db.getFirstAsync(
+    "INSERT INTO exercise_tokens (exercise_id, token, correct_position) VALUES (?, ?, ?) RETURNING *",
     exerciseToken.exercise_id,
     exerciseToken.token,
     exerciseToken.correct_position,
   );
-  const exerciseTokenId = result.lastInsertRowId;
-  const created = await getExerciseTokenById(db, exerciseTokenId);
   if (!created) throw new Error("Failed to create exercise token");
   return created;
 }

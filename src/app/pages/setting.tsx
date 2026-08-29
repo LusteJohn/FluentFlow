@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 
@@ -17,10 +17,12 @@ export default function SettingsPage() {
     title: string;
     message: string;
   }>(null);
+  const [loading, setLoading] = useState(false);
 
   const closeDialog = () => setDialog(null);
 
   const handleImportData = async () => {
+    setLoading(true);
     try {
           await importJourneyData();
           await importTopicData();
@@ -41,6 +43,8 @@ export default function SettingsPage() {
         message:
           error?.message ?? "Failed to import data. Please try again.",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,14 +64,22 @@ export default function SettingsPage() {
             style={({ pressed }) => [
               styles.button,
               pressed && styles.buttonPressed,
+              loading && styles.buttonDisabled,
             ]}
-            onPress={handleImportData}>
+            onPress={handleImportData}
+            disabled={loading}>
+            {loading ? (
+              <ActivityIndicator
+                size="small"
+                color={Colors.light.onPrimary}
+              />
+            ) : null}
             <ThemedText type="default" style={styles.buttonText}>
-              Import All Data
+              {loading ? "Importing..." : "Import All Data"}
             </ThemedText>
           </Pressable>
           <ThemedText type="small" style={styles.hint}>
-            This will insert default journey, topic, topic intro, and topic vocabulary records if none exist.
+            This will import journey, topic, topic intro, topic vocabulary, exercise, and exercise token data into the database.
           </ThemedText>
         </View>
       </View>
@@ -123,6 +135,9 @@ const styles = StyleSheet.create({
   buttonPressed: {
     borderBottomWidth: 0,
     transform: [{ translateY: 3 }],
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: {
     color: Colors.light.onPrimary,
