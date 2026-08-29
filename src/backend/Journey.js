@@ -1,16 +1,14 @@
 import { SEED_JOURNEYS } from "@/data/seed-journey";
 
 export async function createJourney(db, journey) {
-  const result = await db.runAsync(
-    "INSERT INTO journeys (title, description, icon, bg_image, order_index) VALUES (?, ?, ?, ?, ?)",
+  const created = await db.getFirstAsync(
+    "INSERT INTO journeys (title, description, icon, bg_image, order_index) VALUES (?, ?, ?, ?, ?) RETURNING *",
     journey.title,
     journey.description,
     journey.icon,
     journey.bg_image,
     journey.order_index,
   );
-  const journeyId = result.lastInsertRowId;
-  const created = await getJourneyById(db, journeyId);
   if (!created) throw new Error("Failed to create journey");
   return created;
 }

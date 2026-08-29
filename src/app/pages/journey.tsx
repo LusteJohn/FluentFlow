@@ -75,7 +75,7 @@ export default function JourneyPage() {
   );
 
   const completedCount = journeys.filter((_, i) => i === 0).length;
-  const inProgressIndex = journeys.length > 1 ? 1 : -1;
+  const inProgressIndex = journeys.length > 0 ? journeys.length - 1 : -1;
 
   return (
     <ThemedView style={styles.container}>
@@ -153,29 +153,21 @@ export default function JourneyPage() {
                     isInProgress && styles.nodeCardActive,
                     isLocked && styles.nodeCardLocked,
                   ]}>
-                  {isInProgress && bgImage && (
-                    <View style={styles.cardImagePlaceholder}>
+                  {bgImage && (
+                    <View
+                      style={[
+                        styles.cardImagePlaceholder,
+                        isCompleted && styles.cardImageCompleted,
+                        isLocked && styles.cardImageLocked,
+                      ]}
+                    >
                       <Image
                         source={bgImage}
-                        style={styles.cardImage}
-                        contentFit="cover"
-                      />
-                    </View>
-                  )}
-                  {isCompleted && bgImage && (
-                    <View style={[styles.cardImagePlaceholder, styles.cardImageCompleted]}>
-                      <Image
-                        source={bgImage}
-                        style={[styles.cardImage, styles.cardImageCompletedInner]}
-                        contentFit="cover"
-                      />
-                    </View>
-                  )}
-                  {isLocked && bgImage && (
-                    <View style={[styles.cardImagePlaceholder, styles.cardImageLocked]}>
-                      <Image
-                        source={bgImage}
-                        style={[styles.cardImage, styles.cardImageLockedInner]}
+                        style={[
+                          styles.cardImage,
+                          isCompleted && styles.cardImageCompletedInner,
+                          isLocked && styles.cardImageLockedInner,
+                        ]}
                         contentFit="cover"
                       />
                     </View>

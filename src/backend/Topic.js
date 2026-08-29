@@ -1,15 +1,13 @@
 import { SEED_TOPICS } from "@/data/seed-topic";
 
 export async function createTopic(db, topic) {
-  const result = await db.runAsync(
-    "INSERT INTO topics (journey_id, title, grammar_focus, order_index) VALUES (?, ?, ?, ?)",
+  const created = await db.getFirstAsync(
+    "INSERT INTO topics (journey_id, title, grammar_focus, order_index) VALUES (?, ?, ?, ?) RETURNING *",
     topic.journey_id,
     topic.title,
     topic.grammar_focus,
     topic.order_index,
   );
-  const topicId = result.lastInsertRowId;
-  const created = await getTopicById(db, topicId);
   if (!created) throw new Error("Failed to create topic");
   return created;
 }

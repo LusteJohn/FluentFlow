@@ -1,16 +1,22 @@
-import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View, TextInput } from "react-native";
-import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { useCallback, useState } from "react";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 
+import { getExerciseTokensByExerciseId } from "@/backend/ExerciseTokens";
+import { getExerciseById } from "@/backend/TopicExercise";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { getExerciseById } from "@/backend/TopicExercise";
-import { getExerciseTokensByExerciseId } from "@/backend/ExerciseTokens";
 import { getDatabase } from "@/database/database";
-import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
+import NavBar from "../(tabs)/navBar";
 
 interface Exercise {
   exercise_id: number;
@@ -54,12 +60,24 @@ export default function ExerciseSessionPage() {
   const [allTokens, setAllTokens] = useState<ExerciseToken[]>([]);
   const [selectedTokens, setSelectedTokens] = useState<ExerciseToken[]>([]);
   const [spellingAnswer, setSpellingAnswer] = useState("");
+  const [referenceItems, setReferenceItems] = useState<string[]>([]);
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
 
       async function loadData() {
+        // Reset state up front so switching between exercises never shows
+        // stale data (previous exercise's tokens/prompt) while the new
+        // exercise is still loading.
+        if (isActive) {
+          setExercise(null);
+          setAllTokens([]);
+          setSelectedTokens([]);
+          setSpellingAnswer("");
+          setReferenceItems([]);
+        }
+
         try {
           const db = await getDatabase();
           const exId = parseInt(exercise_id ?? "1", 10);
@@ -69,12 +87,34 @@ export default function ExerciseSessionPage() {
             setExercise(exo);
           }
 
-          const tokens = (await getExerciseTokensByExerciseId(
-            db,
-            exId,
-          )) as ExerciseToken[];
+          const tokens =
+            ((await getExerciseTokensByExerciseId(
+              db,
+              exId,
+            )) as ExerciseToken[]) ?? [];
           if (isActive) {
             setAllTokens(shuffleArray(tokens));
+          }
+
+          // Build a stable (computed once, not re-shuffled on every render)
+          // reference hint so the student always has something to go on,
+          // regardless of exercise type.
+          if (isActive && exo) {
+            if (exo.type === "spelling") {
+              // one token per letter already - just show them as a shuffled bank
+              setReferenceItems(shuffleArray(tokens.map((t) => t.token)));
+            } else if (exo.type === "fill_blank_spelling") {
+              // fill_blank_spelling stores the whole answer as a single token
+              const raw = tokens[0]?.token ?? "";
+              const words = raw.trim().split(/\s+/).filter(Boolean);
+              setReferenceItems(
+                words.length > 1
+                  ? shuffleArray(words)
+                  : shuffleArray(raw.split("")),
+              );
+            } else {
+              setReferenceItems([]);
+            }
           }
         } catch (error) {
           console.error("Failed to load exercise session", error);
@@ -120,11 +160,11 @@ export default function ExerciseSessionPage() {
         setAllTokens(shuffleArray(allTokens));
       }
     } else if (exercise.type === "fill_blank_spelling") {
-      const answer = correctAnswerFromTokens() ?? (
-        exercise.context_sentence
+      const answer =
+        correctAnswerFromTokens() ??
+        (exercise.context_sentence
           ? extractAnswerFromContext(exercise.context_sentence)
-          : null
-      );
+          : null);
       const isCorrect =
         answer !== null &&
         spellingAnswer.trim().toLowerCase() === answer.toLowerCase();
@@ -150,9 +190,7 @@ export default function ExerciseSessionPage() {
       : spellingAnswer.trim().length === 0;
 
   const isTokenSelected = (token: ExerciseToken) =>
-    selectedTokens.some(
-      (t) => t.exercise_token_id === token.exercise_token_id,
-    );
+    selectedTokens.some((t) => t.exercise_token_id === token.exercise_token_id);
 
   const correctAnswerFromTokens = (): string | null => {
     if (allTokens.length === 0) return null;
@@ -197,10 +235,7 @@ export default function ExerciseSessionPage() {
           return (
             <Pressable
               key={token.exercise_token_id}
-              style={[
-                styles.wordChip,
-                isSelected && styles.wordChipSelected,
-              ]}
+              style={[styles.wordChip, isSelected && styles.wordChipSelected]}
               onPress={() => handleSelectToken(token)}
               disabled={isSelected}
             >
@@ -221,7 +256,6 @@ export default function ExerciseSessionPage() {
 
   const renderTextInput = () => {
     const placeholder = "Type your answer";
-    const correctAnswer = correctAnswerFromTokens();
 
     return (
       <View style={styles.textInputContainer}>
@@ -236,11 +270,24 @@ export default function ExerciseSessionPage() {
           onChangeText={setSpellingAnswer}
           placeholder={placeholder}
           placeholderTextColor={Colors.light.onSurfaceVariant}
+          autoCapitalize="none"
         />
-        {correctAnswer && (
-          <View style={styles.answerReference}>
-            <ThemedText style={styles.answerLabel}>Answer:</ThemedText>
-            <ThemedText style={styles.answerText}>{correctAnswer}</ThemedText>
+        {referenceItems.length > 0 && (
+          <View style={styles.referenceContainer}>
+            <ThemedText style={styles.referenceLabel}>
+              {exercise?.type === "spelling"
+                ? "Letters to use:"
+                : "Words to use:"}
+            </ThemedText>
+            <View style={styles.referenceRow}>
+              {referenceItems.map((item, index) => (
+                <View key={`${item}-${index}`} style={styles.referenceChip}>
+                  <ThemedText style={styles.referenceChipText}>
+                    {item}
+                  </ThemedText>
+                </View>
+              ))}
+            </View>
           </View>
         )}
       </View>
@@ -252,12 +299,15 @@ export default function ExerciseSessionPage() {
       <AppHeader />
 
       <View style={styles.simpleTopBar}>
-        <Pressable
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
           <SymbolView
-            name={{ ios: "chevron.left", android: "arrow_back_ios", web: "arrow_back_ios" } as any}
+            name={
+              {
+                ios: "chevron.left",
+                android: "arrow_back_ios",
+                web: "arrow_back_ios",
+              } as any
+            }
             size={28}
             tintColor={Colors.light.onSurface}
           />
@@ -271,11 +321,13 @@ export default function ExerciseSessionPage() {
         <View style={styles.headerSection}>
           <View style={styles.topicIconContainer}>
             <SymbolView
-              name={{
-                ios: "book.fill",
-                android: "menu_book",
-                web: "menu_book",
-              } as any}
+              name={
+                {
+                  ios: "book.fill",
+                  android: "menu_book",
+                  web: "menu_book",
+                } as any
+              }
               size={40}
               tintColor={Colors.light.primary}
             />
@@ -487,23 +539,37 @@ const styles = StyleSheet.create({
     color: Colors.light.onSurface,
     textAlign: "center",
   },
-  answerReference: {
-    flexDirection: "row",
-    alignItems: "center",
+  referenceContainer: {
+    width: "100%",
+    maxWidth: 280,
     gap: 8,
-    backgroundColor: Colors.light.surfaceContainerLow,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
+    alignItems: "center",
   },
-  answerLabel: {
+  referenceLabel: {
     color: Colors.light.onSurfaceVariant,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
   },
-  answerText: {
-    color: Colors.light.primary,
-    fontSize: 16,
+  referenceRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    justifyContent: "center",
+  },
+  referenceChip: {
+    backgroundColor: Colors.light.surfaceContainerLow,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
+    minWidth: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  referenceChipText: {
+    color: Colors.light.onSurface,
+    fontSize: 15,
     fontWeight: "700",
   },
   footer: {

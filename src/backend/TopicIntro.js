@@ -1,14 +1,12 @@
 import { SEED_TOPIC_INTRO } from "@/data/seed-topic-intro";
 
 export async function createTopicIntro(db, topicIntro) {
-  const result = await db.runAsync(
-    "INSERT INTO topic_introduction (topic_id, intro_text, example_sentence) VALUES (?, ?, ?)",
+  const created = await db.getFirstAsync(
+    "INSERT INTO topic_introduction (topic_id, intro_text, example_sentence) VALUES (?, ?, ?) RETURNING *",
     topicIntro.topic_id,
     topicIntro.intro_text,
     topicIntro.example_sentence,
   );
-  const topicIntroId = result.lastInsertRowId;
-  const created = await getTopicIntroById(db, topicIntroId);
   if (!created) throw new Error("Failed to create topic intro");
   return created;
 }

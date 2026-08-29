@@ -11,6 +11,7 @@ import {
   getExercisesByTopicIdAndLevel,
   seedExercises,
 } from "@/backend/TopicExercise";
+import { getExerciseTokensByExerciseId } from "@/backend/ExerciseTokens";
 import { getDatabase } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
@@ -23,6 +24,13 @@ interface Exercise {
   prompt: string;
   context_sentence: string | null;
   order_index: number;
+}
+
+interface ExerciseToken {
+  exercise_token_id: number;
+  exercise_id: number;
+  token: string;
+  correct_position: number;
 }
 
 interface Topic {
@@ -74,14 +82,14 @@ const LEVEL_META: Record<string, {
   advanced: {
     title: "Advanced",
     description: "Complex dialogues & technical terms. Negotiating upgrades and resolving disputes.",
-    icon: { ios: "lock.fill", android: "lock", web: "lock" },
-    iconBg: Colors.light.surfaceVariant,
-    iconColor: Colors.light.outline,
-    badgeColor: Colors.light.onSurfaceVariant,
-    badgeText: "Locked",
-    badgeBg: Colors.light.surfaceVariant,
-    progressColor: Colors.light.outline,
-    activeDots: 0,
+    icon: { ios: "checkmark.circle", android: "check_circle", web: "check_circle" },
+    iconBg: Colors.light.secondaryFixedDim,
+    iconColor: Colors.light.onSecondaryContainer,
+    badgeColor: Colors.light.onSecondaryContainer,
+    badgeText: "Available",
+    badgeBg: Colors.light.secondaryContainer,
+    progressColor: Colors.light.onPrimaryContainer,
+    activeDots: 2,
   },
 };
 
@@ -109,6 +117,9 @@ export default function ExercisePage() {
   const [expandedLevel, setExpandedLevel] = useState<string | null>(null);
   const [exercisesByLevel, setExercisesByLevel] = useState<
     Record<string, Exercise[]>
+  >({});
+  const [tokensByExercise, setTokensByExercise] = useState<
+    Record<number, ExerciseToken[]>
   >({});
   const [loadingLevel, setLoadingLevel] = useState<string | null>(null);
 
@@ -151,22 +162,31 @@ export default function ExercisePage() {
         exercises = (await getExercisesByTopicIdAndLevel(db, topicId, level)) ?? [];
       }
 
-      const firstExercise = exercises[0];
-
-      if (firstExercise) {
-        router.push(
-          `/pages/exercise-session?exercise_id=${firstExercise.exercise_id}` as any,
-        );
-        return;
+      const tokensMap: Record<number, ExerciseToken[]> = {};
+      for (const exercise of exercises) {
+        const tokens = await getExerciseTokensByExerciseId(db, exercise.exercise_id);
+        tokensMap[exercise.exercise_id] = tokens ?? [];
       }
 
       setExercisesByLevel((prev) => ({ ...prev, [level]: exercises }));
+      setTokensByExercise((prev) => ({ ...prev, ...tokensMap }));
       setExpandedLevel(level);
     } catch (error) {
       console.error("Failed to load exercises", error);
     } finally {
       setLoadingLevel(null);
     }
+  };
+
+  const getCorrectAnswer = (
+    tokens: ExerciseToken[],
+    exerciseType: string,
+  ): string => {
+    if (tokens.length === 0) return "";
+    return [...tokens]
+      .sort((a, b) => a.correct_position - b.correct_position)
+      .map((t) => t.token)
+      .join(exerciseType === "sentence_builder" ? " " : "");
   };
 
   const isLevelLocked = (level: string): boolean => {
@@ -326,64 +346,108 @@ export default function ExercisePage() {
                                 {exerciseList.length} exercises
                               </ThemedText>
                             </View>
-                            {exerciseList.map((exercise) => {
-                              const typeLabel =
-                                EXERCISE_TYPE_LABELS[exercise.type] ??
-                                exercise.type;
+                             {exerciseList.map((exercise) => {
+                               const typeLabel =
+                                 EXERCISE_TYPE_LABELS[exercise.type] ??
+                                 exercise.type;
+                               const exerciseTokens =
+                                 tokensByExercise[exercise.exercise_id] ?? [];
+                               const correctAnswer = getCorrectAnswer(
+                                 exerciseTokens,
+                                 exercise.type,
+                               );
 
-                              return (
-                                <View
-                                  key={exercise.exercise_id}
-                                  style={styles.exerciseItem}
-                                >
-                                  <View style={styles.exerciseHeader}>
-                                    <ThemedText style={styles.exerciseNumber}>
-                                      #{exercise.order_index}
-                                    </ThemedText>
-                                    <View
-                                      style={[
-                                        styles.exerciseTypeBadge,
-                                        {
-                                          backgroundColor:
-                                            Colors.light.surfaceContainer,
-                                        },
-                                      ]}
-                                    >
-                                      <ThemedText
-                                        style={[
-                                          styles.exerciseType,
-                                          { color: meta.progressColor },
-                                        ]}
-                                      >
-                                        {typeLabel}
-                                      </ThemedText>
-                                    </View>
-                                  </View>
-                                  <ThemedText style={styles.exercisePrompt}>
-                                    {exercise.prompt}
-                                  </ThemedText>
-                                  {exercise.context_sentence && (
-                                    <ThemedText style={styles.exerciseContext}>
-                                      {exercise.context_sentence}
-                                    </ThemedText>
-                                  )}
-                                  {exercise.type === "sentence_builder" && (
-                                    <Pressable
-                                      style={styles.startExerciseButton}
-                                      onPress={() =>
-                                        router.push(
-                                          `/pages/exercise-session?exercise_id=${exercise.exercise_id}&topic_id=${topicId}` as any,
-                                        )
-                                      }
-                                    >
-                                      <ThemedText style={styles.startExerciseButtonText}>
-                                        Start
-                                      </ThemedText>
-                                    </Pressable>
-                                  )}
-                                </View>
-                              );
-                            })}
+                               return (
+                                 <View
+                                   key={exercise.exercise_id}
+                                   style={styles.exerciseItem}
+                                 >
+                                   <View style={styles.exerciseHeader}>
+                                     <ThemedText style={styles.exerciseNumber}>
+                                       #{exercise.order_index}
+                                     </ThemedText>
+                                     <View
+                                       style={[
+                                         styles.exerciseTypeBadge,
+                                         {
+                                           backgroundColor:
+                                             Colors.light.surfaceContainer,
+                                         },
+                                       ]}
+                                     >
+                                       <ThemedText
+                                         style={[
+                                           styles.exerciseType,
+                                           { color: meta.progressColor },
+                                         ]}
+                                       >
+                                         {typeLabel}
+                                       </ThemedText>
+                                     </View>
+                                   </View>
+                                   <ThemedText style={styles.exercisePrompt}>
+                                     {exercise.prompt}
+                                   </ThemedText>
+                                   {exercise.context_sentence && (
+                                     <ThemedText style={styles.exerciseContext}>
+                                       {exercise.context_sentence}
+                                     </ThemedText>
+                                   )}
+                                   {exercise.type === "sentence_builder" &&
+                                      exerciseTokens.length > 0 && (
+                                      <View style={styles.tokensContainer}>
+                                        <ThemedText style={styles.tokensLabel}>
+                                          Arrange these words:
+                                        </ThemedText>
+                                        <ScrollView
+                                          horizontal
+                                          showsHorizontalScrollIndicator={false}
+                                          contentContainerStyle={
+                                            styles.tokensScrollContent
+                                          }
+                                        >
+                                          {exerciseTokens.map((token) => (
+                                            <View
+                                              key={token.exercise_token_id}
+                                              style={styles.tokenChip}
+                                            >
+                                              <ThemedText style={styles.tokenText}>
+                                                {token.token}
+                                              </ThemedText>
+                                            </View>
+                                          ))}
+                                        </ScrollView>
+                                      </View>
+                                    )}
+                                    {(exercise.type === "spelling" ||
+                                       exercise.type ===
+                                         "fill_blank_spelling" ||
+                                       exercise.type === "sentence_builder") &&
+                                       correctAnswer && (
+                                       <View style={styles.tokensContainer}>
+                                         <ThemedText style={styles.tokensLabel}>
+                                           Answer:
+                                         </ThemedText>
+                                         <ThemedText style={styles.tokenText}>
+                                           {correctAnswer}
+                                         </ThemedText>
+                                       </View>
+                                    )}
+                                   <Pressable
+                                     style={styles.startExerciseButton}
+                                     onPress={() =>
+                                       router.push(
+                                         `/pages/exercise-session?exercise_id=${exercise.exercise_id}&topic_id=${topicId}` as any,
+                                       )
+                                     }
+                                   >
+                                     <ThemedText style={styles.startExerciseButtonText}>
+                                       Start
+                                     </ThemedText>
+                                   </Pressable>
+                                 </View>
+                               );
+                             })}
                           </>
                         )}
                         {!isLoading && !hasExercises && (
