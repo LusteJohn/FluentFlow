@@ -13,6 +13,9 @@ import { SymbolView } from "expo-symbols";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
+import { SpellingExercise } from "@/components/exercise/SpellingExercise";
+import { FillBlankExercise } from "@/components/exercise/FillBlankExercise";
+import { SentenceBuilderExercise } from "@/components/exercise/SentenceBuilderExercise";
 import { getTopicById } from "@/backend/Topic";
 import {
   getExercisesByTopicIdAndLevel,
@@ -324,7 +327,6 @@ export default function ExerciseListPage() {
               </ThemedText>
             </View>
 
-            {/* eslint-disable react-hooks/refs */}
             {(() => {
               const exercise = exercises[currentExerciseIndex];
               const typeLabel =
@@ -335,6 +337,46 @@ export default function ExerciseListPage() {
                 exerciseTokens,
                 exercise.type,
               );
+              const answerResult = answerResults[exercise.exercise_id];
+
+              const handleLetterChange = (pos: number, value: string) => {
+                const letters = letterInputs[exercise.exercise_id] ?? [];
+                const newLetters = [...letters];
+                newLetters[pos] = value;
+                setLetterInputs((prev) => ({
+                  ...prev,
+                  [exercise.exercise_id]: newLetters,
+                }));
+              };
+
+              const handleWordToggle = (token: ExerciseToken) => {
+                const current = selectedWords[exercise.exercise_id] ?? [];
+                const isSelected = current.some(
+                  (t) => t.exercise_token_id === token.exercise_token_id,
+                );
+                if (isSelected) {
+                  setSelectedWords((prev) => ({
+                    ...prev,
+                    [exercise.exercise_id]: prev[exercise.exercise_id]?.filter(
+                      (t) => t.exercise_token_id !== token.exercise_token_id,
+                    ) ?? [],
+                  }));
+                } else {
+                  setSelectedWords((prev) => ({
+                    ...prev,
+                    [exercise.exercise_id]: [...(prev[exercise.exercise_id] ?? []), token],
+                  }));
+                }
+              };
+
+              const handleWordRemove = (idx: number) => {
+                setSelectedWords((prev) => ({
+                  ...prev,
+                  [exercise.exercise_id]: prev[exercise.exercise_id]?.filter(
+                    (_, i) => i !== idx,
+                  ) ?? [],
+                }));
+              };
 
               return (
                 <View style={styles.exerciseItem}>
@@ -351,7 +393,7 @@ export default function ExerciseListPage() {
                       <ThemedText
                         style={[
                           styles.exerciseType,
-                          { color: Colors.light.primary },
+                           { color: "#22c55e" },
                         ]}
                       >
                         {typeLabel}
@@ -368,62 +410,26 @@ export default function ExerciseListPage() {
                   )}
                    {exercise.type === "sentence_builder" &&
                      exerciseTokens.length > 0 && (() => {
-                       const shuffled = [...exerciseTokens]
-                         .sort(() => Math.random() - 0.5);
+                       const shuffledTokens =
+                         answerResult === undefined
+                           ? [...exerciseTokens].sort(() => Math.random() - 0.5)
+                           : exerciseTokens;
                        return (
-                       <View style={styles.tokensContainer}>
-                         <ThemedText style={styles.tokensLabel}>
-                           Arrange these words:
-                         </ThemedText>
-                         <View style={styles.wordBoxContainer}>
-                           {shuffled.map((token) => {
-                             const isSelected =
-                               (selectedWords[exercise.exercise_id] ?? []).some(
-                                 (t) => t.exercise_token_id === token.exercise_token_id,
-                               );
-                             return (
-                                <Pressable
-                                  key={token.exercise_token_id}
-                                  style={[
-                                    styles.wordBox,
-                                    isSelected && styles.wordBoxSelected,
-                                  ]}
-                                  disabled={answerResults[exercise.exercise_id] === true}
-                                  onPress={() => {
-                                   if (isSelected) {
-                                     setSelectedWords((prev) => ({
-                                       ...prev,
-                                       [exercise.exercise_id]: prev[exercise.exercise_id]?.filter(
-                                         (t) => t.exercise_token_id !== token.exercise_token_id,
-                                       ) ?? [],
-                                     }));
-                                   } else {
-                                     setSelectedWords((prev) => ({
-                                       ...prev,
-                                       [exercise.exercise_id]: [
-                                         ...(prev[exercise.exercise_id] ?? []),
-                                         token,
-                                       ],
-                                     }));
-                                   }
-                                 }}
-                               >
-                                 <ThemedText
-                                   style={[
-                                     styles.tokenText,
-                                     isSelected && styles.tokenTextSelected,
-                                   ]}
-                                 >
-                                   {token.token}
-                                 </ThemedText>
-                               </Pressable>
-                             );
-                           })}
+                         <View style={styles.tokensContainer}>
+                           <ThemedText style={styles.tokensLabel}>
+                             Arrange these words:
+                           </ThemedText>
+                           <SentenceBuilderExercise
+                             tokens={shuffledTokens}
+                             selectedWords={selectedWords[exercise.exercise_id] ?? []}
+                             answerResult={answerResult}
+                             onWordToggle={handleWordToggle}
+                             onWordRemove={handleWordRemove}
+                           />
                          </View>
-                       </View>
                        );
                      })()}
-                  {correctAnswer && (
+                   {correctAnswer && (
                     <View style={styles.tokensContainer}>
                       <ThemedText style={styles.tokensLabel}>
                         Answer:
@@ -436,71 +442,16 @@ export default function ExerciseListPage() {
                   <View style={styles.answerForm}>
                     {exercise.type === "spelling" ? (
                       <>
-                        {exerciseTokens.length > 0 && (() => {
-                          return (
-                            <ScrollView
-                              horizontal
-                              showsHorizontalScrollIndicator={false}
-                              contentContainerStyle={styles.letterBoxesRow}
-                            >
-                              {exerciseTokens.map((token) => {
-                                const pos = token.correct_position;
-                                const letters =
-                                  letterInputs[exercise.exercise_id] ?? [];
-                                const currentLetter = letters[pos] ?? "";
-                                const hasError =
-                                  answerResults[exercise.exercise_id] === false;
-                                const isCorrect =
-                                  answerResults[exercise.exercise_id] === true;
-
-                                return (
-                                  <TextInput
-                                    key={token.exercise_token_id}
-                                    ref={(el) => {
-                                      if (!letterInputRefs.current[exercise.exercise_id]) {
-                                        letterInputRefs.current[exercise.exercise_id] = [];
-                                      }
-                                      letterInputRefs.current[exercise.exercise_id][pos] = el;
-                                    }}
-                                    style={[
-                                      styles.letterBox,
-                                      isCorrect && styles.letterBoxCorrect,
-                                      hasError && styles.letterBoxIncorrect,
-                                    ]}
-                                    maxLength={1}
-                                    textAlign="center"
-                                    value={currentLetter}
-                                    keyboardType="default"
-                                    autoCapitalize="characters"
-                                    editable={!isCorrect}
-                                    onChangeText={(text) => {
-                                      const newLetters = [...letters];
-                                      newLetters[pos] = text.slice(-1).toUpperCase();
-                                      setLetterInputs((prev) => ({
-                                        ...prev,
-                                        [exercise.exercise_id]: newLetters,
-                                      }));
-                                      if (text.slice(-1) && pos < exerciseTokens.length - 1) {
-                                        const nextRef = letterInputRefs.current[exercise.exercise_id]?.[pos + 1];
-                                        if (nextRef) {
-                                          nextRef.focus();
-                                        }
-                                      }
-                                    }}
-                                    onSubmitEditing={() => {
-                                      if (pos < exerciseTokens.length - 1) {
-                                        const nextRef = letterInputRefs.current[exercise.exercise_id]?.[pos + 1];
-                                        if (nextRef) {
-                                          nextRef.focus();
-                                        }
-                                      }
-                                    }}
-                                  />
-                                );
-                              })}
-                            </ScrollView>
-                          );
-                        })()}
+                        {exerciseTokens.length > 0 && (
+                          <SpellingExercise
+                            tokens={exerciseTokens}
+                            letters={letterInputs[exercise.exercise_id] ?? []}
+                            answerResult={answerResult}
+                            letterRefs={letterInputRefs}
+                            exerciseId={exercise.exercise_id}
+                            onLetterChange={handleLetterChange}
+                          />
+                        )}
                       </>
                     ) : exercise.type === "sentence_builder" ? (
                       <View>
@@ -516,14 +467,7 @@ export default function ExerciseListPage() {
                                   <Pressable
                                     key={`${word.exercise_token_id}-${idx}`}
                                     style={styles.arrangedWordBox}
-                                    onPress={() => {
-                                      setSelectedWords((prev) => ({
-                                        ...prev,
-                                        [exercise.exercise_id]: prev[exercise.exercise_id]?.filter(
-                                          (_, i) => i !== idx,
-                                        ) ?? [],
-                                      }));
-                                    }}
+                                    onPress={() => handleWordRemove(idx)}
                                   >
                                     <ThemedText style={styles.arrangedWordText}>
                                       {word.token}
@@ -536,24 +480,15 @@ export default function ExerciseListPage() {
                         )}
                       </View>
                     ) : (
-                       <TextInput
-                        style={[
-                          styles.answerInput,
-                          answerResults[exercise.exercise_id] === false &&
-                            styles.answerInputIncorrect,
-                          answerResults[exercise.exercise_id] === true &&
-                            styles.answerInputCorrect,
-                        ]}
-                        placeholder="Type your answer..."
-                        placeholderTextColor={Colors.light.onSurfaceVariant}
+                      <FillBlankExercise
                         value={submittedAnswers[exercise.exercise_id] ?? ""}
-                         onChangeText={(text) =>
+                        onChangeText={(text) =>
                           setSubmittedAnswers((prev) => ({
                             ...prev,
                             [exercise.exercise_id]: text,
                           }))
                         }
-                        editable={answerResults[exercise.exercise_id] !== true}
+                        answerResult={answerResult}
                       />
                     )}
                     <Pressable
@@ -570,30 +505,29 @@ export default function ExerciseListPage() {
                           isSubmitDisabled(exercise) &&
                             styles.submitButtonTextDisabled,
                         ]}
-                       >
-                        {answerResults[exercise.exercise_id] === true
-                          ? "Correct!"
-                          : "Submit"}
+                      >
+                        {answerResult === true ? "Correct!" : "Submit"}
                       </ThemedText>
                     </Pressable>
                   </View>
-                   {answerResults[exercise.exercise_id] === true && (
-                     <View style={styles.successBanner}>
-                       <ThemedText style={styles.successBannerText}>
-                         Correct!
-                       </ThemedText>
-                     </View>
-                   )}
-                   {answerResults[exercise.exercise_id] === false && (
-                     <View style={styles.errorBanner}>
-                       <ThemedText style={styles.errorBannerText}>
-                         Incorrect. The correct answer is: {correctAnswer}
-                       </ThemedText>
-                     </View>
-                   )}
+                  {answerResult === true && (
+                    <View style={styles.successBanner}>
+                      <ThemedText style={styles.successBannerText}>
+                        Correct!
+                      </ThemedText>
+                    </View>
+                  )}
+                  {answerResult === false && (
+                    <View style={styles.errorBanner}>
+                      <ThemedText style={styles.errorBannerText}>
+                        Incorrect. The correct answer is: {correctAnswer}
+                      </ThemedText>
+                    </View>
+                  )}
                 </View>
               );
             })()}
+
 
             <View style={styles.arrowNav}>
               <Pressable
@@ -607,7 +541,7 @@ export default function ExerciseListPage() {
                 <SymbolView
                   name={{ ios: "chevron.left", android: "arrow_back_ios", web: "arrow_back_ios" } as any}
                   size={28}
-                  tintColor={currentExerciseIndex === 0 ? Colors.light.onSurfaceVariant : Colors.light.primary}
+                  tintColor={currentExerciseIndex === 0 ? Colors.light.onSurfaceVariant : "#22c55e"}
                 />
               </Pressable>
               <Pressable
@@ -621,7 +555,7 @@ export default function ExerciseListPage() {
                 <SymbolView
                   name={{ ios: "chevron.right", android: "arrow_forward_ios", web: "arrow_forward_ios" } as any}
                   size={28}
-                  tintColor={currentExerciseIndex === exercises.length - 1 ? Colors.light.onSurfaceVariant : Colors.light.primary}
+                  tintColor={currentExerciseIndex === exercises.length - 1 ? Colors.light.onSurfaceVariant : "#22c55e"}
                 />
               </Pressable>
             </View>
@@ -678,7 +612,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.outlineVariant,
   },
   pageTitle: {
-    color: Colors.light.primary,
+    color: "#22c55e",
     fontSize: 22,
     fontWeight: "700",
     lineHeight: 28,
@@ -715,7 +649,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: Colors.light.surfaceContainer,
-    shadowColor: Colors.light.primary,
+     shadowColor: "#22c55e",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -778,53 +712,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     gap: 12,
     marginTop: 8,
-    alignItems: "stretch",
-  },
-  answerInput: {
-    width: "100%",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    fontSize: 15,
-    fontWeight: "500",
-    color: Colors.light.onSurface,
-  },
-  answerInputCorrect: {
-    borderColor: Colors.light.primary,
-    backgroundColor: Colors.light.primaryContainer,
-  },
-  answerInputIncorrect: {
-    borderColor: Colors.light.error,
-    backgroundColor: Colors.light.errorContainer,
-  },
-   wordBox: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    marginRight: 8,
-    marginBottom: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  wordBoxContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 8,
-  },
-  wordBoxSelected: {
-    backgroundColor: Colors.light.primaryContainer,
-    borderColor: Colors.light.primary,
-  },
-  tokenTextSelected: {
-    color: Colors.light.primary,
-    fontWeight: "600",
+     alignItems: "stretch",
   },
   arrangedWordsContainer: {
     marginTop: 12,
@@ -837,21 +725,21 @@ const styles = StyleSheet.create({
   arrangedWordBox: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: Colors.light.primaryContainer,
+    backgroundColor: "#dcfce7",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.light.primary,
+    borderColor: "#22c55e",
     marginRight: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   arrangedWordText: {
-    color: Colors.light.primary,
+    color: "#166534",
     fontSize: 16,
     fontWeight: "500",
   },
   submitButton: {
-    backgroundColor: Colors.light.primary,
+    backgroundColor: "#22c55e",
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
@@ -863,7 +751,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.surfaceVariant,
   },
   submitButtonText: {
-    color: Colors.light.onPrimary,
+    color: "#ffffff",
     fontSize: 14,
     fontWeight: "600",
   },
@@ -878,7 +766,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   successBannerText: {
-    color: Colors.light.onPrimary,
+    color: "#ffffff",
     fontSize: 14,
     fontWeight: "600",
   },
@@ -904,11 +792,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.light.primaryContainer,
+    backgroundColor: "#dcfce7",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: Colors.light.primary,
+    borderColor: "#22c55e",
     borderBottomWidth: 3,
   },
   arrowButtonDisabled: {
@@ -929,30 +817,6 @@ const styles = StyleSheet.create({
   },
   paginationDotActive: {
     width: 24,
-    backgroundColor: Colors.light.primary,
-  },
-  letterBoxesRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-  },
-  letterBox: {
-    width: 48,
-    height: 56,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: Colors.light.outlineVariant,
-    fontSize: 24,
-    fontWeight: "600",
-    color: Colors.light.onSurface,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-  },
-  letterBoxCorrect: {
-    borderColor: Colors.light.primary,
-    backgroundColor: Colors.light.primaryContainer,
-  },
-  letterBoxIncorrect: {
-    borderColor: Colors.light.error,
-    backgroundColor: Colors.light.errorContainer,
+    backgroundColor: "#22c55e",
   },
 });
