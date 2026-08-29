@@ -57,8 +57,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.outlineVariant,
   },
   answerInputCorrect: {
-    borderColor: "#22c55e",
-    backgroundColor: "#dcfce7",
+    borderColor: Colors.light.primary,
+    backgroundColor: Colors.light.primaryContainer,
   },
   answerInputIncorrect: {
     borderColor: Colors.light.error,
