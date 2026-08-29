@@ -40,7 +40,7 @@ const LEVEL_META: Record<string, {
     iconBg: "#fff4e5",
     iconColor: "#795900",
     badgeColor: "#6f5100",
-    badgeText: "Completed",
+    badgeText: "Available",
     badgeBg: Colors.light.secondaryContainer,
     progressColor: Colors.light.primary,
     activeDots: 3,
@@ -52,7 +52,7 @@ const LEVEL_META: Record<string, {
     iconBg: "#fff4e5",
     iconColor: "#0058be",
     badgeColor: "#6f5100",
-    badgeText: "Current",
+    badgeText: "Available",
     badgeBg: Colors.light.secondaryContainer,
     progressColor: Colors.light.primary,
     activeDots: 2,
@@ -172,7 +172,6 @@ export default function ExercisePage() {
                 <View
                   style={[
                     styles.levelCardHeader,
-                    level === "intermediate" && styles.levelCardActive,
                   ]}
                 >
                   <View
