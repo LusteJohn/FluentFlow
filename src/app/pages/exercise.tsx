@@ -7,31 +7,9 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { getTopicById } from "@/backend/Topic";
-import {
-  getExercisesByTopicIdAndLevel,
-  seedExercises,
-} from "@/backend/TopicExercise";
-import { getExerciseTokensByExerciseId } from "@/backend/ExerciseTokens";
 import { getDatabase } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
-
-interface Exercise {
-  exercise_id: number;
-  topic_id: number;
-  level: string;
-  type: string;
-  prompt: string;
-  context_sentence: string | null;
-  order_index: number;
-}
-
-interface ExerciseToken {
-  exercise_token_id: number;
-  exercise_id: number;
-  token: string;
-  correct_position: number;
-}
 
 interface Topic {
   topic_id: number;
@@ -93,12 +71,6 @@ const LEVEL_META: Record<string, {
   },
 };
 
-const EXERCISE_TYPE_LABELS: Record<string, string> = {
-  spelling: "Spelling",
-  fill_blank_spelling: "Fill in the Blank",
-  sentence_builder: "Sentence Builder",
-};
-
 const JOURNEY_ICONS: Record<number, any> = {
   1: { ios: "house.fill", android: "home", web: "home" },
   2: { ios: "book.fill", android: "school", web: "school" },
@@ -110,18 +82,9 @@ const JOURNEY_ICONS: Record<number, any> = {
 
 export default function ExercisePage() {
   const { topic_id } = useLocalSearchParams<{ topic_id: string }>();
-  const topicId = topic_id;
   const router = useRouter();
   const [topicTitle, setTopicTitle] = useState<string>("Exercises");
   const [journeyId, setJourneyId] = useState<number | null>(null);
-  const [expandedLevel, setExpandedLevel] = useState<string | null>(null);
-  const [exercisesByLevel, setExercisesByLevel] = useState<
-    Record<string, Exercise[]>
-  >({});
-  const [tokensByExercise, setTokensByExercise] = useState<
-    Record<number, ExerciseToken[]>
-  >({});
-  const [loadingLevel, setLoadingLevel] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -130,8 +93,8 @@ export default function ExercisePage() {
       async function loadData() {
         try {
           const db = await getDatabase();
-          const topicId = parseInt(topic_id ?? "1", 10);
-          const topic = (await getTopicById(db, topicId)) as Topic | null;
+          const topicIdNum = parseInt(topic_id ?? "1", 10);
+          const topic = (await getTopicById(db, topicIdNum)) as Topic | null;
           if (isActive) {
             setTopicTitle(topic?.title ?? "Exercises");
             setJourneyId(topic?.journey_id ?? null);
@@ -149,44 +112,10 @@ export default function ExercisePage() {
     }, [topic_id]),
   );
 
-  const handleViewExercises = async (level: string) => {
-    setLoadingLevel(level);
-    try {
-      const db = await getDatabase();
-      const topicId = parseInt(topic_id ?? "1", 10);
-      let exercises: Exercise[] =
-        (await getExercisesByTopicIdAndLevel(db, topicId, level)) ?? [];
-
-      if (exercises.length === 0) {
-        await seedExercises(db);
-        exercises = (await getExercisesByTopicIdAndLevel(db, topicId, level)) ?? [];
-      }
-
-      const tokensMap: Record<number, ExerciseToken[]> = {};
-      for (const exercise of exercises) {
-        const tokens = await getExerciseTokensByExerciseId(db, exercise.exercise_id);
-        tokensMap[exercise.exercise_id] = tokens ?? [];
-      }
-
-      setExercisesByLevel((prev) => ({ ...prev, [level]: exercises }));
-      setTokensByExercise((prev) => ({ ...prev, ...tokensMap }));
-      setExpandedLevel(level);
-    } catch (error) {
-      console.error("Failed to load exercises", error);
-    } finally {
-      setLoadingLevel(null);
-    }
-  };
-
-  const getCorrectAnswer = (
-    tokens: ExerciseToken[],
-    exerciseType: string,
-  ): string => {
-    if (tokens.length === 0) return "";
-    return [...tokens]
-      .sort((a, b) => a.correct_position - b.correct_position)
-      .map((t) => t.token)
-      .join(exerciseType === "sentence_builder" ? " " : "");
+  const handleViewExercises = (level: string) => {
+    router.push(
+      `/pages/exercise-list?topic_id=${topic_id}&level=${level}` as any,
+    );
   };
 
   const isLevelLocked = (level: string): boolean => {
@@ -237,10 +166,6 @@ export default function ExercisePage() {
           {LEVELS.map((level) => {
             const meta = LEVEL_META[level];
             const locked = isLevelLocked(level);
-            const exerciseList = exercisesByLevel[level] ?? [];
-            const hasExercises = exerciseList.length > 0;
-            const isExpanded = expandedLevel === level;
-            const isLoading = loadingLevel === level;
 
             return (
               <View key={level} style={styles.levelCard}>
@@ -256,19 +181,11 @@ export default function ExercisePage() {
                       { backgroundColor: meta.iconBg },
                     ]}
                   >
-                    {locked ? (
-                      <SymbolView
-                        name={meta.icon as any}
-                        size={28}
-                        tintColor={meta.iconColor}
-                      />
-                    ) : (
-                      <SymbolView
-                        name={meta.icon as any}
-                        size={28}
-                        tintColor={meta.iconColor}
-                      />
-                    )}
+                    <SymbolView
+                      name={meta.icon as any}
+                      size={28}
+                      tintColor={meta.iconColor}
+                    />
                   </View>
                   <View style={styles.levelContent}>
                     <View style={styles.levelTitleRow}>
@@ -317,147 +234,19 @@ export default function ExercisePage() {
                 </View>
 
                 {!locked && (
-                  <>
-                    <View style={styles.viewButtonContainer}>
-                      <Pressable
-                        style={({ pressed }) => [
-                          styles.viewButton,
-                          pressed && styles.viewButtonPressed,
-                        ]}
-                        onPress={() => handleViewExercises(level)}
-                      >
-                        <ThemedText style={styles.viewButtonText}>
-                          {isExpanded ? "Hide Exercises" : "View Exercises"}
-                        </ThemedText>
-                      </Pressable>
-                    </View>
-
-                    {isExpanded && (
-                      <View style={styles.exercisesContainer}>
-                        {isLoading && (
-                          <ThemedText style={styles.loadingText}>
-                            Loading exercises...
-                          </ThemedText>
-                        )}
-                        {!isLoading && hasExercises && (
-                          <>
-                            <View style={styles.exerciseCount}>
-                              <ThemedText style={styles.exerciseCountText}>
-                                {exerciseList.length} exercises
-                              </ThemedText>
-                            </View>
-                             {exerciseList.map((exercise) => {
-                               const typeLabel =
-                                 EXERCISE_TYPE_LABELS[exercise.type] ??
-                                 exercise.type;
-                               const exerciseTokens =
-                                 tokensByExercise[exercise.exercise_id] ?? [];
-                               const correctAnswer = getCorrectAnswer(
-                                 exerciseTokens,
-                                 exercise.type,
-                               );
-
-                               return (
-                                 <View
-                                   key={exercise.exercise_id}
-                                   style={styles.exerciseItem}
-                                 >
-                                   <View style={styles.exerciseHeader}>
-                                     <ThemedText style={styles.exerciseNumber}>
-                                       #{exercise.order_index}
-                                     </ThemedText>
-                                     <View
-                                       style={[
-                                         styles.exerciseTypeBadge,
-                                         {
-                                           backgroundColor:
-                                             Colors.light.surfaceContainer,
-                                         },
-                                       ]}
-                                     >
-                                       <ThemedText
-                                         style={[
-                                           styles.exerciseType,
-                                           { color: meta.progressColor },
-                                         ]}
-                                       >
-                                         {typeLabel}
-                                       </ThemedText>
-                                     </View>
-                                   </View>
-                                   <ThemedText style={styles.exercisePrompt}>
-                                     {exercise.prompt}
-                                   </ThemedText>
-                                   {exercise.context_sentence && (
-                                     <ThemedText style={styles.exerciseContext}>
-                                       {exercise.context_sentence}
-                                     </ThemedText>
-                                   )}
-                                   {exercise.type === "sentence_builder" &&
-                                      exerciseTokens.length > 0 && (
-                                      <View style={styles.tokensContainer}>
-                                        <ThemedText style={styles.tokensLabel}>
-                                          Arrange these words:
-                                        </ThemedText>
-                                        <ScrollView
-                                          horizontal
-                                          showsHorizontalScrollIndicator={false}
-                                          contentContainerStyle={
-                                            styles.tokensScrollContent
-                                          }
-                                        >
-                                          {exerciseTokens.map((token) => (
-                                            <View
-                                              key={token.exercise_token_id}
-                                              style={styles.tokenChip}
-                                            >
-                                              <ThemedText style={styles.tokenText}>
-                                                {token.token}
-                                              </ThemedText>
-                                            </View>
-                                          ))}
-                                        </ScrollView>
-                                      </View>
-                                    )}
-                                    {(exercise.type === "spelling" ||
-                                       exercise.type ===
-                                         "fill_blank_spelling" ||
-                                       exercise.type === "sentence_builder") &&
-                                       correctAnswer && (
-                                       <View style={styles.tokensContainer}>
-                                         <ThemedText style={styles.tokensLabel}>
-                                           Answer:
-                                         </ThemedText>
-                                         <ThemedText style={styles.tokenText}>
-                                           {correctAnswer}
-                                         </ThemedText>
-                                       </View>
-                                    )}
-                                   <Pressable
-                                     style={styles.startExerciseButton}
-                                     onPress={() =>
-                                       router.push(
-                                         `/pages/exercise-session?exercise_id=${exercise.exercise_id}&topic_id=${topicId}` as any,
-                                       )
-                                     }
-                                   >
-                                     <ThemedText style={styles.startExerciseButtonText}>
-                                       Start
-                                     </ThemedText>
-                                   </Pressable>
-                                 </View>
-                               );
-                             })}
-                          </>
-                        )}
-                        {!isLoading && !hasExercises && (
-                          <ThemedText style={styles.noExercisesText}>
-                            No exercises available for this level yet.
-                          </ThemedText>
-                        )}
-                      </View>
-                    )}
-                  </>
+                  <View style={styles.viewButtonContainer}>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.viewButton,
+                        pressed && styles.viewButtonPressed,
+                      ]}
+                      onPress={() => handleViewExercises(level)}
+                    >
+                      <ThemedText style={styles.viewButtonText}>
+                        View Exercises
+                      </ThemedText>
+                    </Pressable>
+                  </View>
                 )}
               </View>
             );
@@ -647,125 +436,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     lineHeight: 20,
-  },
-  exercisesContainer: {
-    padding: 16,
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.surfaceContainer,
-  },
-  exerciseCount: {
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.outlineVariant,
-  },
-  exerciseCountText: {
-    fontSize: 13,
-    fontWeight: "500",
-    lineHeight: 18,
-    color: Colors.light.onSurfaceVariant,
-  },
-  exerciseItem: {
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.surfaceContainer,
-    gap: 6,
-  },
-  exerciseHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  exerciseNumber: {
-    fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 18,
-    color: Colors.light.onSurface,
-  },
-  exerciseTypeBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  exerciseType: {
-    fontSize: 12,
-    fontWeight: "600",
-    lineHeight: 16,
-  },
-  exercisePrompt: {
-    fontSize: 15,
-    fontWeight: "500",
-    lineHeight: 22,
-    color: Colors.light.onSurface,
-  },
-  exerciseContext: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontStyle: "italic",
-    color: Colors.light.onSurfaceVariant,
-    marginTop: 2,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: Colors.light.onSurfaceVariant,
-    fontStyle: "italic",
-    textAlign: "center",
-    paddingVertical: 12,
-  },
-  noExercisesText: {
-    fontSize: 14,
-    color: Colors.light.onSurfaceVariant,
-    textAlign: "center",
-    paddingVertical: 12,
-  },
-  tokensContainer: {
-    marginTop: 8,
-    gap: 6,
-  },
-  tokensLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: Colors.light.onSurfaceVariant,
-    marginBottom: 4,
-  },
-  tokensScrollContent: {
-    gap: 8,
-    alignItems: "center",
-  },
-  tokenChip: {
-    backgroundColor: Colors.light.surfaceContainerHigh,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.light.surfaceContainer,
-  },
-  tokenText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.light.onSurface,
-  },
-  startExerciseButton: {
-    backgroundColor: Colors.light.primary,
-    paddingVertical: 14,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 12,
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.light.primaryContainer,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  startExerciseButtonText: {
-    color: Colors.light.onPrimary,
-    fontSize: 16,
-    fontWeight: "600",
-    letterSpacing: 0.5,
   },
 });
