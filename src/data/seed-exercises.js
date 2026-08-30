@@ -9,6 +9,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the meal you eat in the morning.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 2,
@@ -18,6 +19,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to stop sleeping.\"",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 3,
@@ -27,6 +29,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a device that wakes you up.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 4,
@@ -36,6 +39,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word describing actions done regularly.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 5,
@@ -45,6 +49,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the time you usually go to sleep.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -55,6 +60,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "He always ___ (check) his phone before bed.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 7,
@@ -64,6 +70,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "She usually ___ (finish) her homework before dinner.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 8,
@@ -73,6 +80,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "We rarely ___ (watch) TV during the week.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 9,
@@ -82,6 +90,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "My parents ___ (leave) for work at 8 AM.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 10,
@@ -91,6 +100,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "My sister ___ (brush) her hair every morning.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -101,6 +111,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 12,
@@ -110,6 +121,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 13,
@@ -119,6 +131,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 14,
@@ -128,6 +141,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 15,
@@ -137,6 +151,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 2
     // -- beginner (spelling) --
@@ -148,6 +163,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a sliding storage box.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 17,
@@ -157,6 +173,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a place to sit and watch TV.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 18,
@@ -166,6 +183,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a flat surface used for storage.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 19,
@@ -175,6 +193,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a home device like a fridge.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 20,
@@ -184,6 +203,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a cabinet used for storage.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -194,6 +214,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The mirror hangs ___ (above) the sink.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 22,
@@ -203,6 +224,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The trash can is ___ (beside) the kitchen counter.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 23,
@@ -212,6 +234,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The washing machine is located ___ (near) the bathroom.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 24,
@@ -221,6 +244,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The vacuum cleaner is kept ___ (inside) the closet.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 25,
@@ -230,6 +254,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The plates are ___ (in) the cupboard.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -240,6 +265,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 27,
@@ -249,6 +275,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 28,
@@ -258,6 +285,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 29,
@@ -267,6 +295,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 30,
@@ -276,6 +305,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 3
     // -- beginner (spelling) --
@@ -287,6 +317,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a brother or sister.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 32,
@@ -296,6 +327,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the child of your aunt or uncle.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 33,
@@ -305,6 +337,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a family member.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 34,
@@ -314,6 +347,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a family living together.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 35,
@@ -323,6 +357,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"older\" within a family.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -333,6 +368,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This laptop is ___ (I), not my brother's.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 37,
@@ -342,6 +378,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The decision is ___ (he) to make, not mine.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 38,
@@ -351,6 +388,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Those seats are ___ (we), not theirs.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 39,
@@ -360,6 +398,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Is that jacket ___ (you) or your brother's?",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 40,
@@ -369,6 +408,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This is ___ (their) house.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -379,6 +419,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 42,
@@ -388,6 +429,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 43,
@@ -397,6 +439,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 44,
@@ -406,6 +449,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 45,
@@ -415,6 +459,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 4
     // -- beginner (spelling) --
@@ -426,6 +471,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for cleaning a floor with a broom.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 47,
@@ -435,6 +481,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for clothes that need washing.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 48,
@@ -444,6 +491,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for cleaning using a vacuum cleaner.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 49,
@@ -453,6 +501,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for making a place neat.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 50,
@@ -462,6 +511,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for removing dust from surfaces.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -472,6 +522,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Right now, my mom ___ (dust) the bookshelves.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 52,
@@ -481,6 +532,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "My brother ___ (vacuum) the hallway carpet right now.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 53,
@@ -490,6 +542,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "They ___ (wash) the car in the driveway now.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 54,
@@ -499,6 +552,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "While I cook, my sister ___ (set) the table.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 55,
@@ -508,6 +562,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "My father ___ (mow) the lawn right now.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -518,6 +573,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 57,
@@ -527,6 +583,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 58,
@@ -536,6 +593,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 59,
@@ -545,6 +603,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 60,
@@ -554,6 +613,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 5
     // -- beginner (spelling) --
@@ -565,6 +625,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a direction telling someone what to do.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 62,
@@ -574,6 +635,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to secure with a key.\"",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 63,
@@ -583,6 +645,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to disconnect from power.\"",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 64,
@@ -592,6 +655,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for helping someone remember.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 65,
@@ -601,6 +665,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"a direction or command.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -611,6 +676,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (remind) me to buy groceries later.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 67,
@@ -620,6 +686,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Always ___ (switch off) the lights when leaving a room.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 68,
@@ -629,6 +696,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Please ___ (follow) the instructions carefully.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 69,
@@ -638,6 +706,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (unplug) all appliances during a storm.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 70,
@@ -647,6 +716,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (lock) the door before you sleep.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -657,6 +727,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 72,
@@ -666,6 +737,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 73,
@@ -675,6 +747,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 74,
@@ -684,6 +757,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 75,
@@ -693,6 +767,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 6
     // -- beginner (spelling) --
@@ -704,6 +779,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a student in your class.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 77,
@@ -713,6 +789,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the doer of the action in a sentence.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 78,
@@ -722,6 +799,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a task given by a teacher.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 79,
@@ -731,6 +809,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for being present at school.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 80,
@@ -740,6 +819,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a talk given to teach a subject.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -750,6 +830,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Each of the students ___ (have) a different assignment.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 82,
@@ -759,6 +840,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The list of rules ___ (be) posted on the wall.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 83,
@@ -768,6 +850,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The class, along with the teacher, ___ (attend) the assembly.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 84,
@@ -777,6 +860,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "A number of students ___ (miss) the lecture yesterday.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 85,
@@ -786,6 +870,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "My teacher ___ (give) homework every Friday.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -796,6 +881,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 87,
@@ -805,6 +891,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 88,
@@ -814,6 +901,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 89,
@@ -823,6 +911,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 90,
@@ -832,6 +921,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 7
     // -- beginner (spelling) --
@@ -843,6 +933,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the room where classes happen.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 92,
@@ -852,6 +943,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a course of study like Math.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 93,
@@ -861,6 +953,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a plan of times for classes.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 94,
@@ -870,6 +963,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the time something must be finished.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 95,
@@ -879,6 +973,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to make something clear.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -889,6 +984,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (how) long does the lesson usually last?",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 97,
@@ -898,6 +994,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (who) is responsible for organizing the event?",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 98,
@@ -907,6 +1004,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Could you ___ (explain) how to solve this problem?",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 99,
@@ -916,6 +1014,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (when) is the assignment deadline?",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 100,
@@ -925,6 +1024,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (why) are you late for class?",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -935,6 +1035,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 102,
@@ -944,6 +1045,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 103,
@@ -953,6 +1055,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 104,
@@ -962,6 +1065,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 105,
@@ -971,6 +1075,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 8
     // -- beginner (spelling) --
@@ -982,6 +1087,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a book used to study a subject.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 107,
@@ -991,6 +1097,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a formal test of knowledge.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 108,
@@ -1000,6 +1107,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for half of a school year.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 109,
@@ -1009,6 +1117,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for subjects taught in a school program.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 110,
@@ -1018,6 +1127,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for an optional subject.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -1028,6 +1138,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (the) curriculum this year includes more Science subjects.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 112,
@@ -1037,6 +1148,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I have ___ (an) important exam next week.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 113,
@@ -1046,6 +1158,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This is ___ (the) hardest exam I've taken this semester.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 114,
@@ -1055,6 +1168,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (a) new semester always brings new challenges.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 115,
@@ -1064,6 +1178,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I need ___ (a) new textbook for Science.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -1074,6 +1189,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 117,
@@ -1083,6 +1199,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 118,
@@ -1092,6 +1209,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 119,
@@ -1101,6 +1219,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 120,
@@ -1110,6 +1229,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 9
     // -- beginner (spelling) --
@@ -1121,6 +1241,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for skill to do something.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 122,
@@ -1130,6 +1251,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for an official instruction.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 123,
@@ -1139,6 +1261,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for approval to do something.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 124,
@@ -1148,6 +1271,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to suggest something as useful.\"",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 125,
@@ -1157,6 +1281,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for something a person is required to do.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -1167,6 +1292,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "We ___ (must) follow the school rules at all times.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 127,
@@ -1176,6 +1302,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I ___ (recommend) reviewing chapter three before the test.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 128,
@@ -1185,6 +1312,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Attending assembly is an ___ (obligation) for all students.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 129,
@@ -1194,6 +1322,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "You ___ (should) ask the teacher if you don't understand.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 130,
@@ -1203,6 +1332,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "You ___ (must) wear your uniform to school.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -1213,6 +1343,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 132,
@@ -1222,6 +1353,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 133,
@@ -1231,6 +1363,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 134,
@@ -1240,6 +1373,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 135,
@@ -1249,6 +1383,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 10
     // -- beginner (spelling) --
@@ -1260,6 +1395,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to complete a course of study.\"",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 137,
@@ -1269,6 +1405,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a planned piece of work.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 138,
@@ -1278,6 +1415,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"a decided course of action.\"",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 139,
@@ -1287,6 +1425,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to make ready in advance.\"",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 140,
@@ -1296,6 +1435,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to successfully reach a goal.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -1306,6 +1446,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "She ___ (will) achieve her goal if she keeps working hard.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 142,
@@ -1315,6 +1456,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "They ___ (be/going) to attend the graduation ceremony.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 143,
@@ -1324,6 +1466,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "He plans to ___ (achieve) high grades this semester.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 144,
@@ -1333,6 +1476,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I ___ (will) help you prepare for the exam.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 145,
@@ -1342,6 +1486,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I ___ (will) prepare for the test tomorrow.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -1352,6 +1497,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 147,
@@ -1361,6 +1507,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 148,
@@ -1370,6 +1517,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 149,
@@ -1379,6 +1527,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 150,
@@ -1388,6 +1537,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 11
     // -- beginner (spelling) --
@@ -1399,6 +1549,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a list of food and drinks.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 152,
@@ -1408,6 +1559,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a person who serves food.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 153,
@@ -1417,6 +1569,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a drink.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 154,
@@ -1426,6 +1579,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for an arrangement to hold a table.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 155,
@@ -1435,6 +1589,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to politely ask for something.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -1445,6 +1600,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (may) I have another napkin, please?",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 157,
@@ -1454,6 +1610,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "We would like to ___ (request) a quiet table.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 158,
@@ -1463,6 +1620,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "What ___ (beverage) would you like with your meal?",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 159,
@@ -1472,6 +1630,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I would like to speak with the ___ (waiter) about the order.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 160,
@@ -1481,6 +1640,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I ___ (would) like a table for two.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -1491,6 +1651,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 162,
@@ -1500,6 +1661,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 163,
@@ -1509,6 +1671,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 164,
@@ -1518,6 +1681,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 165,
@@ -1527,6 +1691,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 12
     // -- beginner (spelling) --
@@ -1538,6 +1703,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a component used to prepare food.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 167,
@@ -1547,6 +1713,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for an amount of food served to one person.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 168,
@@ -1556,6 +1723,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a particular food prepared a certain way.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 169,
@@ -1565,6 +1733,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"enough for a purpose.\"",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 170,
@@ -1574,6 +1743,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a helping or amount of food.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -1584,6 +1754,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I don't think this portion is ___ (sufficient) for two people.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 172,
@@ -1593,6 +1764,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Could I get a bigger ___ (serving) of noodles?",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 173,
@@ -1602,6 +1774,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "There are too ___ (many) toppings on this pizza.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 174,
@@ -1611,6 +1784,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This dish has ___ (a few) unusual ingredients.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 175,
@@ -1620,6 +1794,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "There isn't ___ (much) salt in this soup.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -1630,6 +1805,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 177,
@@ -1639,6 +1815,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 178,
@@ -1648,6 +1825,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 179,
@@ -1657,6 +1835,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 180,
@@ -1666,6 +1845,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 13
     // -- beginner (spelling) --
@@ -1677,6 +1857,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the taste of food.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 182,
@@ -1686,6 +1867,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for made at home.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 183,
@@ -1695,6 +1877,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a pleasant smell.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 184,
@@ -1704,6 +1887,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the feel of food when eaten.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 185,
@@ -1713,6 +1897,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for having a pleasant, non-sweet taste.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -1723,6 +1908,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This is a ___ (savory), rich dish.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 187,
@@ -1732,6 +1918,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The ___ (aroma) of the roasted chicken was amazing.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 188,
@@ -1741,6 +1928,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This soup has a rich, ___ (savory) flavor.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 189,
@@ -1750,6 +1938,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "It has a smooth, creamy ___ (texture).",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 190,
@@ -1759,6 +1948,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This soup has a great ___ (flavor).",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -1769,6 +1959,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 192,
@@ -1778,6 +1969,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 193,
@@ -1787,6 +1979,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 194,
@@ -1796,6 +1989,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 195,
@@ -1805,6 +1999,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 14
     // -- beginner (spelling) --
@@ -1816,6 +2011,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a personal view or judgment.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 197,
@@ -1825,6 +2021,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for very pleasant to taste.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 198,
@@ -1834,6 +2031,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to like one thing more.\"",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 199,
@@ -1843,6 +2041,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for something not as good as expected.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 200,
@@ -1852,6 +2051,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to suggest something as good.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -1862,6 +2062,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The soup was tasty, ___ (but) the portion was too small.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 202,
@@ -1871,6 +2072,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I prefer this dish ___ (because) it's healthier.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 203,
@@ -1880,6 +2082,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I would ___ (recommend) the seafood pasta to anyone.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 204,
@@ -1889,6 +2092,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This place is popular ___ (because) the food is authentic.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 205,
@@ -1898,6 +2102,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I like this cake ___ (because) it's sweet.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -1908,6 +2113,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 207,
@@ -1917,6 +2123,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 208,
@@ -1926,6 +2133,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 209,
@@ -1935,6 +2143,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 210,
@@ -1944,6 +2153,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 15
     // -- beginner (spelling) --
@@ -1955,6 +2165,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a small dish served before the main course.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 212,
@@ -1964,6 +2175,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the primary dish of a meal.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 213,
@@ -1973,6 +2185,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a sweet dish eaten after a meal.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 214,
@@ -1982,6 +2195,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"before something happens.\"",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 215,
@@ -1991,6 +2205,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"lastly, after a series of events.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -2001,6 +2216,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "We ordered an ___ (appetizer) before the main course arrived.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 217,
@@ -2010,6 +2226,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "After that, we decided on our ___ (dessert).",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 218,
@@ -2019,6 +2236,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (finally), we thanked the staff and left.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 219,
@@ -2028,6 +2246,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "We started with an ___ (appetizer), then moved to the main course.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 220,
@@ -2037,6 +2256,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (first), we look at the menu.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -2047,6 +2267,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 222,
@@ -2056,6 +2277,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 223,
@@ -2065,6 +2287,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 224,
@@ -2074,6 +2297,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 225,
@@ -2083,6 +2307,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 16
     // -- beginner (spelling) --
@@ -2094,6 +2319,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a person who makes coffee.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 227,
@@ -2103,6 +2329,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"able to be used or obtained.\"",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 228,
@@ -2112,6 +2339,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"a choice available.\"",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 229,
@@ -2121,6 +2349,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to make coffee or tea.\"",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 230,
@@ -2130,6 +2359,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for difficulty or inconvenience.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -2140,6 +2370,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "If it's available, I ___ (would/try) the seasonal blend.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 232,
@@ -2149,6 +2380,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "If you ___ (brew) a fresh pot, I would love a cup.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 233,
@@ -2158,6 +2390,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "What ___ (option) would you recommend for someone who likes sweet drinks?",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 234,
@@ -2167,6 +2400,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The barista said the seasonal drink is not ___ (available) anymore.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 235,
@@ -2176,6 +2410,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "If it's not too much ___ (trouble), could I get a refill?",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -2186,6 +2421,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 237,
@@ -2195,6 +2431,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 238,
@@ -2204,6 +2441,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 239,
@@ -2213,6 +2451,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 240,
@@ -2222,6 +2461,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 17
     // -- beginner (spelling) --
@@ -2233,6 +2473,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for having a sharp, unpleasant taste.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 242,
@@ -2242,6 +2483,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for not strong in flavor.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 243,
@@ -2251,6 +2493,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for served cold with ice.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 244,
@@ -2260,6 +2503,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for having a full, strong flavor.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 245,
@@ -2269,6 +2513,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for pleasantly cool or energizing.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -2279,6 +2524,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I like a ___ (mild) blend rather than something too strong.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 247,
@@ -2288,6 +2534,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "An ___ (iced) latte is perfect for summer.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 248,
@@ -2297,6 +2544,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This coffee tastes too ___ (bitter) for me.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 249,
@@ -2306,6 +2554,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I want something ___ (rich) and creamy.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 250,
@@ -2315,6 +2564,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I like this coffee because it's ___ (rich).",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -2325,6 +2575,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 252,
@@ -2334,6 +2585,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 253,
@@ -2343,6 +2595,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 254,
@@ -2352,6 +2605,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 255,
@@ -2361,6 +2615,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 18
     // -- beginner (spelling) --
@@ -2372,6 +2627,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for knowledge gained by doing something.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 257,
@@ -2381,6 +2637,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"not long ago.\"",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 258,
@@ -2390,6 +2647,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"well known or recognized.\"",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 259,
@@ -2399,6 +2657,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for up until now.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 260,
@@ -2408,6 +2667,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"before now, sooner than expected.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -2418,6 +2678,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This place has ___ (recently) become quite popular.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 262,
@@ -2427,6 +2688,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This name sounds ___ (familiar) to me.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 263,
@@ -2436,6 +2698,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I have ___ (never) had such a delicious latte.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 264,
@@ -2445,6 +2708,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I haven't tried that flavor ___ (yet).",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 265,
@@ -2454,6 +2718,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I have ___ (already) finished my coffee.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -2464,6 +2729,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 267,
@@ -2473,6 +2739,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 268,
@@ -2482,6 +2749,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 269,
@@ -2491,6 +2759,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 270,
@@ -2500,6 +2769,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 19
     // -- beginner (spelling) --
@@ -2511,6 +2781,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to propose an idea.\"",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 272,
@@ -2520,6 +2791,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a baked, often sweet food.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 273,
@@ -2529,6 +2801,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for warm and comfortable.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 274,
@@ -2538,6 +2811,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for located outside a building.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 275,
@@ -2547,6 +2821,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to use something together with others.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -2557,6 +2832,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I ___ (suggest) we try the seasonal pastry.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 277,
@@ -2566,6 +2842,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Shall we ___ (share) a table with them?",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 278,
@@ -2575,6 +2852,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This café has such a ___ (cozy) atmosphere.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 279,
@@ -2584,6 +2862,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I ___ (suggest) sitting near the window today.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 280,
@@ -2593,6 +2872,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "___ (let's) sit outside today.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -2603,6 +2883,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 282,
@@ -2612,6 +2893,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 283,
@@ -2621,6 +2903,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 284,
@@ -2630,6 +2913,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 285,
@@ -2639,6 +2923,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 20
     // -- beginner (spelling) --
@@ -2650,6 +2935,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for kind and pleasant toward others.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 287,
@@ -2659,6 +2945,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for able to wait calmly.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 288,
@@ -2668,6 +2955,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for happy and full of good spirits.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 289,
@@ -2677,6 +2965,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for nervous meeting new people.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 290,
@@ -2686,6 +2975,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for liking to talk a lot.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -2696,6 +2986,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "She is usually quiet, but today she seems more ___ (talkative).",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 292,
@@ -2705,6 +2996,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The staff here are always ___ (cheerful) and welcoming.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 293,
@@ -2714,6 +3006,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "He is naturally ___ (friendly), so he makes friends easily.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 294,
@@ -2723,6 +3016,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Unlike his sister, he tends to be quite ___ (shy).",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 295,
@@ -2732,6 +3026,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "She is very ___ (patient) with new customers.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -2742,6 +3037,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 297,
@@ -2751,6 +3047,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 298,
@@ -2760,6 +3057,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 299,
@@ -2769,6 +3067,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 300,
@@ -2778,6 +3077,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 21
     // -- beginner (spelling) --
@@ -2789,6 +3089,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for recently produced, not stale.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 302,
@@ -2798,6 +3099,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a small stand selling goods.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 303,
@@ -2807,6 +3109,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"reasonably priced.\"",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 304,
@@ -2816,6 +3119,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the standard of something.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 305,
@@ -2825,6 +3129,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to examine differences.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -2835,6 +3140,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Let's ___ (compare) prices before buying anything.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 307,
@@ -2844,6 +3150,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This shop offers better ___ (quality) than that one.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 308,
@@ -2853,6 +3160,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "These tomatoes look ___ (fresher) than the ones at the other stall.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 309,
@@ -2862,6 +3170,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This is the most ___ (affordable) stall we've found so far.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 310,
@@ -2871,6 +3180,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This fruit is ___ (fresher) than that one.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -2881,6 +3191,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 312,
@@ -2890,6 +3201,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 313,
@@ -2899,6 +3211,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 314,
@@ -2908,6 +3221,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 315,
@@ -2917,6 +3231,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 22
     // -- beginner (spelling) --
@@ -2928,6 +3243,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a unit of mass, often shortened to \"kilo.\"",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 317,
@@ -2937,6 +3253,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a group of twelve.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 318,
@@ -2946,6 +3263,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the amount of money needed to buy something.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 319,
@@ -2955,6 +3273,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a reduction in the usual price.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 320,
@@ -2964,6 +3283,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the complete amount of something.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -2974,6 +3294,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Could you give me a ___ (discount) if I buy in bulk?",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 322,
@@ -2983,6 +3304,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "What is the ___ (total) after the discount?",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 323,
@@ -2992,6 +3314,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Can you weigh two ___ (kilograms) of potatoes?",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 324,
@@ -3001,6 +3324,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I need exactly one ___ (dozen) bananas.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 325,
@@ -3010,6 +3334,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "What is the ___ (price) of this basket?",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -3020,6 +3345,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 327,
@@ -3029,6 +3355,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 328,
@@ -3038,6 +3365,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 329,
@@ -3047,6 +3375,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 330,
@@ -3056,6 +3385,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 23
     // -- beginner (spelling) --
@@ -3067,6 +3397,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for negotiating a price.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 332,
@@ -3076,6 +3407,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to reduce,\" especially a price.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 333,
@@ -3085,6 +3417,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for an agreement, often about price.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 334,
@@ -3094,6 +3427,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for fair and sensible, not excessive.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 335,
@@ -3103,6 +3437,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"having a certain value.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -3113,6 +3448,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This bag is ___ (worth) the price, isn't it?",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 337,
@@ -3122,6 +3458,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "That's a ___ (reasonable) price, isn't it?",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 338,
@@ -3131,6 +3468,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "You always ___ (bargain) at the market, don't you?",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 339,
@@ -3140,6 +3478,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "You wouldn't mind lowering the price, ___ (would) you?",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 340,
@@ -3149,6 +3488,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This is fresh, ___ (isn't) it?",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -3159,6 +3499,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 342,
@@ -3168,6 +3509,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 343,
@@ -3177,6 +3519,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 344,
@@ -3186,6 +3529,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 345,
@@ -3195,6 +3539,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 24
     // -- beginner (spelling) --
@@ -3206,6 +3551,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the way into a place.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 347,
@@ -3215,6 +3561,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the way out of a place.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 348,
@@ -3224,6 +3571,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a passage between rows of stalls.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 349,
@@ -3233,6 +3581,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for full of people.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 350,
@@ -3242,6 +3591,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the point where two paths meet.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -3252,6 +3602,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The market is quite ___ (crowded) on weekends.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 352,
@@ -3261,6 +3612,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Head ___ (towards) the entrance and you'll see the spice stalls.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 353,
@@ -3270,6 +3622,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The vegetable stalls are ___ (across) from the fruit stalls.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 354,
@@ -3279,6 +3632,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Walk ___ (past) the entrance and continue straight.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 355,
@@ -3288,6 +3642,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Walk ___ (through) this aisle to find the spices.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -3298,6 +3653,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 357,
@@ -3307,6 +3663,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 358,
@@ -3316,6 +3673,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 359,
@@ -3325,6 +3683,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 360,
@@ -3334,6 +3693,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 25
     // -- beginner (spelling) --
@@ -3345,6 +3705,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for made by weaving materials together.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 362,
@@ -3354,6 +3715,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for strongly and solidly built.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 363,
@@ -3363,6 +3725,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for made of clay hardened by heat.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 364,
@@ -3372,6 +3735,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for able to last a long time.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 365,
@@ -3381,6 +3745,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for made by hand, not machine.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -3391,6 +3756,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This basket is beautifully ___ (handmade) by local artisans.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 367,
@@ -3400,6 +3766,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This is a ___ (durable) material that lasts for years.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 368,
@@ -3409,6 +3776,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This bag is ___ (handmade) and very sturdy.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 369,
@@ -3418,6 +3786,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This large, ___ (ceramic) vase is quite heavy.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 370,
@@ -3427,6 +3796,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This basket is ___ (woven) from natural fibers.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -3437,6 +3807,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 372,
@@ -3446,6 +3817,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 373,
@@ -3455,6 +3827,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 374,
@@ -3464,6 +3837,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 375,
@@ -3473,6 +3847,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 26
     // -- beginner (spelling) --
@@ -3484,6 +3859,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a paper proving payment.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 377,
@@ -3493,6 +3869,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a person who handles payments.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 378,
@@ -3502,6 +3879,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the place where you pay for items.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 379,
@@ -3511,6 +3889,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to buy something.\"",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 380,
@@ -3520,6 +3899,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to trade one item for another.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -3530,6 +3910,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I kept the ___ (receipt) in case I needed to return it.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 382,
@@ -3539,6 +3920,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I decided to ___ (exchange) the shirt for a different color.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 383,
@@ -3548,6 +3930,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The store ___ (offer) a discount on my purchase.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 384,
@@ -3557,6 +3940,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I ___ (purchase) a new pair of shoes yesterday.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 385,
@@ -3566,6 +3950,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I ___ (buy) a shirt last weekend.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -3576,6 +3961,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 387,
@@ -3585,6 +3971,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 388,
@@ -3594,6 +3981,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 389,
@@ -3603,6 +3991,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 390,
@@ -3612,6 +4001,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 27
     // -- beginner (spelling) --
@@ -3623,6 +4013,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for happening often.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 392,
@@ -3632,6 +4023,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for not often.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 393,
@@ -3641,6 +4033,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a plan of spending money.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 394,
@@ -3650,6 +4043,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for acting suddenly without thinking.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 395,
@@ -3659,6 +4053,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for with close attention, avoiding mistakes.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -3669,6 +4064,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "He ___ (impulsively) bought a new phone he didn't need.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 397,
@@ -3678,6 +4074,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I ___ (rarely) spend more than my budget allows.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 398,
@@ -3687,6 +4084,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "He shops ___ (frequently), almost every weekend.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 399,
@@ -3696,6 +4094,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I always plan my purchases ___ (carefully).",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 400,
@@ -3705,6 +4104,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I try to stick to my ___ (budget) every month.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -3715,6 +4115,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 402,
@@ -3724,6 +4125,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 403,
@@ -3733,6 +4135,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 404,
@@ -3742,6 +4145,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 405,
@@ -3751,6 +4155,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 28
     // -- beginner (spelling) --
@@ -3762,6 +4167,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a fault in something.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 407,
@@ -3771,6 +4177,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for money returned after a product return.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 408,
@@ -3780,6 +4187,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"not working correctly.\"",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 409,
@@ -3789,6 +4197,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a guarantee to repair or replace a product.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 410,
@@ -3798,6 +4207,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to express dissatisfaction.\"",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -3808,6 +4218,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The cashier ___ (process) my refund when the system crashed.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 412,
@@ -3817,6 +4228,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "While I was inspecting the item, I noticed it was ___ (faulty).",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 413,
@@ -3826,6 +4238,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I was reading the ___ (warranty) when the cashier called my name.",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 414,
@@ -3835,6 +4248,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I was about to ___ (complain) when the manager offered a refund.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 415,
@@ -3844,6 +4258,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "The item I bought was ___ (faulty).",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -3854,6 +4269,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 417,
@@ -3863,6 +4279,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 418,
@@ -3872,6 +4289,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 419,
@@ -3881,6 +4299,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 420,
@@ -3890,6 +4309,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 29
     // -- beginner (spelling) --
@@ -3901,6 +4321,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a room to try on clothes.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 422,
@@ -3910,6 +4331,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a surface that reflects an image.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 423,
@@ -3919,6 +4341,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to change something to fit better.\"",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 424,
@@ -3928,6 +4351,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the measurements of clothing.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 425,
@@ -3937,6 +4361,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for the image seen in a mirror.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -3947,6 +4372,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "She examined ___ (herself) carefully in the fitting room mirror.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 427,
@@ -3956,6 +4382,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I could barely recognize ___ (myself) in this outfit.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 428,
@@ -3965,6 +4392,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Could you ___ (adjust) the sleeves for me, please?",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 429,
@@ -3974,6 +4402,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "He tried to fix the collar ___ (himself) without help.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 430,
@@ -3983,6 +4412,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "This shirt is the wrong ___ (size) for me.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -3993,6 +4423,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 432,
@@ -4002,6 +4433,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 433,
@@ -4011,6 +4443,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 434,
@@ -4020,6 +4453,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 435,
@@ -4029,6 +4463,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // Topic 30
     // -- beginner (spelling) --
@@ -4040,6 +4475,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word meaning \"to make a choice.\"",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 437,
@@ -4049,6 +4485,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a cause or explanation.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 438,
@@ -4058,6 +4495,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for pleased with something.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 439,
@@ -4067,6 +4505,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for not needed.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 440,
@@ -4076,6 +4515,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the word for a choice made after consideration.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
     // -- intermediate (fill_blank_spelling) --
     {
@@ -4086,6 +4526,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Since I wasn't ___ (satisfied) with the quality, I asked for a refund.",
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 442,
@@ -4095,6 +4536,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I gave a clear ___ (reason) for returning the item.",
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 443,
@@ -4104,6 +4546,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "Buying two of the same item felt ___ (unnecessary).",
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 444,
@@ -4113,6 +4556,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I couldn't ___ (decide) which color to choose.",
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 445,
@@ -4122,6 +4566,7 @@ export const SEED_EXERCISES = [
         prompt: "Spell the missing word to complete the sentence.",
         context_sentence: "I bought it ___ (because) I liked the color.",
         order_index: 5,
+        xp: 5,
     },
     // -- advanced (sentence_builder) --
     {
@@ -4132,6 +4577,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 1,
+        xp: 5,
     },
     {
         exercise_id: 447,
@@ -4141,6 +4587,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 2,
+        xp: 5,
     },
     {
         exercise_id: 448,
@@ -4150,6 +4597,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 3,
+        xp: 5,
     },
     {
         exercise_id: 449,
@@ -4159,6 +4607,7 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 4,
+        xp: 5,
     },
     {
         exercise_id: 450,
@@ -4168,5 +4617,6 @@ export const SEED_EXERCISES = [
         prompt: "Tap the words to put them in the correct order.",
         context_sentence: null,
         order_index: 5,
+        xp: 5,
     },
 ]
