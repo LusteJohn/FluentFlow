@@ -4,6 +4,7 @@ import { seedTopics } from "@/backend/Topic";
 import { seedExercises } from "@/backend/TopicExercise";
 import { seedTopicIntros } from "@/backend/TopicIntro";
 import { seedTopicVocabulary } from "@/backend/TopicVocabulary";
+import { seedUserProfiles } from "@/backend/UserProfile";
 import { Platform } from "react-native";
 
 let SQLite: any = null;
@@ -33,6 +34,10 @@ export async function getDatabase() {
 
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS tbl_users (user_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+        );
+
+        await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS user_profiles (user_id INTEGER PRIMARY KEY AUTOINCREMENT, firstname TEXT NOT NULL, middlename TEXT, lastname TEXT NOT NULL, name_ext TEXT, birthdate TEXT, gender TEXT, address TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
         );
 
         await db.runAsync(
@@ -116,4 +121,9 @@ export async function importExerciseData() {
 export async function importExerciseTokenData() {
   const db = await getDatabase();
   await seedExerciseTokens(db);
+}
+
+export async function importUserProfileData() {
+  const db = await getDatabase();
+  await seedUserProfiles(db);
 }
