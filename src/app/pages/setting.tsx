@@ -24,17 +24,37 @@ export default function SettingsPage() {
   const handleImportData = async () => {
     setLoading(true);
     try {
-          await importJourneyData();
-          await importTopicData();
-          await importTopicIntroData();
-          await importTopicVocabularyData();
-          await importExerciseData();
-          await importExerciseTokenData();
+      const db = await getDatabase();
+
+      await importJourneyData();
+      const journeyCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM journeys");
+
+      await importTopicData();
+      const topicCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM topics");
+
+      await importTopicIntroData();
+      const topicIntroCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM topic_introduction");
+
+      await importTopicVocabularyData();
+      const topicVocabCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM topic_vocabulary");
+
+      await importExerciseData();
+      const exerciseCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM exercises");
+
+      await importExerciseTokenData();
+      const tokenCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM exercise_tokens");
+
       setDialog({
         type: "success",
         title: "Import Succeeded",
         message:
-          "Journey, topic, topic intro, and topic vocabulary data imported successfully!",
+          `Imported data successfully:\n\n` +
+          `Journeys: ${journeyCount?.count ?? 0}\n` +
+          `Topics: ${topicCount?.count ?? 0}\n` +
+          `Topic Introductions: ${topicIntroCount?.count ?? 0}\n` +
+          `Topic Vocabulary: ${topicVocabCount?.count ?? 0}\n` +
+          `Exercises: ${exerciseCount?.count ?? 0}\n` +
+          `Exercise Tokens: ${tokenCount?.count ?? 0}`,
       });
     } catch (error: any) {
       setDialog({

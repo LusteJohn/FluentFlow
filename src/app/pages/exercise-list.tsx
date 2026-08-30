@@ -284,6 +284,8 @@ export default function ExerciseListPage() {
 
   const levelTitle = LEVEL_TITLES[level ?? "beginner"] ?? "Exercises";
 
+  const totalXP = exercises.reduce((sum, ex) => sum + (ex as any).xp ?? 5, 0);
+
   return (
     <ThemedView style={styles.container}>
       <AppHeader />
@@ -300,9 +302,16 @@ export default function ExerciseListPage() {
             tintColor={Colors.light.onSurface}
           />
         </Pressable>
-        <ThemedText style={styles.pageTitle}>
-          {topicTitle} — {levelTitle}
-        </ThemedText>
+        <View style={styles.titleContainer}>
+          <ThemedText style={styles.pageTitle}>
+            {topicTitle} — {levelTitle}
+          </ThemedText>
+          <View style={styles.xpBadge}>
+            <ThemedText style={styles.xpText}>
+              {totalXP} XP
+            </ThemedText>
+          </View>
+        </View>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -601,6 +610,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
+  titleContainer: {
+    flex: 1,
+    gap: 4,
+  },
+  pageTitle: {
+    color: Colors.light.primary,
+    fontSize: 22,
+    fontWeight: "700",
+    lineHeight: 28,
+  },
+  xpBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: Colors.light.secondaryContainer,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  xpText: {
+    color: Colors.light.onSecondaryContainer,
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 16,
+  },
   backButton: {
     width: 40,
     height: 40,
@@ -610,13 +642,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.surfaceContainerLow,
     borderWidth: 1,
     borderColor: Colors.light.outlineVariant,
-  },
-  pageTitle: {
-    color: Colors.light.primary,
-    fontSize: 22,
-    fontWeight: "700",
-    lineHeight: 28,
-    flex: 1,
   },
   headerSpacer: {
     width: 40,

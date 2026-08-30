@@ -1,7 +1,7 @@
 import { BackHandler, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -69,10 +69,10 @@ const WEEKLY_BARS: WeeklyBar[] = [
   { day: "M", height: 40 },
   { day: "T", height: 60 },
   { day: "W", height: 30 },
-  { day: "T", height: 80 },
+  { day: "Th", height: 80 },
   { day: "F", height: 50 },
-  { day: "S", height: 0 },
-  { day: "S", height: 0 },
+  { day: "Sa", height: 0 },
+  { day: "Su", height: 0 },
 ];
 
 const RECENT_EXERCISES: RecentExercise[] = [
@@ -120,22 +120,36 @@ const RECENT_EXERCISES: RecentExercise[] = [
 export default function HomePage() {
   const router = useRouter();
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const handleExit = () => {
-    setShowExitDialog(false);
-    if (Platform.OS === "android") {
-      BackHandler.exitApp();
-    } else {
-      router.back();
+    if (mountedRef.current) {
+      setShowExitDialog(false);
+      if (Platform.OS === "android") {
+        BackHandler.exitApp();
+      } else {
+        router.back();
+      }
     }
   };
 
   const handleCancel = () => {
-    setShowExitDialog(false);
+    if (mountedRef.current) {
+      setShowExitDialog(false);
+    }
   };
 
   const handleBackPress = () => {
-    setShowExitDialog(true);
+    if (mountedRef.current) {
+      setShowExitDialog(true);
+    }
     return true;
   };
 
