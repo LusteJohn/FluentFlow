@@ -6,6 +6,7 @@ import {
   View,
   TextInput,
   Alert,
+  Modal,
 } from "react-native";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -85,6 +86,8 @@ export default function ExerciseListPage() {
     Record<number, boolean>
   >({});
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
 
   const getCorrectAnswer = (
     tokens: ExerciseToken[],
@@ -250,10 +253,27 @@ export default function ExerciseListPage() {
         correctAnswer !== "" &&
         submitted.trim().toLowerCase() === correctAnswer.toLowerCase();
 
-      setAnswerResults((prev) => ({
-        ...prev,
-        [exercise.exercise_id]: isCorrect,
-      }));
+      const newResults = { ...answerResults, [exercise.exercise_id]: isCorrect };
+      setAnswerResults(newResults);
+
+      const allSubmitted = exercises.every(
+        (ex) => newResults[ex.exercise_id] !== undefined,
+      );
+      if (allSubmitted && !reviewMode) {
+        setTimeout(() => setShowCompletionModal(true), 50);
+      }
+
+      if (reviewMode && isCorrect) {
+        const remaining = exercises.filter(
+          (ex) => answerResults[ex.exercise_id] === false,
+        );
+        if (remaining.length <= 1) {
+          setTimeout(() => {
+            setReviewMode(false);
+            Alert.alert("Great job!", "You've corrected all your mistakes!");
+          }, 300);
+        }
+      }
 
       if (isCorrect) {
       } else {
@@ -266,6 +286,18 @@ export default function ExerciseListPage() {
       console.error("Failed to submit answer", error);
       Alert.alert("Error", "Failed to submit answer. Please try again.");
     }
+  };
+
+  const handleContinue = () => {
+    setShowCompletionModal(false);
+    setReviewMode(false);
+    router.push(`/pages/exercise?topic_id=${topic_id}`);
+  };
+
+  const handleReviewMistakes = () => {
+    setShowCompletionModal(false);
+    setReviewMode(true);
+    setCurrentExerciseIndex(0);
   };
 
   const isSubmitDisabled = (exercise: Exercise): boolean => {
@@ -285,6 +317,19 @@ export default function ExerciseListPage() {
   const levelTitle = LEVEL_TITLES[level ?? "beginner"] ?? "Exercises";
 
   const totalXP = exercises.reduce((sum, ex) => sum + (ex as any).xp ?? 5, 0);
+
+  const displayExercises = reviewMode
+    ? exercises.filter((ex) => answerResults[ex.exercise_id] === false)
+    : exercises;
+
+  const completedCount = exercises.filter((ex) => answerResults[ex.exercise_id] === true).length;
+  const totalEarnedXP = exercises.reduce((sum, ex) => {
+    if (answerResults[ex.exercise_id] === true) {
+      return sum + ((ex as any).xp ?? 5);
+    }
+    return sum;
+  }, 0);
+  const accuracy = exercises.length > 0 ? Math.round((completedCount / exercises.length) * 100) : 0;
 
   return (
     <ThemedView style={styles.container}>
@@ -323,21 +368,27 @@ export default function ExerciseListPage() {
         {loading && (
           <ThemedText style={styles.loadingText}>Loading exercises...</ThemedText>
         )}
-        {!loading && exercises.length === 0 && (
+        {!loading && displayExercises.length === 0 && (
           <ThemedText style={styles.noExercisesText}>
-            No exercises available for this level yet.
+            {reviewMode
+              ? "No incorrect exercises to review. Great job!"
+              : "No exercises available for this level yet."}
           </ThemedText>
         )}
-        {!loading && exercises.length > 0 && (
+        {!loading && displayExercises.length > 0 && (
           <>
             <View style={styles.progressIndicator}>
               <ThemedText style={styles.progressIndicatorText}>
-                Exercise {currentExerciseIndex + 1} of {exercises.length}
+                {reviewMode
+                  ? `Reviewing ${displayExercises.length} incorrect exercise${displayExercises.length !== 1 ? "s" : ""}`
+                  : `Exercise ${currentExerciseIndex + 1} of ${displayExercises.length}`}
               </ThemedText>
             </View>
 
             {(() => {
-              const exercise = exercises[currentExerciseIndex];
+              const exercise = displayExercises[currentExerciseIndex];
+              if (!exercise) return null;
+
               const typeLabel =
                 EXERCISE_TYPE_LABELS[exercise.type] ?? exercise.type;
               const exerciseTokens =
@@ -418,26 +469,26 @@ export default function ExerciseListPage() {
                     </ThemedText>
                   )}
                    {exercise.type === "sentence_builder" &&
-                     exerciseTokens.length > 0 && (() => {
-                       const shuffledTokens =
-                         answerResult === undefined
-                           ? [...exerciseTokens].sort(() => Math.random() - 0.5)
-                           : exerciseTokens;
-                       return (
-                         <View style={styles.tokensContainer}>
-                           <ThemedText style={styles.tokensLabel}>
-                             Arrange these words:
-                           </ThemedText>
-                           <SentenceBuilderExercise
-                             tokens={shuffledTokens}
-                             selectedWords={selectedWords[exercise.exercise_id] ?? []}
-                             answerResult={answerResult}
-                             onWordToggle={handleWordToggle}
-                             onWordRemove={handleWordRemove}
-                           />
-                         </View>
-                       );
-                     })()}
+                      exerciseTokens.length > 0 && (() => {
+                        const shuffledTokens =
+                          answerResult === undefined
+                            ? [...exerciseTokens].sort(() => Math.random() - 0.5)
+                            : exerciseTokens;
+                        return (
+                          <View style={styles.tokensContainer}>
+                            <ThemedText style={styles.tokensLabel}>
+                              Arrange these words:
+                            </ThemedText>
+                            <SentenceBuilderExercise
+                              tokens={shuffledTokens}
+                              selectedWords={selectedWords[exercise.exercise_id] ?? []}
+                              answerResult={answerResult}
+                              onWordToggle={handleWordToggle}
+                              onWordRemove={handleWordRemove}
+                            />
+                          </View>
+                        );
+                      })()}
                    {correctAnswer && (
                     <View style={styles.tokensContainer}>
                       <ThemedText style={styles.tokensLabel}>
@@ -556,15 +607,15 @@ export default function ExerciseListPage() {
               <Pressable
                 style={[
                   styles.arrowButton,
-                  currentExerciseIndex === exercises.length - 1 && styles.arrowButtonDisabled,
+                  currentExerciseIndex === displayExercises.length - 1 && styles.arrowButtonDisabled,
                 ]}
                 onPress={goToNext}
-                disabled={currentExerciseIndex === exercises.length - 1}
+                disabled={currentExerciseIndex === displayExercises.length - 1}
               >
                 <SymbolView
                   name={{ ios: "chevron.right", android: "arrow_forward_ios", web: "arrow_forward_ios" } as any}
                   size={28}
-                   tintColor={currentExerciseIndex === exercises.length - 1 ? Colors.light.onSurfaceVariant : Colors.light.primary}
+                   tintColor={currentExerciseIndex === displayExercises.length - 1 ? Colors.light.onSurfaceVariant : Colors.light.primary}
                 />
               </Pressable>
             </View>
@@ -572,9 +623,9 @@ export default function ExerciseListPage() {
         )}
       </ScrollView>
 
-      {!loading && exercises.length > 1 && (
+      {!loading && displayExercises.length > 1 && (
         <View style={styles.pagination}>
-          {exercises.map((_, index) => (
+          {displayExercises.map((_, index) => (
             <View
               key={index}
               style={[
@@ -585,7 +636,67 @@ export default function ExerciseListPage() {
           ))}
         </View>
       )}
+
       <NavBar />
+
+      {showCompletionModal && (
+        <Modal
+          visible={showCompletionModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowCompletionModal(false)}>
+          <View style={styles.completionOverlay}>
+            <ScrollView contentContainerStyle={styles.completionContent}>
+              <View style={styles.completionIconContainer}>
+                <View style={styles.completionIconInner}>
+                  <SymbolView
+                    name={{ ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" } as any}
+                    size={48}
+                    tintColor={Colors.light.primary}
+                  />
+                </View>
+              </View>
+
+              <ThemedText style={styles.completionTitle}>Lesson Complete!</ThemedText>
+              <ThemedText style={styles.completionSubtitle}>{topicTitle}</ThemedText>
+
+              <View style={styles.completionStatsGrid}>
+                <View style={styles.completionStatCard}>
+                  <SymbolView
+                    name={{ ios: "bolt.fill", android: "flash_on", web: "flash_on" } as any}
+                    size={28}
+                    tintColor={Colors.light.secondary}
+                  />
+                  <ThemedText style={styles.completionStatValue}>+{totalEarnedXP} XP</ThemedText>
+                  <ThemedText style={styles.completionStatLabel}>Earned</ThemedText>
+                </View>
+                <View style={styles.completionStatCard}>
+                  <SymbolView
+                    name={{ ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" } as any}
+                    size={28}
+                    tintColor={Colors.light.primary}
+                  />
+                  <ThemedText style={styles.completionStatValue}>{accuracy}%</ThemedText>
+                  <ThemedText style={styles.completionStatLabel}>Accuracy</ThemedText>
+                </View>
+              </View>
+
+              <View style={styles.completionActions}>
+                <Pressable
+                  style={styles.completionContinueButton}
+                  onPress={handleContinue}>
+                  <ThemedText style={styles.completionContinueButtonText}>Continue</ThemedText>
+                </Pressable>
+                <Pressable
+                  style={styles.completionReviewButton}
+                  onPress={handleReviewMistakes}>
+                  <ThemedText style={styles.completionReviewButtonText}>Review Mistakes</ThemedText>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
+        </Modal>
+      )}
     </ThemedView>
   );
 }
@@ -594,6 +705,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.surface,
+    position: "relative",
   },
   scrollView: {
     flex: 1,
@@ -843,5 +955,117 @@ const styles = StyleSheet.create({
   paginationDotActive: {
     width: 24,
     backgroundColor: "#22c55e",
+  },
+  completionOverlay: {
+    flex: 1,
+    backgroundColor: Colors.light.surface,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  completionContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    gap: 24,
+  },
+  completionIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: Colors.light.surfaceContainerHigh,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 4,
+    borderColor: Colors.light.surfaceContainerLowest,
+  },
+  completionIconInner: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.light.primaryContainer,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  completionTitle: {
+    color: Colors.light.primary,
+    fontSize: 28,
+    fontWeight: "700",
+    letterSpacing: -0.02,
+    textAlign: "center",
+  },
+  completionSubtitle: {
+    color: Colors.light.onSurfaceVariant,
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  completionStatsGrid: {
+    flexDirection: "row",
+    gap: 16,
+    width: "100%",
+    maxWidth: 320,
+  },
+  completionStatCard: {
+    flex: 1,
+    backgroundColor: Colors.light.surfaceContainerLowest,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
+    shadowColor: Colors.light.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  completionStatValue: {
+    color: Colors.light.onSurface,
+    fontSize: 20,
+    fontWeight: "700",
+    lineHeight: 28,
+  },
+  completionStatLabel: {
+    color: Colors.light.onSurfaceVariant,
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
+  },
+  completionActions: {
+    width: "100%",
+    maxWidth: 320,
+    gap: 12,
+    marginTop: 8,
+  },
+  completionContinueButton: {
+    backgroundColor: Colors.light.primary,
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomWidth: 3,
+    borderBottomColor: Colors.light.primaryContainer,
+  },
+  completionContinueButtonText: {
+    color: Colors.light.onPrimary,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  completionReviewButton: {
+    backgroundColor: Colors.light.surfaceContainer,
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
+  },
+  completionReviewButtonText: {
+    color: Colors.light.primary,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
