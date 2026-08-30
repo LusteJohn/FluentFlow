@@ -2,7 +2,7 @@ import { SEED_EXERCISES } from "@/data/seed-exercises";
 
 export async function createExercise(db, exercise) {
   const result = await db.runAsync(
-    "INSERT OR REPLACE INTO exercises (exercise_id, topic_id, level, type, prompt, context_sentence, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    "INSERT OR REPLACE INTO exercises (exercise_id, topic_id, level, type, prompt, context_sentence, order_index, xp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
     exercise.exercise_id,
     exercise.topic_id,
     exercise.level,
@@ -10,6 +10,7 @@ export async function createExercise(db, exercise) {
     exercise.prompt,
     exercise.context_sentence ?? null,
     exercise.order_index ?? null,
+    exercise.xp ?? 5,
   );
   if (result.changes < 1) throw new Error("Failed to create exercise");
   return {
@@ -20,6 +21,7 @@ export async function createExercise(db, exercise) {
     prompt: exercise.prompt,
     context_sentence: exercise.context_sentence ?? null,
     order_index: exercise.order_index ?? null,
+    xp: exercise.xp ?? 5,
   };
 }
 
@@ -82,6 +84,10 @@ export async function updateExercise(db, exerciseId, updates) {
   if (updates.order_index !== undefined) {
     fields.push("order_index = ?");
     values.push(updates.order_index);
+  }
+  if (updates.xp !== undefined) {
+    fields.push("xp = ?");
+    values.push(updates.xp);
   }
 
   if (fields.length === 0) return getExerciseById(db, exerciseId);

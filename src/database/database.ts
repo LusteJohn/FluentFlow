@@ -62,8 +62,12 @@ export async function getDatabase() {
         } catch (e) {}
 
         await db.runAsync(
-          "CREATE TABLE IF NOT EXISTS exercises (exercise_id INTEGER PRIMARY KEY AUTOINCREMENT, topic_id INTEGER NOT NULL, level TEXT NOT NULL CHECK (level IN ('beginner', 'intermediate', 'advanced')), type TEXT NOT NULL CHECK (type IN ('sentence_builder', 'spelling', 'fill_blank_spelling')), prompt TEXT NOT NULL, context_sentence TEXT, order_index INTEGER, FOREIGN KEY(topic_id) REFERENCES topics(topic_id))",
+          "CREATE TABLE IF NOT EXISTS exercises (exercise_id INTEGER PRIMARY KEY AUTOINCREMENT, topic_id INTEGER NOT NULL, level TEXT NOT NULL CHECK (level IN ('beginner', 'intermediate', 'advanced')), type TEXT NOT NULL CHECK (type IN ('sentence_builder', 'spelling', 'fill_blank_spelling')), prompt TEXT NOT NULL, context_sentence TEXT, order_index INTEGER, xp INTEGER DEFAULT 5, FOREIGN KEY(topic_id) REFERENCES topics(topic_id))",
         );
+
+        try {
+          await db.runAsync("ALTER TABLE exercises ADD COLUMN xp INTEGER DEFAULT 5");
+        } catch (e) {}
 
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS exercise_answers (answer_id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id INTEGER NOT NULL, answer_text TEXT NOT NULL, is_primary INTEGER DEFAULT 0, match_type TEXT DEFAULT 'exact' CHECK (match_type IN ('exact', 'case_insensitive', 'fuzzy')), FOREIGN KEY (exercise_id) REFERENCES exercises(exercise_id))",
