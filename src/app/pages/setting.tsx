@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { importJourneyData, importTopicData, importTopicIntroData, importTopicVocabularyData, importExerciseData, importExerciseTokenData } from "@/database/database";
+import { getDatabase, importJourneyData, importTopicData, importTopicIntroData, importTopicVocabularyData, importExerciseData, importExerciseTokenData } from "@/database/database";
 import AlertDialog from "@/components/alert-dialog";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
