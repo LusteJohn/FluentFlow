@@ -96,6 +96,16 @@ function getWeekBounds(date: Date) {
   return { monday, sunday };
 }
 
+function toLocalDateTimeString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 function getWeekOptions() {
   const options = [];
   const today = new Date();
@@ -106,8 +116,8 @@ function getWeekOptions() {
     const label = `${monday.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${sunday.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
     options.push({
       label,
-      start: monday.toISOString(),
-      end: sunday.toISOString(),
+      start: toLocalDateTimeString(monday),
+      end: toLocalDateTimeString(sunday),
     });
   }
   return options;
@@ -547,7 +557,7 @@ export default function HomePage() {
                       <ThemedText style={styles.dayDetailPrompt}>{item.title}</ThemedText>
                       <ThemedText style={styles.dayDetailGrammar}>{item.grammar_focus}</ThemedText>
                       <ThemedText style={styles.dayDetailTime}>
-                        {new Date(item.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(item.recorded_at).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', hour12: true })}
                       </ThemedText>
                     </View>
                   ))}

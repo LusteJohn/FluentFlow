@@ -1,7 +1,37 @@
+const parseLocalFromISO = (iso) => {
+  const match = iso.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!match) return new Date(iso);
+  const [, year, month, day, hours, minutes, seconds] = match;
+  return new Date(
+    parseInt(year, 10),
+    parseInt(month, 10) - 1,
+    parseInt(day, 10),
+    parseInt(hours, 10),
+    parseInt(minutes, 10),
+    parseInt(seconds, 10),
+  );
+};
+
+const parseLocalDate = (localStr) => {
+  const [datePart] = localStr.split(' ');
+  const [year, month, day] = datePart.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
 export async function getWeeklyProgress(db, userId, startOfWeek, endOfWeek) {
-  const formatDate = (iso) => {
-    return iso.slice(0, 10) + ' ' + iso.slice(11, 19);
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
+
+  const start = parseLocalDate(startOfWeek);
+  const end = parseLocalDate(endOfWeek);
+  end.setDate(end.getDate() + 1);
 
   const result = await db.getAllAsync(
     `SELECT 
@@ -17,24 +47,30 @@ export async function getWeeklyProgress(db, userId, startOfWeek, endOfWeek) {
      GROUP BY strftime('%w', recorded_at)
      ORDER BY day_of_week ASC`,
     userId,
-    formatDate(startOfWeek),
-    formatDate(endOfWeek),
+    formatDate(start),
+    formatDate(end),
   );
   return result;
 }
 
 export async function getWeeklyProgressDetails(db, userId, weekStart, weekEnd, dayIndex) {
   const dayOffset = dayIndex === 0 ? 6 : dayIndex - 1;
-  const start = new Date(weekStart);
-  start.setUTCDate(start.getUTCDate() + dayOffset);
-  start.setUTCHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setUTCDate(start.getUTCDate() + 1);
-  end.setUTCHours(0, 0, 0, 0);
+  const baseDate = parseLocalDate(weekStart);
+  const dayStart = new Date(baseDate);
+  dayStart.setDate(baseDate.getDate() + dayOffset);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayStart.getDate() + 1);
+  dayEnd.setHours(0, 0, 0, 0);
 
   const formatDate = (date) => {
-    const iso = date.toISOString();
-    return iso.slice(0, 10) + ' ' + iso.slice(11, 19);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
   const result = await db.getAllAsync(
@@ -58,8 +94,8 @@ export async function getWeeklyProgressDetails(db, userId, weekStart, weekEnd, d
        AND p.recorded_at < ?
      ORDER BY p.recorded_at ASC`,
     userId,
-    formatDate(start),
-    formatDate(end),
+    formatDate(dayStart),
+    formatDate(dayEnd),
   );
   return result;
 }
