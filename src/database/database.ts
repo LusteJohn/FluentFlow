@@ -5,6 +5,7 @@ import { seedExercises } from "@/backend/TopicExercise";
 import { seedTopicIntros } from "@/backend/TopicIntro";
 import { seedTopicVocabulary } from "@/backend/TopicVocabulary";
 import { seedUserProfiles } from "@/backend/UserProfile";
+import { seedUserExerciseProgress } from "@/backend/UserExerciseProgress";
 import { Platform } from "react-native";
 
 let SQLite: any = null;
@@ -82,6 +83,14 @@ export async function getDatabase() {
           "CREATE TABLE IF NOT EXISTS exercise_tokens (exercise_token_id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id INTEGER NOT NULL, token TEXT NOT NULL, correct_position INTEGER NOT NULL, FOREIGN KEY (exercise_id) REFERENCES exercises(exercise_id))",
         );
 
+        await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS user_exercise_progress (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, exercise_id INTEGER NOT NULL, is_completed INTEGER NOT NULL DEFAULT 0 CHECK (is_completed IN (0, 1)), attempts_count INTEGER NOT NULL DEFAULT 0, completed_at TEXT, recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE(user_id, exercise_id), FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), FOREIGN KEY (exercise_id) REFERENCES exercises(exercise_id))",
+        );
+
+        try {
+          await db.runAsync("ALTER TABLE user_exercise_progress ADD COLUMN recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+        } catch (e) {}
+
         return db;
       } catch (error) {
         dbPromise = null;
@@ -126,4 +135,9 @@ export async function importExerciseTokenData() {
 export async function importUserProfileData() {
   const db = await getDatabase();
   await seedUserProfiles(db);
+}
+
+export async function importUserExerciseProgressData() {
+  const db = await getDatabase();
+  await seedUserExerciseProgress(db);
 }
