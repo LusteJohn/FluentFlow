@@ -1,4 +1,4 @@
-import { BackHandler, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { BackHandler, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useEffect, useRef, useState } from "react";
@@ -7,6 +7,9 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import AlertDialog from "@/components/alert-dialog";
+import { getDatabase } from "@/database/database";
+import { getUserProfile } from "@/backend/UserProfile";
+import { getWeeklyProgress, getWeeklyProgressDetails, getRecentCompletedExercises } from "@/backend/UserExerciseProgress";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
 
@@ -22,6 +25,20 @@ interface StatCard {
 interface WeeklyBar {
   day: string;
   height: number;
+  dayIndex: number;
+}
+
+interface DayDetailItem {
+  id: number;
+  recorded_at: string;
+  exercise_id: number;
+  level: string;
+  type: string;
+  title: string;
+  xp: number;
+  topic_id: number;
+  topic_title: string;
+  grammar_focus: string;
 }
 
 interface RecentExercise {
@@ -65,69 +82,53 @@ const STAT_CARDS: StatCard[] = [
   },
 ];
 
-const WEEKLY_BARS: WeeklyBar[] = [
-  { day: "M", height: 40 },
-  { day: "T", height: 60 },
-  { day: "W", height: 30 },
-  { day: "Th", height: 80 },
-  { day: "F", height: 50 },
-  { day: "Sa", height: 0 },
-  { day: "Su", height: 0 },
-];
+const DAY_LABELS = ["Su", "M", "T", "W", "Th", "F", "Sa"];
 
-const RECENT_EXERCISES: RecentExercise[] = [
-  {
-    id: "1",
-    type: "sentence_builder",
-    typeIcon: { ios: "puzzlepiece.fill", android: "construction", web: "construction" },
-    typeIconBg: Colors.light.tertiaryContainer,
-    typeIconColor: Colors.light.onTertiary,
-    title: "Sentence Builder",
-    status: "Completed",
-    statusIcon: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
-    statusColor: Colors.light.primary,
-    xp: "+20 XP",
-    xpColor: Colors.light.primary,
-  },
-  {
-    id: "2",
-    type: "listening",
-    typeIcon: { ios: "ear.fill", android: "hearing", web: "hearing" },
-    typeIconBg: Colors.light.primaryContainer,
-    typeIconColor: Colors.light.onPrimaryContainer,
-    title: "Listening Comp.",
-    status: "Completed",
-    statusIcon: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
-    statusColor: Colors.light.primary,
-    xp: "+15 XP",
-    xpColor: Colors.light.primary,
-  },
-  {
-    id: "3",
-    type: "vocab_drill",
-    typeIcon: { ios: "text.book.closed.fill", android: "translate", web: "translate" },
-    typeIconBg: Colors.light.surfaceContainer,
-    typeIconColor: Colors.light.onSurfaceVariant,
-    title: "Vocab Drill",
-    status: "In Progress",
-    statusIcon: { ios: "circle.dashed", android: "pending", web: "pending" },
-    statusColor: Colors.light.onSurfaceVariant,
-    xp: "-- XP",
-    xpColor: Colors.light.onSurfaceVariant,
-  },
-];
+function getWeekBounds(date: Date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d.setDate(diff));
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return { monday, sunday };
+}
+
+function getWeekOptions() {
+  const options = [];
+  const today = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i * 7);
+    const { monday, sunday } = getWeekBounds(d);
+    const label = `${monday.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${sunday.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    options.push({
+      label,
+      start: monday.toISOString(),
+      end: sunday.toISOString(),
+    });
+  }
+  return options;
+}
 
 export default function HomePage() {
   const router = useRouter();
   const [showExitDialog, setShowExitDialog] = useState(false);
   const mountedRef = useRef(false);
 
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
+  const [weeklyBars, setWeeklyBars] = useState<WeeklyBar[]>([]);
+  const [recentExercises, setRecentExercises] = useState<RecentExercise[]>([]);
+  const [weekOptions] = useState(getWeekOptions);
+  const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
+  const [showWeekPicker, setShowWeekPicker] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showDayDetail, setShowDayDetail] = useState(false);
+  const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
+  const [dayDetails, setDayDetails] = useState<DayDetailItem[]>([]);
+  const [loadingDayDetails, setLoadingDayDetails] = useState(false);
 
   const handleExit = () => {
     if (mountedRef.current) {
@@ -154,6 +155,13 @@ export default function HomePage() {
   };
 
   useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (Platform.OS === "android") {
       const subscription = BackHandler.addEventListener(
         "hardwareBackPress",
@@ -162,6 +170,141 @@ export default function HomePage() {
       return () => subscription.remove();
     }
   }, []);
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const db = await getDatabase();
+        const profile = await getUserProfile(db);
+        if (profile && mountedRef.current) {
+          setUserId(profile.user_id);
+        }
+      } catch (error) {
+        console.error("Failed to load user", error);
+      }
+    }
+    const timer = setTimeout(() => {
+      loadUser();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    async function loadWeeklyData() {
+      if (!mountedRef.current) return;
+      setLoading(true);
+      try {
+        const db = await getDatabase();
+        const week = weekOptions[selectedWeekIndex];
+        const rows = await getWeeklyProgress(db, userId, week.start, week.end);
+
+        const dayMap: Record<number, { completed_count: number; total_xp: number }> = {};
+        for (let i = 0; i < 7; i++) {
+          dayMap[i] = { completed_count: 0, total_xp: 0 };
+        }
+
+        let maxXp = 1;
+        rows.forEach((row: any) => {
+          const dayNum = parseInt(row.day_of_week, 10);
+          dayMap[dayNum] = {
+            completed_count: row.completed_count ?? 0,
+            total_xp: row.total_xp ?? 0,
+          };
+          if ((row.total_xp ?? 0) > maxXp) maxXp = row.total_xp ?? 1;
+        });
+
+        const bars: WeeklyBar[] = DAY_LABELS.map((day, idx) => {
+          const xp = dayMap[idx]?.total_xp ?? 0;
+          const height = Math.max(4, Math.round((xp / maxXp) * 92));
+          return { day, height, dayIndex: idx };
+        });
+
+        if (mountedRef.current) {
+          setWeeklyBars(bars);
+        }
+      } catch (error) {
+        console.error("Failed to load weekly progress", error);
+      } finally {
+        if (mountedRef.current) setLoading(false);
+      }
+    }
+
+    loadWeeklyData();
+  }, [userId, selectedWeekIndex, weekOptions]);
+
+  const handleDayPress = async (dayIndex: number) => {
+    if (!userId) return;
+    setSelectedDayIndex(dayIndex);
+    setLoadingDayDetails(true);
+    setShowDayDetail(true);
+    try {
+      const db = await getDatabase();
+      const week = weekOptions[selectedWeekIndex];
+      const rows = await getWeeklyProgressDetails(db, userId, week.start, week.end, dayIndex);
+      setDayDetails(rows);
+    } catch (error) {
+      console.error("Failed to load day details", error);
+      setDayDetails([]);
+    } finally {
+      setLoadingDayDetails(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!userId) return;
+
+    async function loadRecentExercises() {
+      try {
+        const db = await getDatabase();
+        const rows = await getRecentCompletedExercises(db, userId, 5);
+
+        const typeIcons: Record<string, { icon: any; bg: string; color: string }> = {
+          sentence_builder: {
+            icon: { ios: "puzzlepiece.fill", android: "construction", web: "construction" },
+            bg: Colors.light.tertiaryContainer,
+            color: Colors.light.onTertiary,
+          },
+          spelling: {
+            icon: { ios: "textformat", android: "text_fields", web: "text_fields" },
+            bg: Colors.light.primaryContainer,
+            color: Colors.light.onPrimaryContainer,
+          },
+          fill_blank_spelling: {
+            icon: { ios: "textbox", android: "edit", web: "edit" },
+            bg: Colors.light.surfaceContainer,
+            color: Colors.light.onSurfaceVariant,
+          },
+        };
+
+        const exercises: RecentExercise[] = rows.map((row: any, idx: number) => {
+          const meta = typeIcons[row.type] ?? typeIcons.fill_blank_spelling;
+          return {
+            id: String(row.id),
+            type: row.type,
+            typeIcon: meta.icon,
+            typeIconBg: meta.bg,
+            typeIconColor: meta.color,
+            title: row.title,
+            status: "Completed" as const,
+            statusIcon: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
+            statusColor: Colors.light.primary,
+            xp: `+${row.xp ?? 5} XP`,
+            xpColor: Colors.light.primary,
+          };
+        });
+
+        if (mountedRef.current) {
+          setRecentExercises(exercises);
+        }
+      } catch (error) {
+        console.error("Failed to load recent exercises", error);
+      }
+    }
+
+    loadRecentExercises();
+  }, [userId]);
 
   const renderStatCard = (card: StatCard) => (
     <View
@@ -195,7 +338,10 @@ export default function HomePage() {
   );
 
   const renderWeeklyBar = (item: WeeklyBar, index: number) => (
-    <View key={item.day} style={styles.weekBarContainer}>
+    <Pressable
+      key={item.day}
+      style={styles.weekBarContainer}
+      onPress={() => handleDayPress(item.dayIndex)}>
       <View style={styles.weekBarTrack}>
         <View
           style={[
@@ -203,7 +349,7 @@ export default function HomePage() {
             {
               height: Math.max(item.height, 4),
               backgroundColor:
-                index === 4
+                index === new Date().getDay()
                   ? Colors.light.primary
                   : Colors.light.primaryContainer,
             },
@@ -213,11 +359,11 @@ export default function HomePage() {
       <ThemedText
         style={[
           styles.weekBarLabel,
-          index === 4 && styles.weekBarLabelActive,
+          index === new Date().getDay() && styles.weekBarLabelActive,
         ]}>
         {item.day}
       </ThemedText>
-    </View>
+    </Pressable>
   );
 
   const renderRecentExercise = (item: RecentExercise) => (
@@ -275,6 +421,8 @@ export default function HomePage() {
     </View>
   );
 
+  const selectedWeek = weekOptions[selectedWeekIndex];
+
   return (
     <ThemedView style={styles.container}>
       <AppHeader />
@@ -296,23 +444,119 @@ export default function HomePage() {
 
         <View style={styles.weeklySection}>
           <View style={styles.weeklyHeader}>
-            <ThemedText style={styles.sectionTitle}>Weekly Progress</ThemedText>
-            <ThemedText style={styles.weeklySeeAll}>See All</ThemedText>
-          </View>
-          <View style={styles.weeklyChart}>
-            <View style={styles.weeklyChartInner}>
-              {WEEKLY_BARS.map(renderWeeklyBar)}
+            <View>
+              <ThemedText style={styles.sectionTitle}>Weekly Progress</ThemedText>
+              <Pressable onPress={() => setShowWeekPicker(true)}>
+                <ThemedText style={styles.weekLabel}>
+                  {selectedWeek?.label ?? "Select Week"}
+                </ThemedText>
+              </Pressable>
             </View>
           </View>
+          {loading ? (
+            <ThemedText style={styles.loadingText}>Loading...</ThemedText>
+          ) : (
+            <View style={styles.weeklyChart}>
+              <View style={styles.weeklyChartInner}>
+                {weeklyBars.map(renderWeeklyBar)}
+              </View>
+            </View>
+          )}
         </View>
 
         <View style={styles.recentSection}>
           <ThemedText style={styles.sectionTitle}>Recent Exercises</ThemedText>
           <View style={styles.recentList}>
-            {RECENT_EXERCISES.map(renderRecentExercise)}
+            {recentExercises.length > 0
+              ? recentExercises.map(renderRecentExercise)
+              : <ThemedText style={styles.emptyText}>No recent exercises yet.</ThemedText>}
           </View>
         </View>
       </ScrollView>
+
+      {showWeekPicker && (
+        <View style={styles.weekPickerOverlay}>
+          <View style={styles.weekPickerCard}>
+            <View style={styles.weekPickerHeader}>
+              <ThemedText style={styles.weekPickerTitle}>Select Week</ThemedText>
+              <Pressable onPress={() => setShowWeekPicker(false)}>
+                <ThemedText style={styles.weekPickerDone}>Done</ThemedText>
+              </Pressable>
+            </View>
+            <ScrollView style={styles.weekPickerList}>
+              {weekOptions.map((week, idx) => (
+                <Pressable
+                  key={week.label}
+                  style={[
+                    styles.weekPickerItem,
+                    selectedWeekIndex === idx && styles.weekPickerItemActive,
+                  ]}
+                  onPress={() => {
+                    setSelectedWeekIndex(idx);
+                    setShowWeekPicker(false);
+                  }}>
+                  <ThemedText
+                    style={[
+                      styles.weekPickerItemText,
+                      selectedWeekIndex === idx && styles.weekPickerItemTextActive,
+                    ]}>
+                    {week.label}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      )}
+
+      {showDayDetail && (
+        <Modal
+          visible={showDayDetail}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowDayDetail(false)}>
+          <View style={styles.dayDetailOverlay}>
+            <View style={styles.dayDetailCard}>
+              <View style={styles.dayDetailHeader}>
+                <ThemedText style={styles.dayDetailTitle}>
+                  {selectedDayIndex !== null ? DAY_LABELS[selectedDayIndex] : ""} Progress
+                </ThemedText>
+                <Pressable onPress={() => setShowDayDetail(false)}>
+                  <ThemedText style={styles.dayDetailClose}>Close</ThemedText>
+                </Pressable>
+              </View>
+              {loadingDayDetails ? (
+                <ThemedText style={styles.dayDetailLoading}>Loading...</ThemedText>
+              ) : dayDetails.length === 0 ? (
+                <ThemedText style={styles.dayDetailEmpty}>No exercises completed on this day.</ThemedText>
+              ) : (
+                <ScrollView style={styles.dayDetailList}>
+                  {dayDetails.map((item) => (
+                    <View key={item.id} style={styles.dayDetailItem}>
+                      <View style={styles.dayDetailItemHeader}>
+                        <ThemedText style={styles.dayDetailTopic}>{item.topic_title}</ThemedText>
+                        <View style={styles.dayDetailBadges}>
+                          <View style={styles.dayDetailBadge}>
+                            <ThemedText style={styles.dayDetailBadgeText}>{item.level}</ThemedText>
+                          </View>
+                          <View style={[styles.dayDetailBadge, styles.dayDetailBadgeXP]}>
+                            <ThemedText style={[styles.dayDetailBadgeText, styles.dayDetailBadgeTextXP]}>+{item.xp ?? 5} XP</ThemedText>
+                          </View>
+                        </View>
+                      </View>
+                      <ThemedText style={styles.dayDetailPrompt}>{item.title}</ThemedText>
+                      <ThemedText style={styles.dayDetailGrammar}>{item.grammar_focus}</ThemedText>
+                      <ThemedText style={styles.dayDetailTime}>
+                        {new Date(item.recorded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+          </View>
+        </Modal>
+      )}
 
       <NavBar />
 
@@ -334,6 +578,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.surface,
+    position: "relative",
   },
   scrollView: {
     flex: 1,
@@ -525,5 +770,187 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     lineHeight: 20,
+  },
+  loadingText: {
+    textAlign: "center",
+    paddingVertical: 24,
+    color: Colors.light.onSurfaceVariant,
+  },
+  emptyText: {
+    textAlign: "center",
+    paddingVertical: 16,
+    color: Colors.light.onSurfaceVariant,
+  },
+  weekLabel: {
+    color: Colors.light.primary,
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 20,
+    marginTop: 4,
+  },
+  weekPickerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  weekPickerCard: {
+    width: "90%",
+    maxWidth: 360,
+    backgroundColor: Colors.light.surface,
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
+  },
+  weekPickerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.outlineVariant,
+  },
+  weekPickerTitle: {
+    color: Colors.light.onSurface,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  weekPickerDone: {
+    color: Colors.light.primary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  weekPickerList: {
+    maxHeight: 300,
+  },
+  weekPickerItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.outlineVariant,
+  },
+  weekPickerItemActive: {
+    backgroundColor: Colors.light.primaryContainer,
+  },
+  weekPickerItemText: {
+    color: Colors.light.onSurface,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  weekPickerItemTextActive: {
+    color: Colors.light.primary,
+    fontWeight: "700",
+  },
+  dayDetailOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+    elevation: 1000,
+  },
+  dayDetailCard: {
+    width: "90%",
+    maxWidth: 400,
+    maxHeight: "80%",
+    backgroundColor: Colors.light.surface,
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
+  },
+  dayDetailHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.outlineVariant,
+  },
+  dayDetailTitle: {
+    color: Colors.light.onSurface,
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  dayDetailClose: {
+    color: Colors.light.primary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  dayDetailLoading: {
+    textAlign: "center",
+    paddingVertical: 24,
+    color: Colors.light.onSurfaceVariant,
+  },
+  dayDetailEmpty: {
+    textAlign: "center",
+    paddingVertical: 24,
+    color: Colors.light.onSurfaceVariant,
+  },
+  dayDetailList: {
+    padding: 16,
+    maxHeight: 400,
+  },
+  dayDetailItem: {
+    backgroundColor: Colors.light.surfaceContainerLowest,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
+    gap: 8,
+  },
+  dayDetailItemHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  dayDetailTopic: {
+    color: Colors.light.onSurface,
+    fontSize: 16,
+    fontWeight: "700",
+    flex: 1,
+  },
+  dayDetailBadges: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  dayDetailBadge: {
+    backgroundColor: Colors.light.primaryContainer,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  dayDetailBadgeXP: {
+    backgroundColor: Colors.light.secondaryContainer,
+  },
+  dayDetailBadgeText: {
+    color: Colors.light.primary,
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "capitalize",
+  },
+  dayDetailBadgeTextXP: {
+    color: Colors.light.onSecondaryContainer,
+  },
+  dayDetailPrompt: {
+    color: Colors.light.onSurface,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  dayDetailGrammar: {
+    color: Colors.light.onSurfaceVariant,
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  dayDetailTime: {
+    color: Colors.light.onSurfaceVariant,
+    fontSize: 12,
+    fontWeight: "500",
+    marginTop: 4,
   },
 });

@@ -1,13 +1,13 @@
 import { usePathname, useRouter } from "expo-router";
-import { Pressable, StyleSheet, View } from "react-native";
 import { SymbolView } from "expo-symbols";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { Colors } from "@/constants/theme";
 
 const NAV_ITEMS = [
   {
-    label: "Homepage",
+    label: "Home",
     route: "/pages/homepage",
     name: { ios: "house.fill", android: "home", web: "home" },
   },
@@ -46,14 +46,16 @@ export default function NavBar() {
           <Pressable
             key={item.route}
             style={styles.itemContainer}
-            onPress={() => router.push(item.route)}>
+            onPress={() => router.push(item.route)}
+          >
             {({ pressed }) => (
               <View
                 style={[
                   styles.item,
                   isActive && styles.itemActive,
                   pressed && !isActive && styles.itemPressed,
-                ]}>
+                ]}
+              >
                 <View style={styles.iconWrapper}>
                   <SymbolView
                     name={item.name}
@@ -67,10 +69,8 @@ export default function NavBar() {
                 </View>
                 <ThemedText
                   type="labelSm"
-                  style={[
-                    styles.itemLabel,
-                    isActive && styles.itemLabelActive,
-                  ]}>
+                  style={[styles.itemLabel, isActive && styles.itemLabelActive]}
+                >
                   {item.label}
                 </ThemedText>
                 {isActive && <View style={styles.activeIndicator} />}
@@ -146,4 +146,3 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.primary,
   },
 });
-

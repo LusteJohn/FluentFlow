@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import {
   Pressable,
   ScrollView,
@@ -27,6 +27,8 @@ import {
   seedExerciseTokens,
 } from "@/backend/ExerciseTokens";
 import { createExerciseAnswer, getExerciseAnswersByExerciseId, deleteExerciseAnswersByExerciseId } from "@/backend/ExerciseAnswer";
+import { getUserProfile } from "@/backend/UserProfile";
+import { getUserExerciseProgressByUserAndExercise, createUserExerciseProgress, updateUserExerciseProgress } from "@/backend/UserExerciseProgress";
 import { getDatabase } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
@@ -88,6 +90,7 @@ export default function ExerciseListPage() {
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
 
   const getCorrectAnswer = (
     tokens: ExerciseToken[],
@@ -208,6 +211,21 @@ export default function ExerciseListPage() {
     }, [topic_id, level]),
   );
 
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const db = await getDatabase();
+        const profile = await getUserProfile(db);
+        if (profile) {
+          setUserId(profile.user_id);
+        }
+      } catch (error) {
+        console.error("Failed to load user for progress tracking", error);
+      }
+    }
+    loadUser();
+  }, []);
+
   const goToPrev = () => {
     setCurrentExerciseIndex((prev) => Math.max(prev - 1, 0));
   };
@@ -252,6 +270,34 @@ export default function ExerciseListPage() {
       const isCorrect =
         correctAnswer !== "" &&
         submitted.trim().toLowerCase() === correctAnswer.toLowerCase();
+
+      if (userId) {
+        const existing = await getUserExerciseProgressByUserAndExercise(
+          db,
+          userId,
+          exercise.exercise_id,
+        );
+        const attempts = (existing?.attempts_count ?? 0) + 1;
+        const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+        if (existing) {
+          await updateUserExerciseProgress(db, userId, exercise.exercise_id, {
+            attempts_count: attempts,
+            is_completed: isCorrect,
+            completed_at: isCorrect ? now : existing.completed_at,
+            recorded_at: now,
+          });
+        } else {
+          await createUserExerciseProgress(db, {
+            user_id: userId,
+            exercise_id: exercise.exercise_id,
+            is_completed: isCorrect,
+            attempts_count: attempts,
+            completed_at: isCorrect ? now : null,
+            recorded_at: now,
+          });
+        }
+      }
 
       const newResults = { ...answerResults, [exercise.exercise_id]: isCorrect };
       setAnswerResults(newResults);
