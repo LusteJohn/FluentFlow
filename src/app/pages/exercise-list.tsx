@@ -278,7 +278,8 @@ export default function ExerciseListPage() {
           exercise.exercise_id,
         );
         const attempts = (existing?.attempts_count ?? 0) + 1;
-        const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+        const now = new Date();
+        const recordedAt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
 
         if (existing) {
           await updateUserExerciseProgress(db, userId, exercise.exercise_id, {
