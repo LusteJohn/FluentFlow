@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -38,6 +37,13 @@ interface UserProfile {
 
 const GENDER_OPTIONS = ["Male", "Female", "Other", "Prefer not to say"] as const;
 
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,8 +57,10 @@ export default function ProfilePage() {
   const [birthdate, setBirthdate] = useState("");
   const [gender, setGender] = useState("");
   const [address, setAddress] = useState("");
+
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [tempDate, setTempDate] = useState<Date | null>(null);
+  const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
+  const [pickerMonth, setPickerMonth] = useState(new Date().getMonth());
 
   useFocusEffect(
     useCallback(() => {
@@ -91,22 +99,59 @@ export default function ProfilePage() {
 
   const handleBirthdatePress = () => {
     if (!isEditing) return;
-    const current = birthdate ? new Date(birthdate + "T00:00:00") : new Date();
-    setTempDate(current);
+    if (birthdate) {
+      const parts = birthdate.split("-");
+      setPickerYear(parseInt(parts[0], 10));
+      setPickerMonth(parseInt(parts[1], 10) - 1);
+    } else {
+      const today = new Date();
+      setPickerYear(today.getFullYear());
+      setPickerMonth(today.getMonth());
+    }
     setShowDatePicker(true);
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === "android") {
-      setShowDatePicker(false);
-    }
-    if (selectedDate) {
-      const year = selectedDate.getFullYear();
-      const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
-      const day = String(selectedDate.getDate()).padStart(2, "0");
-      setBirthdate(`${year}-${month}-${day}`);
-    }
+  const getDaysInMonth = (month: number, year: number) =>
+    new Date(year, month + 1, 0).getDate();
+
+  const getFirstDayOfMonth = (month: number, year: number) =>
+    new Date(year, month, 1).getDay();
+
+  const handleConfirmDate = (day: number) => {
+    const month = String(pickerMonth + 1).padStart(2, "0");
+    const dayStr = String(day).padStart(2, "0");
+    setBirthdate(`${pickerYear}-${month}-${dayStr}`);
+    setShowDatePicker(false);
   };
+
+  const daysInMonth = getDaysInMonth(pickerMonth, pickerYear);
+  const firstDay = getFirstDayOfMonth(pickerMonth, pickerYear);
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+
+  const dayCells = [];
+  for (let i = 0; i < firstDay; i++) {
+    dayCells.push(<View key={`empty-${i}`} style={styles.dayCell} />);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    dayCells.push(
+      <Pressable
+        key={d}
+        style={styles.dayCell}
+        onPress={() => handleConfirmDate(d)}>
+        <ThemedText
+          style={[
+            styles.dayText,
+            birthdate ===
+              `${pickerYear}-${String(pickerMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}` &&
+              styles.dayTextActive,
+          ]}>
+          {d}
+        </ThemedText>
+      </Pressable>,
+    );
+  }
 
   const handleSave = async () => {
     if (!firstname.trim() || !lastname.trim()) {
@@ -404,13 +449,77 @@ export default function ProfilePage() {
       </KeyboardAvoidingView>
 
       {showDatePicker && (
-        <DateTimePicker
-          value={tempDate ?? new Date()}
-          mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={handleDateChange}
-          maximumDate={new Date()}
-        />
+        <View style={styles.datePickerOverlay}>
+          <View style={styles.datePickerCard}>
+            <View style={styles.datePickerHeader}>
+              <Pressable onPress={() => setShowDatePicker(false)}>
+                <ThemedText style={styles.datePickerCancel}>Cancel</ThemedText>
+              </Pressable>
+              <ThemedText style={styles.datePickerTitle}>
+                {MONTHS[pickerMonth]} {pickerYear}
+              </ThemedText>
+              <Pressable onPress={() => setShowDatePicker(false)}>
+                <ThemedText style={styles.datePickerDone}>Done</ThemedText>
+              </Pressable>
+            </View>
+
+            <View style={styles.datePickerBody}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.monthScroll}>
+                {MONTHS.map((name, idx) => (
+                  <Pressable
+                    key={name}
+                    style={[
+                      styles.monthChip,
+                      pickerMonth === idx && styles.monthChipActive,
+                    ]}
+                    onPress={() => setPickerMonth(idx)}>
+                    <ThemedText
+                      style={[
+                        styles.monthChipText,
+                        pickerMonth === idx && styles.monthChipTextActive,
+                      ]}>
+                      {name.slice(0, 3)}
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              <ScrollView
+                style={styles.yearScroll}
+                showsVerticalScrollIndicator={false}>
+                {years.map((y) => (
+                  <Pressable
+                    key={y}
+                    style={[
+                      styles.yearItem,
+                      pickerYear === y && styles.yearItemActive,
+                    ]}
+                    onPress={() => setPickerYear(y)}>
+                    <ThemedText
+                      style={[
+                        styles.yearText,
+                        pickerYear === y && styles.yearTextActive,
+                      ]}>
+                      {y}
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              <View style={styles.dayGrid}>
+                {DAYS.map((d) => (
+                  <ThemedText key={d} style={styles.dayHeader}>
+                    {d}
+                  </ThemedText>
+                ))}
+                {dayCells}
+              </View>
+            </View>
+          </View>
+        </View>
       )}
 
       <NavBar />
@@ -589,5 +698,125 @@ const styles = StyleSheet.create({
     color: Colors.light.onPrimary,
     fontSize: 16,
     fontWeight: "600",
+  },
+  datePickerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  datePickerCard: {
+    width: "90%",
+    maxWidth: 360,
+    backgroundColor: Colors.light.surface,
+    borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
+  },
+  datePickerHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.outlineVariant,
+  },
+  datePickerCancel: {
+    color: Colors.light.onSurfaceVariant,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  datePickerTitle: {
+    color: Colors.light.onSurface,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  datePickerDone: {
+    color: Colors.light.primary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  datePickerBody: {
+    padding: 16,
+    gap: 16,
+  },
+  monthScroll: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  monthChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    backgroundColor: Colors.light.surfaceContainer,
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
+  },
+  monthChipActive: {
+    backgroundColor: Colors.light.primary,
+    borderColor: Colors.light.primary,
+  },
+  monthChipText: {
+    color: Colors.light.onSurface,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  monthChipTextActive: {
+    color: Colors.light.onPrimary,
+  },
+  yearScroll: {
+    maxHeight: 120,
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
+    borderRadius: 12,
+  },
+  yearItem: {
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  yearItemActive: {
+    backgroundColor: Colors.light.primaryContainer,
+  },
+  yearText: {
+    color: Colors.light.onSurface,
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  yearTextActive: {
+    color: Colors.light.primary,
+    fontWeight: "700",
+  },
+  dayGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+    justifyContent: "center",
+  },
+  dayHeader: {
+    width: 36,
+    textAlign: "center",
+    color: Colors.light.onSurfaceVariant,
+    fontSize: 12,
+    fontWeight: "600",
+    paddingVertical: 4,
+  },
+  dayCell: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 18,
+  },
+  dayText: {
+    color: Colors.light.onSurface,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  dayTextActive: {
+    color: Colors.light.onPrimary,
+    fontWeight: "700",
   },
 });
