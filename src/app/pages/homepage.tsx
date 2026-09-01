@@ -8,7 +8,7 @@ import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import AlertDialog from "@/components/alert-dialog";
 import TutorialModal, { getWelcomingPhrase } from "@/components/tutorial-modal";
-import { getDatabase, isDataImported } from "@/database/database";
+import { getDatabase, isDataImported, hasSeenTutorial, markTutorialSeen } from "@/database/database";
 import { getUserProfile } from "@/backend/UserProfile";
 import { getWeeklyProgress, getWeeklyProgressDetails, getRecentCompletedExercises, getRecentCompletedExercisesCount, getTotalEarnedXP } from "@/backend/UserExerciseProgress";
 import NavBar from "../(tabs)/navBar";
@@ -194,12 +194,16 @@ export default function HomePage() {
     let cancelled = false;
     (async () => {
       try {
-        const imported = await isDataImported();
-        if (!cancelled && !imported) {
+        const [seen, imported] = await Promise.all([
+          hasSeenTutorial(),
+          isDataImported(),
+        ]);
+        if (!cancelled && !seen) {
           setShowTutorial(true);
+          await markTutorialSeen();
         }
       } catch (error) {
-        console.error("Failed to check import state", error);
+        console.error("Failed to check tutorial state", error);
       }
     })();
     return () => {
@@ -563,7 +567,19 @@ export default function HomePage() {
 
   return (
     <ThemedView style={styles.container}>
-      <AppHeader />
+      <View style={styles.headerRow}>
+        <AppHeader />
+        <Pressable
+          style={styles.helpButton}
+          onPress={() => setShowTutorial(true)}
+          hitSlop={8}>
+          <SymbolView
+            name={{ ios: "questionmark.circle", android: "help", web: "help" } as any}
+            size={24}
+            tintColor="#15803d"
+          />
+        </Pressable>
+      </View>
 
       <ScrollView
         style={styles.scrollView}
@@ -1183,5 +1199,20 @@ const styles = StyleSheet.create({
     color: Colors.light.onSurfaceVariant,
     fontSize: 13,
     fontWeight: "600",
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingRight: 16,
+  },
+  helpButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#dcfce7",
+    marginTop: 8,
   },
 });

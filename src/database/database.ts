@@ -4,8 +4,8 @@ import { seedTopics } from "@/backend/Topic";
 import { seedExercises } from "@/backend/TopicExercise";
 import { seedTopicIntros } from "@/backend/TopicIntro";
 import { seedTopicVocabulary } from "@/backend/TopicVocabulary";
-import { seedUserProfiles } from "@/backend/UserProfile";
 import { seedUserExerciseProgress } from "@/backend/UserExerciseProgress";
+import { seedUserProfiles } from "@/backend/UserProfile";
 import { Platform } from "react-native";
 
 let SQLite: any = null;
@@ -72,7 +72,9 @@ export async function getDatabase() {
         );
 
         try {
-          await db.runAsync("ALTER TABLE exercises ADD COLUMN xp INTEGER DEFAULT 5");
+          await db.runAsync(
+            "ALTER TABLE exercises ADD COLUMN xp INTEGER DEFAULT 5",
+          );
         } catch (e) {}
 
         await db.runAsync(
@@ -88,8 +90,18 @@ export async function getDatabase() {
         );
 
         try {
-          await db.runAsync("ALTER TABLE user_exercise_progress ADD COLUMN recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+          await db.runAsync(
+            "ALTER TABLE user_exercise_progress ADD COLUMN recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+          );
         } catch (e) {}
+
+        await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS user_level_progress (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, topic_id INTEGER NOT NULL, level TEXT NOT NULL CHECK (level IN ('beginner', 'intermediate', 'advanced')), completed_count INTEGER NOT NULL DEFAULT 0, is_completed INTEGER NOT NULL DEFAULT 0 CHECK (is_completed IN (0, 1)), completed_at TEXT, UNIQUE(user_id, topic_id, level), FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), FOREIGN KEY (topic_id) REFERENCES topics(topic_id))",
+        );
+
+        await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS app_kv (key TEXT PRIMARY KEY, value TEXT)",
+        );
 
         return db;
       } catch (error) {
@@ -153,4 +165,39 @@ export async function isDataImported(): Promise<boolean> {
     (result.topics ?? 0) > 0 &&
     (result.exercises ?? 0) > 0
   );
+}
+
+export async function hasSeenTutorial(): Promise<boolean> {
+  try {
+    const db = await getDatabase();
+    const row = await db.getFirstAsync(
+      "SELECT value FROM app_kv WHERE key = ?",
+      "tutorial_seen",
+    );
+    return row?.value === "1";
+  } catch {
+    return true;
+  }
+}
+
+export async function markTutorialSeen(): Promise<void> {
+  try {
+    const db = await getDatabase();
+    await db.runAsync(
+      "INSERT INTO app_kv (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      "tutorial_seen",
+      "1",
+    );
+  } catch (error) {
+    console.error("Failed to mark tutorial seen", error);
+  }
+}
+
+export async function resetTutorialSeen(): Promise<void> {
+  try {
+    const db = await getDatabase();
+    await db.runAsync("DELETE FROM app_kv WHERE key = ?", "tutorial_seen");
+  } catch (error) {
+    console.error("Failed to reset tutorial flag", error);
+  }
 }
