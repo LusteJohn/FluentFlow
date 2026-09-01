@@ -6,7 +6,8 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { getAllJourneys } from "@/backend/Journey";
+import { getAllJourneys, getAllJourneyProgressForUser } from "@/backend/Journey";
+import { getUserProfile } from "@/backend/UserProfile";
 import { getDatabase } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
@@ -42,6 +43,7 @@ export default function JourneyPage() {
   const router = useRouter();
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [journeyProgress, setJourneyProgress] = useState<Record<number, { totalExercises: number; completedExercises: number; percent: number }>>({});
 
   useFocusEffect(
     useCallback(() => {
@@ -54,10 +56,20 @@ export default function JourneyPage() {
           if (isActive) {
             setJourneys(result ?? []);
           }
+          const profile = await getUserProfile(db);
+          if (isActive && profile) {
+            const progress = await getAllJourneyProgressForUser(db, profile.user_id);
+            if (isActive) {
+              setJourneyProgress(progress ?? {});
+            }
+          } else if (isActive) {
+            setJourneyProgress({});
+          }
         } catch (error) {
           console.error("Failed to load journeys", error);
           if (isActive) {
             setJourneys([]);
+            setJourneyProgress({});
           }
         } finally {
           if (isActive) {
@@ -74,8 +86,11 @@ export default function JourneyPage() {
     }, []),
   );
 
-  const completedCount = journeys.filter((_, i) => i === 0).length;
-  const inProgressIndex = journeys.length > 0 ? journeys.length - 1 : -1;
+  const firstInProgressIndex = journeys.findIndex((j) => {
+    const p = journeyProgress[j.journey_id];
+    return !p || p.percent < 100;
+  });
+  const inProgressIndex = firstInProgressIndex >= 0 ? firstInProgressIndex : -1;
 
   return (
     <ThemedView style={styles.container}>
@@ -97,11 +112,18 @@ export default function JourneyPage() {
           <View style={styles.pathLine} />
 
           {journeys.map((journey, index) => {
-            const isCompleted = index === 0;
-            const isInProgress = index === inProgressIndex;
-            const isLocked = index > inProgressIndex && inProgressIndex >= 0;
-            const nodeSize = isInProgress ? 80 : 64;
-            const iconSize = isInProgress ? 40 : 32;
+            const progress = journeyProgress[journey.journey_id];
+            const percent = progress?.percent ?? 0;
+            const isCompleted = percent === 100;
+            const isInProgress = !isCompleted && percent > 0;
+            const isNotStarted = percent === 0;
+            const isLocked = !isCompleted && !isInProgress && index > 0 && (() => {
+              const prev = journeys[index - 1];
+              const prevProgress = prev ? journeyProgress[prev.journey_id] : null;
+              return !prevProgress || prevProgress.percent < 100;
+            })();
+            const nodeSize = isCompleted || isInProgress ? 80 : 64;
+            const iconSize = isCompleted || isInProgress ? 40 : 32;
             const bgImage = JOURNEY_BG_IMAGES[journey.journey_id];
 
             return (
@@ -150,7 +172,7 @@ export default function JourneyPage() {
                 <View
                   style={[
                     styles.nodeCard,
-                    isInProgress && styles.nodeCardActive,
+                    (isCompleted || isInProgress) && styles.nodeCardActive,
                     isLocked && styles.nodeCardLocked,
                   ]}>
                   {bgImage && (
@@ -174,7 +196,7 @@ export default function JourneyPage() {
                   )}
                   <View style={styles.cardContent}>
                     <ThemedText
-                      type={isInProgress ? "headlineMd" : "labelSm"}
+                      type={(isCompleted || isInProgress) ? "headlineMd" : "labelSm"}
                       style={[
                         styles.cardTitle,
                         isLocked && styles.cardTitleLocked,
@@ -186,15 +208,20 @@ export default function JourneyPage() {
                         Mastered
                       </ThemedText>
                     )}
-                    {isInProgress && (
+                    {(isInProgress || isCompleted) && (
                       <View style={styles.progressContainer}>
                         <View style={styles.progressTrack}>
-                          <View style={[styles.progressFill, { width: "60%" }]} />
+                          <View style={[styles.progressFill, { width: `${percent}%` }]} />
                         </View>
                         <ThemedText type="labelSm" style={styles.progressText}>
-                          60% Complete
+                          {percent}% Complete ({progress?.completedExercises ?? 0}/{progress?.totalExercises ?? 0})
                         </ThemedText>
                       </View>
+                    )}
+                    {isNotStarted && !isLocked && (
+                      <ThemedText type="bodySm" style={styles.cardStatus}>
+                        Not started yet
+                      </ThemedText>
                     )}
                     {isLocked && (
                       <ThemedText type="bodySm" style={styles.cardStatusLocked}>

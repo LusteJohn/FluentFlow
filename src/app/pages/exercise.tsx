@@ -7,6 +7,8 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { getTopicById } from "@/backend/Topic";
+import { getUserProfile } from "@/backend/UserProfile";
+import { getAllLevelProgressForTopic, LevelProgressInfo, EXERCISES_PER_LEVEL } from "@/backend/UserLevelProgress";
 import { getDatabase } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
@@ -21,7 +23,7 @@ interface Topic {
 
 const LEVELS = ["beginner", "intermediate", "advanced"] as const;
 
-const LEVEL_META: Record<string, {
+interface LevelDisplay {
   title: string;
   description: string;
   icon: any;
@@ -32,18 +34,18 @@ const LEVEL_META: Record<string, {
   badgeBg: string;
   progressColor: string;
   activeDots: number;
-}> = {
+  totalDots: number;
+  progressPercent: number;
+}
+
+const LEVEL_BASE: Record<string, Omit<LevelDisplay, "badgeColor" | "badgeText" | "badgeBg" | "activeDots" | "totalDots" | "progressPercent">> = {
   beginner: {
     title: "Beginner",
     description: "Basic vocabulary & simple phrases. Checking in and finding your gate.",
     icon: { ios: "checkmark.circle", android: "check_circle", web: "check_circle" },
     iconBg: "#dcfce7",
     iconColor: "#15803d",
-    badgeColor: "#6f5100",
-    badgeText: "Available",
-    badgeBg: "#dcfce7",
     progressColor: "#22c55e",
-    activeDots: 3,
   },
   intermediate: {
     title: "Intermediate",
@@ -51,11 +53,7 @@ const LEVEL_META: Record<string, {
     icon: { ios: "play.fill", android: "play_arrow", web: "play_arrow" },
     iconBg: "#dcfce7",
     iconColor: "#15803d",
-    badgeColor: "#6f5100",
-    badgeText: "Available",
-    badgeBg: "#dcfce7",
     progressColor: "#22c55e",
-    activeDots: 2,
   },
   advanced: {
     title: "Advanced",
@@ -63,13 +61,55 @@ const LEVEL_META: Record<string, {
     icon: { ios: "checkmark.circle", android: "check_circle", web: "check_circle" },
     iconBg: "#dcfce7",
     iconColor: "#15803d",
-    badgeColor: "#6f5100",
-    badgeText: "Available",
-    badgeBg: "#dcfce7",
     progressColor: "#22c55e",
-    activeDots: 2,
   },
 };
+
+function buildLevelDisplay(
+  level: string,
+  progress: LevelProgressInfo | undefined,
+): LevelDisplay {
+  const base = LEVEL_BASE[level];
+  const total = progress?.totalCount && progress.totalCount > 0
+    ? progress.totalCount
+    : EXERCISES_PER_LEVEL;
+  const completed = progress?.completedCount ?? 0;
+  const percent = Math.min(100, Math.round((completed / total) * 100));
+  const filledDots = Math.min(3, Math.round((completed / total) * 3));
+
+  const status = progress?.status ?? "available";
+  if (status === "completed") {
+    return {
+      ...base,
+      badgeColor: "#15803d",
+      badgeText: "Complete",
+      badgeBg: "#dcfce7",
+      activeDots: 3,
+      totalDots: 3,
+      progressPercent: 100,
+    };
+  }
+  if (status === "in_progress") {
+    return {
+      ...base,
+      badgeColor: "#795900",
+      badgeText: "In Progress",
+      badgeBg: "#fef3c7",
+      activeDots: filledDots,
+      totalDots: 3,
+      progressPercent: percent,
+    };
+  }
+  return {
+    ...base,
+    badgeColor: "#15803d",
+    badgeText: "Available",
+    badgeBg: "#dcfce7",
+    activeDots: 0,
+    totalDots: 3,
+    progressPercent: 0,
+  };
+}
 
 const JOURNEY_ICONS: Record<number, any> = {
   1: { ios: "house.fill", android: "home", web: "home" },
@@ -85,6 +125,7 @@ export default function ExercisePage() {
   const router = useRouter();
   const [topicTitle, setTopicTitle] = useState<string>("Exercises");
   const [journeyId, setJourneyId] = useState<number | null>(null);
+  const [levelProgress, setLevelProgress] = useState<Record<string, LevelProgressInfo>>({});
 
   useFocusEffect(
     useCallback(() => {
@@ -95,9 +136,20 @@ export default function ExercisePage() {
           const db = await getDatabase();
           const topicIdNum = parseInt(topic_id ?? "1", 10);
           const topic = (await getTopicById(db, topicIdNum)) as Topic | null;
+          const profile = await getUserProfile(db);
           if (isActive) {
             setTopicTitle(topic?.title ?? "Exercises");
             setJourneyId(topic?.journey_id ?? null);
+            if (profile) {
+              const progress = await getAllLevelProgressForTopic(
+                db,
+                profile.user_id,
+                topicIdNum,
+              );
+              setLevelProgress(progress);
+            } else {
+              setLevelProgress({});
+            }
           }
         } catch (error) {
           console.error("Failed to load exercise page", error);
@@ -116,10 +168,6 @@ export default function ExercisePage() {
     router.push(
       `/pages/exercise-list?topic_id=${topic_id}&level=${level}` as any,
     );
-  };
-
-  const isLevelLocked = (level: string): boolean => {
-    return LEVEL_META[level]?.badgeText === "Locked";
   };
 
   return (
@@ -164,8 +212,7 @@ export default function ExercisePage() {
         <View style={styles.levelsSection}>
           <ThemedText style={styles.sectionTitle}>Exercise Levels</ThemedText>
           {LEVELS.map((level) => {
-            const meta = LEVEL_META[level];
-            const locked = isLevelLocked(level);
+            const meta = buildLevelDisplay(level, levelProgress[level]);
 
             return (
               <View key={level} style={styles.levelCard}>
@@ -229,24 +276,25 @@ export default function ExercisePage() {
                         );
                       })}
                     </View>
+                    <ThemedText style={styles.progressPercentText}>
+                      {meta.progressPercent}% ({meta.activeDots}/{meta.totalDots} milestones)
+                    </ThemedText>
                   </View>
                 </View>
 
-                {!locked && (
-                  <View style={styles.viewButtonContainer}>
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.viewButton,
-                        pressed && styles.viewButtonPressed,
-                      ]}
-                      onPress={() => handleViewExercises(level)}
-                    >
-                      <ThemedText style={styles.viewButtonText}>
-                        View Exercises
-                      </ThemedText>
-                    </Pressable>
-                  </View>
-                )}
+                <View style={styles.viewButtonContainer}>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.viewButton,
+                      pressed && styles.viewButtonPressed,
+                    ]}
+                    onPress={() => handleViewExercises(level)}
+                  >
+                    <ThemedText style={styles.viewButtonText}>
+                      View Exercises
+                    </ThemedText>
+                  </Pressable>
+                </View>
               </View>
             );
           })}
@@ -408,6 +456,12 @@ const styles = StyleSheet.create({
   progressDotFilled: {},
   progressDotEmpty: {
     backgroundColor: Colors.light.surfaceVariant,
+  },
+  progressPercentText: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#15803d",
   },
   viewButtonContainer: {
     paddingHorizontal: 16,
