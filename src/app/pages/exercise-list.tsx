@@ -29,6 +29,7 @@ import {
 import { createExerciseAnswer, getExerciseAnswersByExerciseId, deleteExerciseAnswersByExerciseId } from "@/backend/ExerciseAnswer";
 import { getUserProfile } from "@/backend/UserProfile";
 import { getUserExerciseProgressByUserAndExercise, createUserExerciseProgress, updateUserExerciseProgress } from "@/backend/UserExerciseProgress";
+import { upsertLevelProgressAfterExercise } from "@/backend/UserLevelProgress";
 import { getDatabase } from "@/database/database";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
@@ -298,6 +299,12 @@ export default function ExerciseListPage() {
             recorded_at: now,
           });
         }
+
+        await upsertLevelProgressAfterExercise(
+          userId,
+          exercise.topic_id,
+          exercise.level,
+        );
       }
 
       const newResults = { ...answerResults, [exercise.exercise_id]: isCorrect };

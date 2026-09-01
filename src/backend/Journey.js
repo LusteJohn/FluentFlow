@@ -82,3 +82,47 @@ export async function seedJourneys(db) {
     await createJourney(db, journey);
   }
 }
+
+export async function getJourneyProgressForUser(db, userId, journeyId) {
+  const totals = await db.getFirstAsync(
+    `SELECT COUNT(*) as total
+     FROM exercises e
+     JOIN topics t ON e.topic_id = t.topic_id
+     WHERE t.journey_id = ?`,
+    journeyId,
+  );
+  const completed = await db.getFirstAsync(
+    `SELECT COUNT(*) as completed
+     FROM user_exercise_progress p
+     JOIN exercises e ON p.exercise_id = e.exercise_id
+     JOIN topics t ON e.topic_id = t.topic_id
+     WHERE p.user_id = ?
+       AND p.is_completed = 1
+       AND t.journey_id = ?`,
+    userId,
+    journeyId,
+  );
+  const totalExercises = totals?.total ?? 0;
+  const completedExercises = completed?.completed ?? 0;
+  const percent = totalExercises > 0
+    ? Math.round((completedExercises / totalExercises) * 100)
+    : 0;
+  return {
+    totalExercises,
+    completedExercises,
+    percent,
+  };
+}
+
+export async function getAllJourneyProgressForUser(db, userId) {
+  const journeys = await getAllJourneys(db);
+  const result = {};
+  for (const journey of journeys ?? []) {
+    result[journey.journey_id] = await getJourneyProgressForUser(
+      db,
+      userId,
+      journey.journey_id,
+    );
+  }
+  return result;
+}

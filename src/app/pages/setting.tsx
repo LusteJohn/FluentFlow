@@ -6,6 +6,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { getDatabase, importJourneyData, importTopicData, importTopicIntroData, importTopicVocabularyData, importExerciseData, importExerciseTokenData } from "@/database/database";
+import { seedUserLevelProgress } from "@/backend/UserLevelProgress";
 import AlertDialog from "@/components/alert-dialog";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
@@ -43,6 +44,8 @@ export default function SettingsPage() {
 
       await importExerciseTokenData();
       const tokenCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM exercise_tokens");
+
+      await seedUserLevelProgress(db);
 
       setDialog({
         type: "success",
