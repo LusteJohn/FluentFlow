@@ -1,6 +1,7 @@
 import { usePathname, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { Colors } from "@/constants/theme";
@@ -36,9 +37,16 @@ const NAV_ITEMS = [
 export default function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Math.max(insets.bottom, Platform.OS === "ios" ? 20 : 12);
+  const indicatorOffset = -((bottomPadding - 20) + 10);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingBottom: bottomPadding, minHeight: 64 + bottomPadding },
+      ]}>
       {NAV_ITEMS.map((item) => {
         const isActive = pathname === item.route;
 
@@ -62,7 +70,7 @@ export default function NavBar() {
                     size={24}
                     tintColor={
                       isActive
-                        ? Colors.light.primary
+                        ? "#15803d"
                         : Colors.light.onSurfaceVariant
                     }
                   />
@@ -73,7 +81,7 @@ export default function NavBar() {
                 >
                   {item.label}
                 </ThemedText>
-                {isActive && <View style={styles.activeIndicator} />}
+                {isActive && <View style={[styles.activeIndicator, { bottom: indicatorOffset }]} />}
               </View>
             )}
           </Pressable>
@@ -90,7 +98,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 8,
     paddingTop: 10,
-    paddingBottom: 20,
     backgroundColor: Colors.light.surface,
     borderTopWidth: 1,
     borderTopColor: Colors.light.outlineVariant,
@@ -115,7 +122,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   itemActive: {
-    backgroundColor: Colors.light.primaryContainer,
+    backgroundColor: "#dcfce7",
   },
   itemPressed: {
     backgroundColor: Colors.light.surfaceContainerHigh,
@@ -134,15 +141,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   itemLabelActive: {
-    color: Colors.light.primary,
+    color: "#15803d",
     fontWeight: "700",
   },
   activeIndicator: {
     position: "absolute",
-    bottom: -10,
     width: 24,
     height: 3,
     borderRadius: 2,
-    backgroundColor: Colors.light.primary,
+    backgroundColor: "#15803d",
   },
 });
