@@ -9,7 +9,7 @@ import { Colors } from "@/constants/theme";
 import AlertDialog from "@/components/alert-dialog";
 import { getDatabase } from "@/database/database";
 import { getUserProfile } from "@/backend/UserProfile";
-import { getWeeklyProgress, getWeeklyProgressDetails, getRecentCompletedExercises } from "@/backend/UserExerciseProgress";
+import { getWeeklyProgress, getWeeklyProgressDetails, getRecentCompletedExercises, getRecentCompletedExercisesCount } from "@/backend/UserExerciseProgress";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
 
@@ -139,6 +139,10 @@ export default function HomePage() {
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
   const [dayDetails, setDayDetails] = useState<DayDetailItem[]>([]);
   const [loadingDayDetails, setLoadingDayDetails] = useState(false);
+  const RECENT_PAGE_SIZE = 5;
+  const [recentPage, setRecentPage] = useState(1);
+  const [recentTotalCount, setRecentTotalCount] = useState(0);
+  const [loadingRecentPage, setLoadingRecentPage] = useState(false);
 
   const handleExit = () => {
     if (mountedRef.current) {
@@ -265,56 +269,131 @@ export default function HomePage() {
   useEffect(() => {
     if (!userId) return;
 
-    async function loadRecentExercises() {
+    const typeIcons: Record<string, { icon: any; bg: string; color: string }> = {
+      sentence_builder: {
+        icon: { ios: "puzzlepiece.fill", android: "construction", web: "construction" },
+        bg: Colors.light.tertiaryContainer,
+        color: Colors.light.onTertiary,
+      },
+      spelling: {
+        icon: { ios: "textformat", android: "text_fields", web: "text_fields" },
+        bg: Colors.light.primaryContainer,
+        color: Colors.light.onPrimaryContainer,
+      },
+      fill_blank_spelling: {
+        icon: { ios: "textbox", android: "edit", web: "edit" },
+        bg: Colors.light.surfaceContainer,
+        color: Colors.light.onSurfaceVariant,
+      },
+    };
+
+    const mapRows = (rows: any[]): RecentExercise[] =>
+      rows.map((row: any) => {
+        const meta = typeIcons[row.type] ?? typeIcons.fill_blank_spelling;
+        return {
+          id: String(row.id),
+          type: row.type,
+          typeIcon: meta.icon,
+          typeIconBg: meta.bg,
+          typeIconColor: meta.color,
+          title: row.title,
+          status: "Completed" as const,
+          statusIcon: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
+          statusColor: Colors.light.primary,
+          xp: `+${row.xp ?? 5} XP`,
+          xpColor: Colors.light.primary,
+        };
+      });
+
+    async function loadRecentPage(page: number) {
+      if (!mountedRef.current) return;
+      setLoadingRecentPage(true);
       try {
         const db = await getDatabase();
-        const rows = await getRecentCompletedExercises(db, userId, 5);
-
-        const typeIcons: Record<string, { icon: any; bg: string; color: string }> = {
-          sentence_builder: {
-            icon: { ios: "puzzlepiece.fill", android: "construction", web: "construction" },
-            bg: Colors.light.tertiaryContainer,
-            color: Colors.light.onTertiary,
-          },
-          spelling: {
-            icon: { ios: "textformat", android: "text_fields", web: "text_fields" },
-            bg: Colors.light.primaryContainer,
-            color: Colors.light.onPrimaryContainer,
-          },
-          fill_blank_spelling: {
-            icon: { ios: "textbox", android: "edit", web: "edit" },
-            bg: Colors.light.surfaceContainer,
-            color: Colors.light.onSurfaceVariant,
-          },
-        };
-
-        const exercises: RecentExercise[] = rows.map((row: any, idx: number) => {
-          const meta = typeIcons[row.type] ?? typeIcons.fill_blank_spelling;
-          return {
-            id: String(row.id),
-            type: row.type,
-            typeIcon: meta.icon,
-            typeIconBg: meta.bg,
-            typeIconColor: meta.color,
-            title: row.title,
-            status: "Completed" as const,
-            statusIcon: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
-            statusColor: Colors.light.primary,
-            xp: `+${row.xp ?? 5} XP`,
-            xpColor: Colors.light.primary,
-          };
-        });
-
+        const [rows, total] = await Promise.all([
+          getRecentCompletedExercises(db, userId!, RECENT_PAGE_SIZE, (page - 1) * RECENT_PAGE_SIZE),
+          getRecentCompletedExercisesCount(db, userId!),
+        ]);
         if (mountedRef.current) {
-          setRecentExercises(exercises);
+          setRecentExercises(mapRows(rows));
+          setRecentTotalCount(total);
+          setRecentPage(page);
         }
       } catch (error) {
         console.error("Failed to load recent exercises", error);
+      } finally {
+        if (mountedRef.current) setLoadingRecentPage(false);
       }
     }
 
-    loadRecentExercises();
+    loadRecentPage(1);
   }, [userId]);
+
+  const handlePageChange = (newPage: number) => {
+    if (loadingRecentPage) return;
+    const totalPages = Math.max(1, Math.ceil(recentTotalCount / RECENT_PAGE_SIZE));
+    if (newPage < 1 || newPage > totalPages) return;
+    if (!userId) return;
+    setLoadingRecentPage(true);
+    (async () => {
+      try {
+        const db = await getDatabase();
+        const rows = await getRecentCompletedExercises(
+          db,
+          userId,
+          RECENT_PAGE_SIZE,
+          (newPage - 1) * RECENT_PAGE_SIZE,
+        );
+        if (mountedRef.current) {
+          setRecentExercises(
+            rows.map((row: any) => {
+              const meta = (
+                {
+                  sentence_builder: {
+                    icon: { ios: "puzzlepiece.fill", android: "construction", web: "construction" },
+                    bg: Colors.light.tertiaryContainer,
+                    color: Colors.light.onTertiary,
+                  },
+                  spelling: {
+                    icon: { ios: "textformat", android: "text_fields", web: "text_fields" },
+                    bg: Colors.light.primaryContainer,
+                    color: Colors.light.onPrimaryContainer,
+                  },
+                  fill_blank_spelling: {
+                    icon: { ios: "textbox", android: "edit", web: "edit" },
+                    bg: Colors.light.surfaceContainer,
+                    color: Colors.light.onSurfaceVariant,
+                  },
+                } as Record<string, { icon: any; bg: string; color: string }>
+              )[row.type] ?? {
+                icon: { ios: "textbox", android: "edit", web: "edit" },
+                bg: Colors.light.surfaceContainer,
+                color: Colors.light.onSurfaceVariant,
+              };
+              return {
+                id: String(row.id),
+                type: row.type,
+                typeIcon: meta.icon,
+                typeIconBg: meta.bg,
+                typeIconColor: meta.color,
+                title: row.title,
+                status: "Completed" as const,
+                statusIcon: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
+                statusColor: Colors.light.primary,
+                xp: `+${row.xp ?? 5} XP`,
+                xpColor: Colors.light.primary,
+              };
+            }),
+          );
+          setRecentPage(newPage);
+        }
+      } catch (error) {
+        console.error("Failed to change recent exercises page", error);
+      } finally {
+        if (mountedRef.current) setLoadingRecentPage(false);
+      }
+    })();
+  };
 
   const renderStatCard = (card: StatCard) => (
     <View
@@ -477,10 +556,55 @@ export default function HomePage() {
         <View style={styles.recentSection}>
           <ThemedText style={styles.sectionTitle}>Recent Exercises</ThemedText>
           <View style={styles.recentList}>
-            {recentExercises.length > 0
-              ? recentExercises.map(renderRecentExercise)
-              : <ThemedText style={styles.emptyText}>No recent exercises yet.</ThemedText>}
+            {loadingRecentPage && recentExercises.length === 0 ? (
+              <ThemedText style={styles.emptyText}>Loading...</ThemedText>
+            ) : recentExercises.length > 0 ? (
+              recentExercises.map(renderRecentExercise)
+            ) : (
+              <ThemedText style={styles.emptyText}>No recent exercises yet.</ThemedText>
+            )}
           </View>
+          {recentTotalCount > RECENT_PAGE_SIZE && (
+            <View style={styles.paginationRow}>
+              <Pressable
+                style={[
+                  styles.paginationButton,
+                  (recentPage === 1 || loadingRecentPage) && styles.paginationButtonDisabled,
+                ]}
+                onPress={() => handlePageChange(recentPage - 1)}
+                disabled={recentPage === 1 || loadingRecentPage}>
+                <ThemedText
+                  style={[
+                    styles.paginationButtonText,
+                    (recentPage === 1 || loadingRecentPage) && styles.paginationButtonTextDisabled,
+                  ]}>
+                  Prev
+                </ThemedText>
+              </Pressable>
+              <ThemedText style={styles.paginationInfo}>
+                Page {recentPage} of {Math.ceil(recentTotalCount / RECENT_PAGE_SIZE)}
+              </ThemedText>
+              <Pressable
+                style={[
+                  styles.paginationButton,
+                  (recentPage >= Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) || loadingRecentPage) &&
+                    styles.paginationButtonDisabled,
+                ]}
+                onPress={() => handlePageChange(recentPage + 1)}
+                disabled={
+                  recentPage >= Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) || loadingRecentPage
+                }>
+                <ThemedText
+                  style={[
+                    styles.paginationButtonText,
+                    (recentPage >= Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) || loadingRecentPage) &&
+                      styles.paginationButtonTextDisabled,
+                  ]}>
+                  Next
+                </ThemedText>
+              </Pressable>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -962,5 +1086,47 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
     marginTop: 4,
+  },
+  loadMoreButton: {
+    alignSelf: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 9999,
+    backgroundColor: Colors.light.primaryContainer,
+    marginTop: 4,
+  },
+  loadMoreText: {
+    color: Colors.light.primary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  paginationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8,
+    gap: 12,
+  },
+  paginationButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    backgroundColor: Colors.light.primaryContainer,
+  },
+  paginationButtonDisabled: {
+    backgroundColor: Colors.light.surfaceContainer,
+  },
+  paginationButtonText: {
+    color: Colors.light.primary,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  paginationButtonTextDisabled: {
+    color: Colors.light.onSurfaceVariant,
+  },
+  paginationInfo: {
+    color: Colors.light.onSurfaceVariant,
+    fontSize: 13,
+    fontWeight: "600",
   },
 });

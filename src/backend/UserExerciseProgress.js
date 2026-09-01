@@ -100,7 +100,7 @@ export async function getWeeklyProgressDetails(db, userId, weekStart, weekEnd, d
   return result;
 }
 
-export async function getRecentCompletedExercises(db, userId, limit = 5) {
+export async function getRecentCompletedExercises(db, userId, limit = 5, offset = 0) {
   const result = await db.getAllAsync(
     `SELECT 
       p.id,
@@ -112,11 +112,22 @@ export async function getRecentCompletedExercises(db, userId, limit = 5) {
      JOIN exercises e ON p.exercise_id = e.exercise_id
      WHERE p.user_id = ? AND p.is_completed = 1
      ORDER BY p.recorded_at DESC
-     LIMIT ?`,
+     LIMIT ? OFFSET ?`,
     userId,
     limit,
+    offset,
   );
   return result;
+}
+
+export async function getRecentCompletedExercisesCount(db, userId) {
+  const result = await db.getFirstAsync(
+    `SELECT COUNT(*) as total
+     FROM user_exercise_progress p
+     WHERE p.user_id = ? AND p.is_completed = 1`,
+    userId,
+  );
+  return result?.total ?? 0;
 }
 
 export async function createUserExerciseProgress(db, progress) {
