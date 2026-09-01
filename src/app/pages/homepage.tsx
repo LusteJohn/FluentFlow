@@ -84,6 +84,9 @@ const STAT_CARDS: StatCard[] = [
 
 const DAY_LABELS = ["Su", "M", "T", "W", "Th", "F", "Sa"];
 
+const XP_COLOR = "#16a34a";
+const XP_CHIP_BG = "#dcfce7";
+
 function getWeekBounds(date: Date) {
   const d = new Date(date);
   const day = d.getDay();
@@ -299,11 +302,11 @@ export default function HomePage() {
           title: row.title,
           status: "Completed" as const,
           statusIcon: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
-          statusColor: Colors.light.primary,
-          xp: `+${row.xp ?? 5} XP`,
-          xpColor: Colors.light.primary,
-        };
-      });
+            statusColor: Colors.light.primary,
+            xp: `+${row.xp ?? 5} XP`,
+            xpColor: XP_COLOR,
+          };
+        });
 
     async function loadRecentPage(page: number) {
       if (!mountedRef.current) return;
@@ -381,7 +384,7 @@ export default function HomePage() {
                 statusIcon: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
                 statusColor: Colors.light.primary,
                 xp: `+${row.xp ?? 5} XP`,
-                xpColor: Colors.light.primary,
+                xpColor: XP_COLOR,
               };
             }),
           );
@@ -439,8 +442,8 @@ export default function HomePage() {
               height: Math.max(item.height, 4),
               backgroundColor:
                 index === new Date().getDay()
-                  ? Colors.light.primary
-                  : Colors.light.primaryContainer,
+                  ? "#15803d"
+                  : "#86efac",
             },
           ]}
         />
@@ -494,8 +497,8 @@ export default function HomePage() {
           styles.exerciseXpChip,
           {
             backgroundColor:
-              item.xpColor === Colors.light.primary
-                ? Colors.light.primaryContainer
+              item.xpColor === XP_COLOR
+                ? XP_CHIP_BG
                 : Colors.light.surfaceContainer,
           },
         ]}>
@@ -838,7 +841,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   weekBarLabelActive: {
-    color: Colors.light.primary,
+    color: "#15803d",
     fontWeight: "700",
   },
   recentSection: {
@@ -1054,22 +1057,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dayDetailBadge: {
-    backgroundColor: Colors.light.primaryContainer,
+    backgroundColor: "#dcfce7",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 9999,
   },
   dayDetailBadgeXP: {
-    backgroundColor: Colors.light.secondaryContainer,
+    backgroundColor: "#dcfce7",
   },
   dayDetailBadgeText: {
-    color: Colors.light.primary,
+    color: "#15803d",
     fontSize: 12,
     fontWeight: "700",
     textTransform: "capitalize",
   },
   dayDetailBadgeTextXP: {
-    color: Colors.light.onSecondaryContainer,
+    color: "#15803d",
   },
   dayDetailPrompt: {
     color: Colors.light.onSurface,
