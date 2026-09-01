@@ -141,3 +141,16 @@ export async function importUserExerciseProgressData() {
   const db = await getDatabase();
   await seedUserExerciseProgress(db);
 }
+
+export async function isDataImported(): Promise<boolean> {
+  const db = await getDatabase();
+  const result = await db.getFirstAsync(
+    "SELECT (SELECT COUNT(*) FROM journeys) as journeys, (SELECT COUNT(*) FROM topics) as topics, (SELECT COUNT(*) FROM exercises) as exercises",
+  );
+  if (!result) return false;
+  return (
+    (result.journeys ?? 0) > 0 &&
+    (result.topics ?? 0) > 0 &&
+    (result.exercises ?? 0) > 0
+  );
+}

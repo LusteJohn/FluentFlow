@@ -7,7 +7,8 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import AlertDialog from "@/components/alert-dialog";
-import { getDatabase } from "@/database/database";
+import TutorialModal, { getWelcomingPhrase } from "@/components/tutorial-modal";
+import { getDatabase, isDataImported } from "@/database/database";
 import { getUserProfile } from "@/backend/UserProfile";
 import { getWeeklyProgress, getWeeklyProgressDetails, getRecentCompletedExercises, getRecentCompletedExercisesCount, getTotalEarnedXP } from "@/backend/UserExerciseProgress";
 import NavBar from "../(tabs)/navBar";
@@ -138,6 +139,9 @@ export default function HomePage() {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const mountedRef = useRef(false);
 
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [welcomingPhrase] = useState(() => getWelcomingPhrase());
+
   const [weeklyBars, setWeeklyBars] = useState<WeeklyBar[]>([]);
   const [recentExercises, setRecentExercises] = useState<RecentExercise[]>([]);
   const [totalXP, setTotalXP] = useState(0);
@@ -183,6 +187,23 @@ export default function HomePage() {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const imported = await isDataImported();
+        if (!cancelled && !imported) {
+          setShowTutorial(true);
+        }
+      } catch (error) {
+        console.error("Failed to check import state", error);
+      }
+    })();
+    return () => {
+      cancelled = true;
     };
   }, []);
 
@@ -731,6 +752,12 @@ export default function HomePage() {
         cancelText="Cancel"
         onConfirm={handleExit}
         onCancel={handleCancel}
+      />
+
+      <TutorialModal
+        visible={showTutorial}
+        welcomingPhrase={welcomingPhrase}
+        onClose={() => setShowTutorial(false)}
       />
     </ThemedView>
   );
