@@ -9,7 +9,7 @@ import { Colors } from "@/constants/theme";
 import AlertDialog from "@/components/alert-dialog";
 import { getDatabase } from "@/database/database";
 import { getUserProfile } from "@/backend/UserProfile";
-import { getWeeklyProgress, getWeeklyProgressDetails, getRecentCompletedExercises, getRecentCompletedExercisesCount } from "@/backend/UserExerciseProgress";
+import { getWeeklyProgress, getWeeklyProgressDetails, getRecentCompletedExercises, getRecentCompletedExercisesCount, getTotalEarnedXP } from "@/backend/UserExerciseProgress";
 import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
 
@@ -126,6 +126,13 @@ function getWeekOptions() {
   return options;
 }
 
+function formatXP(value: number): string {
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`;
+  }
+  return String(value);
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [showExitDialog, setShowExitDialog] = useState(false);
@@ -133,6 +140,7 @@ export default function HomePage() {
 
   const [weeklyBars, setWeeklyBars] = useState<WeeklyBar[]>([]);
   const [recentExercises, setRecentExercises] = useState<RecentExercise[]>([]);
+  const [totalXP, setTotalXP] = useState(0);
   const [weekOptions] = useState(getWeekOptions);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
   const [showWeekPicker, setShowWeekPicker] = useState(false);
@@ -208,6 +216,20 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!userId) return;
+
+    async function loadTotalXP() {
+      try {
+        const db = await getDatabase();
+        const total = await getTotalEarnedXP(db, userId);
+        if (mountedRef.current) {
+          setTotalXP(total);
+        }
+      } catch (error) {
+        console.error("Failed to load total XP", error);
+      }
+    }
+
+    loadTotalXP();
 
     async function loadWeeklyData() {
       if (!mountedRef.current) return;
@@ -398,36 +420,39 @@ export default function HomePage() {
     })();
   };
 
-  const renderStatCard = (card: StatCard) => (
-    <View
-      key={card.id}
-      style={[
-        styles.statCard,
-        { backgroundColor: card.iconBg },
-      ]}>
-      <View style={styles.statCardInner}>
+  const renderStatCard = (card: StatCard) => {
+    const displayValue = card.id === "3" ? formatXP(totalXP) : card.value;
+    return (
+      <View
+        key={card.id}
+        style={[
+          styles.statCard,
+          { backgroundColor: card.iconBg },
+        ]}>
+        <View style={styles.statCardInner}>
+          <View
+            style={[
+              styles.statIconContainer,
+              { backgroundColor: "#ffffff30" },
+            ]}>
+            <SymbolView
+              name={card.icon}
+              size={28}
+              tintColor={card.iconColor}
+            />
+          </View>
+          <ThemedText style={styles.statValue}>{displayValue}</ThemedText>
+          <ThemedText style={styles.statLabel}>{card.label}</ThemedText>
+        </View>
         <View
           style={[
-            styles.statIconContainer,
-            { backgroundColor: "#ffffff30" },
-          ]}>
-          <SymbolView
-            name={card.icon}
-            size={28}
-            tintColor={card.iconColor}
-          />
-        </View>
-        <ThemedText style={styles.statValue}>{card.value}</ThemedText>
-        <ThemedText style={styles.statLabel}>{card.label}</ThemedText>
+            styles.statHoverOverlay,
+            { backgroundColor: "#ffffff20" },
+          ]}
+        />
       </View>
-      <View
-        style={[
-          styles.statHoverOverlay,
-          { backgroundColor: "#ffffff20" },
-        ]}
-      />
-    </View>
-  );
+    );
+  };
 
   const renderWeeklyBar = (item: WeeklyBar, index: number) => (
     <Pressable
