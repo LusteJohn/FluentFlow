@@ -662,11 +662,79 @@ export default function HomePage() {
                 <ThemedText style={styles.sectionTitle}>
                   Weekly Progress
                 </ThemedText>
-                <Pressable onPress={() => setShowWeekPicker(true)}>
-                  <ThemedText style={styles.weekLabel}>
-                    {selectedWeek?.label ?? "Select Week"}
-                  </ThemedText>
-                </Pressable>
+                <View style={styles.weekSelectorRow}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="View previous week"
+                    style={({ pressed }) => [
+                      styles.weekArrowButton,
+                      pressed && styles.weekArrowButtonPressed,
+                      selectedWeekIndex >= weekOptions.length - 1 &&
+                        styles.weekArrowButtonDisabled,
+                    ]}
+                    onPress={() =>
+                      setSelectedWeekIndex((index) =>
+                        Math.min(index + 1, weekOptions.length - 1),
+                      )
+                    }
+                    disabled={selectedWeekIndex >= weekOptions.length - 1}
+                  >
+                    <SymbolView
+                      name={
+                        {
+                          ios: "chevron.left",
+                          android: "chevron_left",
+                          web: "chevron_left",
+                        } as any
+                      }
+                      size={18}
+                      tintColor={
+                        selectedWeekIndex >= weekOptions.length - 1
+                          ? Colors.light.onSurfaceVariant
+                          : Colors.light.primary
+                      }
+                    />
+                  </Pressable>
+                  <Pressable
+                    style={styles.weekLabelButton}
+                    onPress={() => setShowWeekPicker(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Choose a week"
+                  >
+                    <ThemedText style={styles.weekLabel}>
+                      {selectedWeek?.label ?? "Select Week"}
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="View next week"
+                    style={({ pressed }) => [
+                      styles.weekArrowButton,
+                      pressed && styles.weekArrowButtonPressed,
+                      selectedWeekIndex === 0 && styles.weekArrowButtonDisabled,
+                    ]}
+                    onPress={() =>
+                      setSelectedWeekIndex((index) => Math.max(index - 1, 0))
+                    }
+                    disabled={selectedWeekIndex === 0}
+                  >
+                    <SymbolView
+                      name={
+                        {
+                          ios: "chevron.right",
+                          android: "chevron_right",
+                          web: "chevron_right",
+                        } as any
+                      }
+                      size={18}
+                      tintColor={
+                        selectedWeekIndex === 0
+                          ? Colors.light.onSurfaceVariant
+                          : Colors.light.primary
+                      }
+                    />
+                  </Pressable>
+                </View>
               </View>
             </View>
             {loading ? (
@@ -982,6 +1050,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  weekSelectorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 4,
+  },
+  weekLabelButton: {
+    flexShrink: 1,
+  },
+  weekArrowButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.light.primaryFixed,
+  },
+  weekArrowButtonPressed: {
+    transform: [{ scale: 0.92 }],
+    backgroundColor: Colors.light.primaryFixedDim,
+  },
+  weekArrowButtonDisabled: {
+    backgroundColor: Colors.light.surfaceContainer,
+    opacity: 0.65,
   },
   weeklySeeAll: {
     color: Colors.light.primary,

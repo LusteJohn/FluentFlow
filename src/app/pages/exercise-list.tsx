@@ -302,12 +302,13 @@ export default function ExerciseListPage() {
         );
         const attempts = (existing?.attempts_count ?? 0) + 1;
         const now = new Date();
+        const recordedAt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
         if (existing) {
           await updateUserExerciseProgress(db, userId, exercise.exercise_id, {
             attempts_count: attempts,
             is_completed: isCorrect,
-            completed_at: isCorrect ? now : existing.completed_at,
-            recorded_at: now,
+            completed_at: isCorrect ? recordedAt : existing.completed_at,
+            recorded_at: recordedAt,
           });
         } else {
           await createUserExerciseProgress(db, {
@@ -315,8 +316,8 @@ export default function ExerciseListPage() {
             exercise_id: exercise.exercise_id,
             is_completed: isCorrect,
             attempts_count: attempts,
-            completed_at: isCorrect ? now : null,
-            recorded_at: now,
+            completed_at: isCorrect ? recordedAt : null,
+            recorded_at: recordedAt,
           });
         }
 
