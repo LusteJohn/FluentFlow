@@ -37,6 +37,7 @@ import { getUserProfile } from "@/backend/UserProfile";
 import { FillBlankExercise } from "@/components/exercise/FillBlankExercise";
 import { SentenceBuilderExercise } from "@/components/exercise/SentenceBuilderExercise";
 import { SpellingExercise } from "@/components/exercise/SpellingExercise";
+import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
@@ -413,429 +414,444 @@ export default function ExerciseListPage() {
       : 0;
 
   return (
-    <ThemedView style={styles.container}>
-      <AppHeader />
+    <ScreenMotion>
+      <ThemedView style={styles.container}>
+        <AppHeader />
 
-      <View style={styles.headerSection}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <SymbolView
-            name={
-              {
-                ios: "chevron.left",
-                android: "arrow_back_ios",
-                web: "arrow_back_ios",
-              } as any
-            }
-            size={24}
-            tintColor={Colors.light.onSurface}
-          />
-        </Pressable>
-        <View style={styles.titleContainer}>
-          <ThemedText style={styles.pageTitle}>
-            {topicTitle} — {levelTitle}
-          </ThemedText>
-          <View style={styles.xpBadge}>
-            <ThemedText style={styles.xpText}>{totalXP} XP</ThemedText>
+        <View style={styles.headerSection}>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <SymbolView
+              name={
+                {
+                  ios: "chevron.left",
+                  android: "arrow_back_ios",
+                  web: "arrow_back_ios",
+                } as any
+              }
+              size={24}
+              tintColor={Colors.light.onSurface}
+            />
+          </Pressable>
+          <View style={styles.titleContainer}>
+            <ThemedText style={styles.pageTitle}>
+              {topicTitle} — {levelTitle}
+            </ThemedText>
+            <View style={styles.xpBadge}>
+              <ThemedText style={styles.xpText}>{totalXP} XP</ThemedText>
+            </View>
           </View>
+          <View style={styles.headerSpacer} />
         </View>
-        <View style={styles.headerSpacer} />
-      </View>
 
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={
-            Platform.OS === "ios" ? "interactive" : "on-drag"
-          }
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          {loading && (
-            <ThemedText style={styles.loadingText}>
-              Loading exercises...
-            </ThemedText>
-          )}
-          {!loading && displayExercises.length === 0 && (
-            <ThemedText style={styles.noExercisesText}>
-              {reviewMode
-                ? "No incorrect exercises to review. Great job!"
-                : "No exercises available for this level yet."}
-            </ThemedText>
-          )}
-          {!loading && displayExercises.length > 0 && (
-            <>
-              <View style={styles.progressIndicator}>
-                <ThemedText style={styles.progressIndicatorText}>
-                  {reviewMode
-                    ? `Reviewing ${displayExercises.length} incorrect exercise${displayExercises.length !== 1 ? "s" : ""}`
-                    : `Exercise ${currentExerciseIndex + 1} of ${displayExercises.length}`}
-                </ThemedText>
-              </View>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={
+              Platform.OS === "ios" ? "interactive" : "on-drag"
+            }
+          >
+            {loading && (
+              <ThemedText style={styles.loadingText}>
+                Loading exercises...
+              </ThemedText>
+            )}
+            {!loading && displayExercises.length === 0 && (
+              <ThemedText style={styles.noExercisesText}>
+                {reviewMode
+                  ? "No incorrect exercises to review. Great job!"
+                  : "No exercises available for this level yet."}
+              </ThemedText>
+            )}
+            {!loading && displayExercises.length > 0 && (
+              <>
+                <View style={styles.progressIndicator}>
+                  <ThemedText style={styles.progressIndicatorText}>
+                    {reviewMode
+                      ? `Reviewing ${displayExercises.length} incorrect exercise${displayExercises.length !== 1 ? "s" : ""}`
+                      : `Exercise ${currentExerciseIndex + 1} of ${displayExercises.length}`}
+                  </ThemedText>
+                </View>
 
-              {(() => {
-                const exercise = displayExercises[currentExerciseIndex];
-                if (!exercise) return null;
+                {(() => {
+                  const exercise = displayExercises[currentExerciseIndex];
+                  if (!exercise) return null;
 
-                const typeLabel =
-                  EXERCISE_TYPE_LABELS[exercise.type] ?? exercise.type;
-                const exerciseTokens =
-                  tokensByExercise[exercise.exercise_id] ?? [];
-                const correctAnswer = getCorrectAnswer(
-                  exerciseTokens,
-                  exercise.type,
-                );
-                const answerResult = answerResults[exercise.exercise_id];
-
-                const handleLetterChange = (pos: number, value: string) => {
-                  const letters = letterInputs[exercise.exercise_id] ?? [];
-                  const newLetters = [...letters];
-                  newLetters[pos] = value;
-                  setLetterInputs((prev) => ({
-                    ...prev,
-                    [exercise.exercise_id]: newLetters,
-                  }));
-                };
-
-                const handleWordToggle = (token: ExerciseToken) => {
-                  const current = selectedWords[exercise.exercise_id] ?? [];
-                  const isSelected = current.some(
-                    (t) => t.exercise_token_id === token.exercise_token_id,
+                  const typeLabel =
+                    EXERCISE_TYPE_LABELS[exercise.type] ?? exercise.type;
+                  const exerciseTokens =
+                    tokensByExercise[exercise.exercise_id] ?? [];
+                  const correctAnswer = getCorrectAnswer(
+                    exerciseTokens,
+                    exercise.type,
                   );
-                  if (isSelected) {
+                  const answerResult = answerResults[exercise.exercise_id];
+
+                  const handleLetterChange = (pos: number, value: string) => {
+                    const letters = letterInputs[exercise.exercise_id] ?? [];
+                    const newLetters = [...letters];
+                    newLetters[pos] = value;
+                    setLetterInputs((prev) => ({
+                      ...prev,
+                      [exercise.exercise_id]: newLetters,
+                    }));
+                  };
+
+                  const handleWordToggle = (token: ExerciseToken) => {
+                    const current = selectedWords[exercise.exercise_id] ?? [];
+                    const isSelected = current.some(
+                      (t) => t.exercise_token_id === token.exercise_token_id,
+                    );
+                    if (isSelected) {
+                      setSelectedWords((prev) => ({
+                        ...prev,
+                        [exercise.exercise_id]:
+                          prev[exercise.exercise_id]?.filter(
+                            (t) =>
+                              t.exercise_token_id !== token.exercise_token_id,
+                          ) ?? [],
+                      }));
+                    } else {
+                      setSelectedWords((prev) => ({
+                        ...prev,
+                        [exercise.exercise_id]: [
+                          ...(prev[exercise.exercise_id] ?? []),
+                          token,
+                        ],
+                      }));
+                    }
+                  };
+
+                  const handleWordRemove = (idx: number) => {
                     setSelectedWords((prev) => ({
                       ...prev,
                       [exercise.exercise_id]:
                         prev[exercise.exercise_id]?.filter(
-                          (t) =>
-                            t.exercise_token_id !== token.exercise_token_id,
+                          (_, i) => i !== idx,
                         ) ?? [],
                     }));
-                  } else {
-                    setSelectedWords((prev) => ({
-                      ...prev,
-                      [exercise.exercise_id]: [
-                        ...(prev[exercise.exercise_id] ?? []),
-                        token,
-                      ],
-                    }));
-                  }
-                };
+                  };
 
-                const handleWordRemove = (idx: number) => {
-                  setSelectedWords((prev) => ({
-                    ...prev,
-                    [exercise.exercise_id]:
-                      prev[exercise.exercise_id]?.filter((_, i) => i !== idx) ??
-                      [],
-                  }));
-                };
-
-                return (
-                  <View style={styles.exerciseItem}>
-                    <View style={styles.exerciseHeader}>
-                      <ThemedText style={styles.exerciseNumber}>
-                        #{exercise.order_index}
-                      </ThemedText>
-                      <View
-                        style={[
-                          styles.exerciseTypeBadge,
-                          { backgroundColor: Colors.light.surfaceContainer },
-                        ]}
-                      >
-                        <ThemedText
+                  return (
+                    <View style={styles.exerciseItem}>
+                      <View style={styles.exerciseHeader}>
+                        <ThemedText style={styles.exerciseNumber}>
+                          #{exercise.order_index}
+                        </ThemedText>
+                        <View
                           style={[
-                            styles.exerciseType,
-                            { color: Colors.light.secondaryContainer },
+                            styles.exerciseTypeBadge,
+                            { backgroundColor: Colors.light.surfaceContainer },
                           ]}
                         >
-                          {typeLabel}
-                        </ThemedText>
+                          <ThemedText
+                            style={[
+                              styles.exerciseType,
+                              { color: Colors.light.secondaryContainer },
+                            ]}
+                          >
+                            {typeLabel}
+                          </ThemedText>
+                        </View>
                       </View>
-                    </View>
-                    <ThemedText style={styles.exercisePrompt}>
-                      {exercise.prompt}
-                    </ThemedText>
-                    {exercise.context_sentence && (
-                      <ThemedText style={styles.exerciseContext}>
-                        {exercise.context_sentence}
+                      <ThemedText style={styles.exercisePrompt}>
+                        {exercise.prompt}
                       </ThemedText>
-                    )}
-                    {exercise.type === "sentence_builder" &&
-                      exerciseTokens.length > 0 &&
-                      (() => {
-                        const shuffledTokens =
-                          answerResult === undefined
-                            ? [...exerciseTokens].sort(
-                                () => Math.random() - 0.5,
-                              )
-                            : exerciseTokens;
-                        return (
-                          <View style={styles.tokensContainer}>
-                            <ThemedText style={styles.tokensLabel}>
-                              Arrange these words:
-                            </ThemedText>
-                            <SentenceBuilderExercise
-                              tokens={shuffledTokens}
-                              selectedWords={
-                                selectedWords[exercise.exercise_id] ?? []
-                              }
-                              answerResult={answerResult}
-                              onWordToggle={handleWordToggle}
-                              onWordRemove={handleWordRemove}
-                            />
-                          </View>
-                        );
-                      })()}
-                    <View style={styles.answerForm}>
-                      <View style={styles.answerHeader}>
-                        <ThemedText style={styles.answerLabel}>
-                          Your answer
+                      {exercise.context_sentence && (
+                        <ThemedText style={styles.exerciseContext}>
+                          {exercise.context_sentence}
                         </ThemedText>
-                        <ThemedText style={styles.answerHint}>
-                          {exercise.type === "sentence_builder"
-                            ? "Tap words to build the sentence"
-                            : exercise.type === "spelling"
-                              ? "One letter per box"
-                              : "Enter the missing word"}
-                        </ThemedText>
-                      </View>
-                      {exercise.type === "spelling" ? (
-                        <>
-                          {exerciseTokens.length > 0 && (
-                            <SpellingExercise
-                              tokens={exerciseTokens}
-                              letters={letterInputs[exercise.exercise_id] ?? []}
-                              answerResult={answerResult}
-                              letterRefs={letterInputRefs}
-                              exerciseId={exercise.exercise_id}
-                              onLetterChange={handleLetterChange}
-                            />
-                          )}
-                        </>
-                      ) : exercise.type === "sentence_builder" ? null : (
-                        <FillBlankExercise
-                          value={submittedAnswers[exercise.exercise_id] ?? ""}
-                          onChangeText={(text) =>
-                            setSubmittedAnswers((prev) => ({
-                              ...prev,
-                              [exercise.exercise_id]: text,
-                            }))
-                          }
-                          answerResult={answerResult}
-                        />
                       )}
-                      <Pressable
-                        style={[
-                          styles.submitButton,
-                          isSubmitDisabled(exercise) &&
-                            styles.submitButtonDisabled,
-                        ]}
-                        onPress={() => handleSubmitAnswer(exercise)}
-                        disabled={isSubmitDisabled(exercise)}
-                      >
-                        <ThemedText
+                      {exercise.type === "sentence_builder" &&
+                        exerciseTokens.length > 0 &&
+                        (() => {
+                          const shuffledTokens =
+                            answerResult === undefined
+                              ? [...exerciseTokens].sort(
+                                  () => Math.random() - 0.5,
+                                )
+                              : exerciseTokens;
+                          return (
+                            <View style={styles.tokensContainer}>
+                              <ThemedText style={styles.tokensLabel}>
+                                Arrange these words:
+                              </ThemedText>
+                              <SentenceBuilderExercise
+                                tokens={shuffledTokens}
+                                selectedWords={
+                                  selectedWords[exercise.exercise_id] ?? []
+                                }
+                                answerResult={answerResult}
+                                onWordToggle={handleWordToggle}
+                                onWordRemove={handleWordRemove}
+                              />
+                            </View>
+                          );
+                        })()}
+                      {correctAnswer && (
+                        <View style={styles.answerReference}>
+                          <ThemedText style={styles.answerReferenceLabel}>
+                            Correct answer
+                          </ThemedText>
+                          <ThemedText style={styles.answerReferenceText}>
+                            {correctAnswer}
+                          </ThemedText>
+                        </View>
+                      )}
+                      <View style={styles.answerForm}>
+                        <View style={styles.answerHeader}>
+                          <ThemedText style={styles.answerLabel}>
+                            Your answer
+                          </ThemedText>
+                          <ThemedText style={styles.answerHint}>
+                            {exercise.type === "sentence_builder"
+                              ? "Tap words to build the sentence"
+                              : exercise.type === "spelling"
+                                ? "One letter per box"
+                                : "Enter the missing word"}
+                          </ThemedText>
+                        </View>
+                        {exercise.type === "spelling" ? (
+                          <>
+                            {exerciseTokens.length > 0 && (
+                              <SpellingExercise
+                                tokens={exerciseTokens}
+                                letters={
+                                  letterInputs[exercise.exercise_id] ?? []
+                                }
+                                answerResult={answerResult}
+                                letterRefs={letterInputRefs}
+                                exerciseId={exercise.exercise_id}
+                                onLetterChange={handleLetterChange}
+                              />
+                            )}
+                          </>
+                        ) : exercise.type === "sentence_builder" ? null : (
+                          <FillBlankExercise
+                            value={submittedAnswers[exercise.exercise_id] ?? ""}
+                            onChangeText={(text) =>
+                              setSubmittedAnswers((prev) => ({
+                                ...prev,
+                                [exercise.exercise_id]: text,
+                              }))
+                            }
+                            answerResult={answerResult}
+                          />
+                        )}
+                        <Pressable
                           style={[
-                            styles.submitButtonText,
+                            styles.submitButton,
                             isSubmitDisabled(exercise) &&
-                              styles.submitButtonTextDisabled,
+                              styles.submitButtonDisabled,
                           ]}
+                          onPress={() => handleSubmitAnswer(exercise)}
+                          disabled={isSubmitDisabled(exercise)}
                         >
-                          {answerResult === true ? "Correct!" : "Submit"}
-                        </ThemedText>
-                      </Pressable>
+                          <ThemedText
+                            style={[
+                              styles.submitButtonText,
+                              isSubmitDisabled(exercise) &&
+                                styles.submitButtonTextDisabled,
+                            ]}
+                          >
+                            {answerResult === true ? "Correct!" : "Submit"}
+                          </ThemedText>
+                        </Pressable>
+                      </View>
+                      {answerResult === true && (
+                        <View style={styles.successBanner}>
+                          <ThemedText style={styles.successBannerText}>
+                            Correct!
+                          </ThemedText>
+                        </View>
+                      )}
+                      {answerResult === false && (
+                        <View style={styles.errorBanner}>
+                          <ThemedText style={styles.errorBannerText}>
+                            Incorrect. The correct answer is: {correctAnswer}
+                          </ThemedText>
+                        </View>
+                      )}
                     </View>
-                    {answerResult === true && (
-                      <View style={styles.successBanner}>
-                        <ThemedText style={styles.successBannerText}>
-                          Correct!
-                        </ThemedText>
-                      </View>
-                    )}
-                    {answerResult === false && (
-                      <View style={styles.errorBanner}>
-                        <ThemedText style={styles.errorBannerText}>
-                          Incorrect. The correct answer is: {correctAnswer}
-                        </ThemedText>
-                      </View>
-                    )}
-                  </View>
-                );
-              })()}
+                  );
+                })()}
 
-              <View style={styles.arrowNav}>
-                <Pressable
-                  style={[
-                    styles.arrowButton,
-                    currentExerciseIndex === 0 && styles.arrowButtonDisabled,
-                  ]}
-                  onPress={goToPrev}
-                  disabled={currentExerciseIndex === 0}
-                >
-                  <SymbolView
-                    name={
-                      {
-                        ios: "chevron.left",
-                        android: "arrow_back_ios",
-                        web: "arrow_back_ios",
-                      } as any
-                    }
-                    size={28}
-                    tintColor={
-                      currentExerciseIndex === 0
-                        ? Colors.light.onSurfaceVariant
-                        : Colors.light.primary
-                    }
-                  />
-                </Pressable>
-                <Pressable
-                  style={[
-                    styles.arrowButton,
-                    currentExerciseIndex === displayExercises.length - 1 &&
-                      styles.arrowButtonDisabled,
-                  ]}
-                  onPress={goToNext}
-                  disabled={
-                    currentExerciseIndex === displayExercises.length - 1
-                  }
-                >
-                  <SymbolView
-                    name={
-                      {
-                        ios: "chevron.right",
-                        android: "arrow_forward_ios",
-                        web: "arrow_forward_ios",
-                      } as any
-                    }
-                    size={28}
-                    tintColor={
+                <View style={styles.arrowNav}>
+                  <Pressable
+                    style={[
+                      styles.arrowButton,
+                      currentExerciseIndex === 0 && styles.arrowButtonDisabled,
+                    ]}
+                    onPress={goToPrev}
+                    disabled={currentExerciseIndex === 0}
+                  >
+                    <SymbolView
+                      name={
+                        {
+                          ios: "chevron.left",
+                          android: "arrow_back_ios",
+                          web: "arrow_back_ios",
+                        } as any
+                      }
+                      size={28}
+                      tintColor={
+                        currentExerciseIndex === 0
+                          ? Colors.light.onSurfaceVariant
+                          : Colors.light.primary
+                      }
+                    />
+                  </Pressable>
+                  <Pressable
+                    style={[
+                      styles.arrowButton,
+                      currentExerciseIndex === displayExercises.length - 1 &&
+                        styles.arrowButtonDisabled,
+                    ]}
+                    onPress={goToNext}
+                    disabled={
                       currentExerciseIndex === displayExercises.length - 1
-                        ? Colors.light.onSurfaceVariant
-                        : Colors.light.primary
                     }
-                  />
-                </Pressable>
-              </View>
-            </>
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      {!loading && displayExercises.length > 1 && (
-        <View style={styles.pagination}>
-          {displayExercises.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.paginationDot,
-                index === currentExerciseIndex && styles.paginationDotActive,
-              ]}
-            />
-          ))}
-        </View>
-      )}
-
-      <NavBar />
-
-      {showCompletionModal && (
-        <Modal
-          visible={showCompletionModal}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowCompletionModal(false)}
-        >
-          <View style={styles.completionOverlay}>
-            <ScrollView contentContainerStyle={styles.completionContent}>
-              <View style={styles.completionIconContainer}>
-                <View style={styles.completionIconInner}>
-                  <SymbolView
-                    name={
-                      {
-                        ios: "checkmark.circle.fill",
-                        android: "check_circle",
-                        web: "check_circle",
-                      } as any
-                    }
-                    size={48}
-                    tintColor={Colors.light.primary}
-                  />
+                  >
+                    <SymbolView
+                      name={
+                        {
+                          ios: "chevron.right",
+                          android: "arrow_forward_ios",
+                          web: "arrow_forward_ios",
+                        } as any
+                      }
+                      size={28}
+                      tintColor={
+                        currentExerciseIndex === displayExercises.length - 1
+                          ? Colors.light.onSurfaceVariant
+                          : Colors.light.primary
+                      }
+                    />
+                  </Pressable>
                 </View>
-              </View>
+              </>
+            )}
+          </ScrollView>
+        </KeyboardAvoidingView>
 
-              <ThemedText style={styles.completionTitle}>
-                Lesson Complete!
-              </ThemedText>
-              <ThemedText style={styles.completionSubtitle}>
-                {topicTitle}
-              </ThemedText>
-
-              <View style={styles.completionStatsGrid}>
-                <View style={styles.completionStatCard}>
-                  <SymbolView
-                    name={
-                      {
-                        ios: "bolt.fill",
-                        android: "flash_on",
-                        web: "flash_on",
-                      } as any
-                    }
-                    size={28}
-                    tintColor={Colors.light.secondary}
-                  />
-                  <ThemedText style={styles.completionStatValue}>
-                    +{totalEarnedXP} XP
-                  </ThemedText>
-                  <ThemedText style={styles.completionStatLabel}>
-                    Earned
-                  </ThemedText>
-                </View>
-                <View style={styles.completionStatCard}>
-                  <SymbolView
-                    name={
-                      {
-                        ios: "checkmark.circle.fill",
-                        android: "check_circle",
-                        web: "check_circle",
-                      } as any
-                    }
-                    size={28}
-                    tintColor={Colors.light.primary}
-                  />
-                  <ThemedText style={styles.completionStatValue}>
-                    {accuracy}%
-                  </ThemedText>
-                  <ThemedText style={styles.completionStatLabel}>
-                    Accuracy
-                  </ThemedText>
-                </View>
-              </View>
-
-              <View style={styles.completionActions}>
-                <Pressable
-                  style={styles.completionContinueButton}
-                  onPress={handleContinue}
-                >
-                  <ThemedText style={styles.completionContinueButtonText}>
-                    Continue
-                  </ThemedText>
-                </Pressable>
-                <Pressable
-                  style={styles.completionReviewButton}
-                  onPress={handleReviewMistakes}
-                >
-                  <ThemedText style={styles.completionReviewButtonText}>
-                    Review Mistakes
-                  </ThemedText>
-                </Pressable>
-              </View>
-            </ScrollView>
+        {!loading && displayExercises.length > 1 && (
+          <View style={styles.pagination}>
+            {displayExercises.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  index === currentExerciseIndex && styles.paginationDotActive,
+                ]}
+              />
+            ))}
           </View>
-        </Modal>
-      )}
-    </ThemedView>
+        )}
+
+        <NavBar />
+
+        {showCompletionModal && (
+          <Modal
+            visible={showCompletionModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowCompletionModal(false)}
+          >
+            <View style={styles.completionOverlay}>
+              <ScrollView contentContainerStyle={styles.completionContent}>
+                <View style={styles.completionIconContainer}>
+                  <View style={styles.completionIconInner}>
+                    <SymbolView
+                      name={
+                        {
+                          ios: "checkmark.circle.fill",
+                          android: "check_circle",
+                          web: "check_circle",
+                        } as any
+                      }
+                      size={48}
+                      tintColor={Colors.light.primary}
+                    />
+                  </View>
+                </View>
+
+                <ThemedText style={styles.completionTitle}>
+                  Lesson Complete!
+                </ThemedText>
+                <ThemedText style={styles.completionSubtitle}>
+                  {topicTitle}
+                </ThemedText>
+
+                <View style={styles.completionStatsGrid}>
+                  <View style={styles.completionStatCard}>
+                    <SymbolView
+                      name={
+                        {
+                          ios: "bolt.fill",
+                          android: "flash_on",
+                          web: "flash_on",
+                        } as any
+                      }
+                      size={28}
+                      tintColor={Colors.light.secondary}
+                    />
+                    <ThemedText style={styles.completionStatValue}>
+                      +{totalEarnedXP} XP
+                    </ThemedText>
+                    <ThemedText style={styles.completionStatLabel}>
+                      Earned
+                    </ThemedText>
+                  </View>
+                  <View style={styles.completionStatCard}>
+                    <SymbolView
+                      name={
+                        {
+                          ios: "checkmark.circle.fill",
+                          android: "check_circle",
+                          web: "check_circle",
+                        } as any
+                      }
+                      size={28}
+                      tintColor={Colors.light.primary}
+                    />
+                    <ThemedText style={styles.completionStatValue}>
+                      {accuracy}%
+                    </ThemedText>
+                    <ThemedText style={styles.completionStatLabel}>
+                      Accuracy
+                    </ThemedText>
+                  </View>
+                </View>
+
+                <View style={styles.completionActions}>
+                  <Pressable
+                    style={styles.completionContinueButton}
+                    onPress={handleContinue}
+                  >
+                    <ThemedText style={styles.completionContinueButtonText}>
+                      Continue
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable
+                    style={styles.completionReviewButton}
+                    onPress={handleReviewMistakes}
+                  >
+                    <ThemedText style={styles.completionReviewButtonText}>
+                      Review Mistakes
+                    </ThemedText>
+                  </Pressable>
+                </View>
+              </ScrollView>
+            </View>
+          </Modal>
+        )}
+      </ThemedView>
+    </ScreenMotion>
   );
 }
 
@@ -1005,6 +1021,27 @@ const styles = StyleSheet.create({
     color: Colors.light.onSurfaceVariant,
     fontSize: 13,
     lineHeight: 18,
+  },
+  answerReference: {
+    gap: 4,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.light.primaryFixed,
+    backgroundColor: Colors.light.primaryContainer,
+  },
+  answerReferenceLabel: {
+    color: Colors.light.onPrimaryContainer,
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  answerReferenceText: {
+    color: Colors.light.onPrimaryContainer,
+    fontSize: 17,
+    fontWeight: "700",
+    lineHeight: 24,
   },
   arrangedWordsContainer: {
     marginTop: 12,
