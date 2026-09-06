@@ -1,18 +1,37 @@
-import { BackHandler, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useEffect, useRef, useState } from "react";
+import {
+  BackHandler,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
+import {
+  getRecentCompletedExercises,
+  getRecentCompletedExercisesCount,
+  getTotalEarnedXP,
+  getWeeklyProgress,
+  getWeeklyProgressDetails,
+} from "@/backend/UserExerciseProgress";
+import { getUserProfile } from "@/backend/UserProfile";
+import AlertDialog from "@/components/alert-dialog";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
-import AlertDialog from "@/components/alert-dialog";
 import TutorialModal, { getWelcomingPhrase } from "@/components/tutorial-modal";
-import { getDatabase, isDataImported, hasSeenTutorial, markTutorialSeen } from "@/database/database";
-import { getUserProfile } from "@/backend/UserProfile";
-import { getWeeklyProgress, getWeeklyProgressDetails, getRecentCompletedExercises, getRecentCompletedExercisesCount, getTotalEarnedXP } from "@/backend/UserExerciseProgress";
-import NavBar from "../(tabs)/navBar";
+import { Colors } from "@/constants/theme";
+import {
+  getDatabase,
+  hasSeenTutorial,
+  isDataImported,
+  markTutorialSeen,
+} from "@/database/database";
 import AppHeader from "../(tabs)/header";
+import NavBar from "../(tabs)/navBar";
 
 interface StatCard {
   id: string;
@@ -61,7 +80,11 @@ const STAT_CARDS: StatCard[] = [
     id: "1",
     value: "7",
     label: "Day Streak",
-    icon: { ios: "flame.fill", android: "local_fire_department", web: "local_fire_department" },
+    icon: {
+      ios: "flame.fill",
+      android: "local_fire_department",
+      web: "local_fire_department",
+    },
     iconBg: Colors.light.surface,
     iconColor: Colors.light.tertiary,
   },
@@ -264,7 +287,10 @@ export default function HomePage() {
         const week = weekOptions[selectedWeekIndex];
         const rows = await getWeeklyProgress(db, userId, week.start, week.end);
 
-        const dayMap: Record<number, { completed_count: number; total_xp: number }> = {};
+        const dayMap: Record<
+          number,
+          { completed_count: number; total_xp: number }
+        > = {};
         for (let i = 0; i < 7; i++) {
           dayMap[i] = { completed_count: 0, total_xp: 0 };
         }
@@ -306,7 +332,13 @@ export default function HomePage() {
     try {
       const db = await getDatabase();
       const week = weekOptions[selectedWeekIndex];
-      const rows = await getWeeklyProgressDetails(db, userId, week.start, week.end, dayIndex);
+      const rows = await getWeeklyProgressDetails(
+        db,
+        userId,
+        week.start,
+        week.end,
+        dayIndex,
+      );
       setDayDetails(rows);
     } catch (error) {
       console.error("Failed to load day details", error);
@@ -319,23 +351,32 @@ export default function HomePage() {
   useEffect(() => {
     if (!userId) return;
 
-    const typeIcons: Record<string, { icon: any; bg: string; color: string }> = {
-      sentence_builder: {
-        icon: { ios: "puzzlepiece.fill", android: "construction", web: "construction" },
-        bg: Colors.light.tertiaryContainer,
-        color: Colors.light.onTertiary,
-      },
-      spelling: {
-        icon: { ios: "textformat", android: "text_fields", web: "text_fields" },
-        bg: Colors.light.primaryContainer,
-        color: Colors.light.onPrimaryContainer,
-      },
-      fill_blank_spelling: {
-        icon: { ios: "textbox", android: "edit", web: "edit" },
-        bg: Colors.light.surfaceContainer,
-        color: Colors.light.onSurfaceVariant,
-      },
-    };
+    const typeIcons: Record<string, { icon: any; bg: string; color: string }> =
+      {
+        sentence_builder: {
+          icon: {
+            ios: "puzzlepiece.fill",
+            android: "construction",
+            web: "construction",
+          },
+          bg: Colors.light.tertiaryContainer,
+          color: Colors.light.onTertiary,
+        },
+        spelling: {
+          icon: {
+            ios: "textformat",
+            android: "text_fields",
+            web: "text_fields",
+          },
+          bg: Colors.light.primaryContainer,
+          color: Colors.light.onPrimaryContainer,
+        },
+        fill_blank_spelling: {
+          icon: { ios: "textbox", android: "edit", web: "edit" },
+          bg: Colors.light.surfaceContainer,
+          color: Colors.light.onSurfaceVariant,
+        },
+      };
 
     const mapRows = (rows: any[]): RecentExercise[] =>
       rows.map((row: any) => {
@@ -348,12 +389,16 @@ export default function HomePage() {
           typeIconColor: meta.color,
           title: row.title,
           status: "Completed" as const,
-          statusIcon: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
-            statusColor: Colors.light.primary,
-            xp: `+${row.xp ?? 5} XP`,
-            xpColor: XP_COLOR,
-          };
-        });
+          statusIcon: {
+            ios: "checkmark.circle.fill",
+            android: "check_circle",
+            web: "check_circle",
+          },
+          statusColor: Colors.light.primary,
+          xp: `+${row.xp ?? 5} XP`,
+          xpColor: XP_COLOR,
+        };
+      });
 
     async function loadRecentPage(page: number) {
       if (!mountedRef.current) return;
@@ -361,7 +406,12 @@ export default function HomePage() {
       try {
         const db = await getDatabase();
         const [rows, total] = await Promise.all([
-          getRecentCompletedExercises(db, userId!, RECENT_PAGE_SIZE, (page - 1) * RECENT_PAGE_SIZE),
+          getRecentCompletedExercises(
+            db,
+            userId!,
+            RECENT_PAGE_SIZE,
+            (page - 1) * RECENT_PAGE_SIZE,
+          ),
           getRecentCompletedExercisesCount(db, userId!),
         ]);
         if (mountedRef.current) {
@@ -381,7 +431,10 @@ export default function HomePage() {
 
   const handlePageChange = (newPage: number) => {
     if (loadingRecentPage) return;
-    const totalPages = Math.max(1, Math.ceil(recentTotalCount / RECENT_PAGE_SIZE));
+    const totalPages = Math.max(
+      1,
+      Math.ceil(recentTotalCount / RECENT_PAGE_SIZE),
+    );
     if (newPage < 1 || newPage > totalPages) return;
     if (!userId) return;
     setLoadingRecentPage(true);
@@ -400,12 +453,20 @@ export default function HomePage() {
               const meta = (
                 {
                   sentence_builder: {
-                    icon: { ios: "puzzlepiece.fill", android: "construction", web: "construction" },
+                    icon: {
+                      ios: "puzzlepiece.fill",
+                      android: "construction",
+                      web: "construction",
+                    },
                     bg: Colors.light.tertiaryContainer,
                     color: Colors.light.onTertiary,
                   },
                   spelling: {
-                    icon: { ios: "textformat", android: "text_fields", web: "text_fields" },
+                    icon: {
+                      ios: "textformat",
+                      android: "text_fields",
+                      web: "text_fields",
+                    },
                     bg: Colors.light.primaryContainer,
                     color: Colors.light.onPrimaryContainer,
                   },
@@ -428,7 +489,11 @@ export default function HomePage() {
                 typeIconColor: meta.color,
                 title: row.title,
                 status: "Completed" as const,
-                statusIcon: { ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" },
+                statusIcon: {
+                  ios: "checkmark.circle.fill",
+                  android: "check_circle",
+                  web: "check_circle",
+                },
                 statusColor: Colors.light.primary,
                 xp: `+${row.xp ?? 5} XP`,
                 xpColor: XP_COLOR,
@@ -450,30 +515,19 @@ export default function HomePage() {
     return (
       <View
         key={card.id}
-        style={[
-          styles.statCard,
-          { backgroundColor: card.iconBg },
-        ]}>
+        style={[styles.statCard, { backgroundColor: card.iconBg }]}
+      >
         <View style={styles.statCardInner}>
           <View
-            style={[
-              styles.statIconContainer,
-              { backgroundColor: "#ffffff30" },
-            ]}>
-            <SymbolView
-              name={card.icon}
-              size={28}
-              tintColor={card.iconColor}
-            />
+            style={[styles.statIconContainer, { backgroundColor: "#ffffff30" }]}
+          >
+            <SymbolView name={card.icon} size={28} tintColor={card.iconColor} />
           </View>
           <ThemedText style={styles.statValue}>{displayValue}</ThemedText>
           <ThemedText style={styles.statLabel}>{card.label}</ThemedText>
         </View>
         <View
-          style={[
-            styles.statHoverOverlay,
-            { backgroundColor: "#ffffff20" },
-          ]}
+          style={[styles.statHoverOverlay, { backgroundColor: "#ffffff20" }]}
         />
       </View>
     );
@@ -483,7 +537,8 @@ export default function HomePage() {
     <Pressable
       key={item.day}
       style={styles.weekBarContainer}
-      onPress={() => handleDayPress(item.dayIndex)}>
+      onPress={() => handleDayPress(item.dayIndex)}
+    >
       <View style={styles.weekBarTrack}>
         <View
           style={[
@@ -491,9 +546,7 @@ export default function HomePage() {
             {
               height: Math.max(item.height, 4),
               backgroundColor:
-                index === new Date().getDay()
-                  ? "#15803d"
-                  : "#86efac",
+                index === new Date().getDay() ? "#15803d" : "#86efac",
             },
           ]}
         />
@@ -502,7 +555,8 @@ export default function HomePage() {
         style={[
           styles.weekBarLabel,
           index === new Date().getDay() && styles.weekBarLabelActive,
-        ]}>
+        ]}
+      >
         {item.day}
       </ThemedText>
     </Pressable>
@@ -517,7 +571,8 @@ export default function HomePage() {
             {
               backgroundColor: `${item.typeIconBg}20`,
             },
-          ]}>
+          ]}
+        >
           <SymbolView
             name={item.typeIcon}
             size={20}
@@ -533,10 +588,8 @@ export default function HomePage() {
               tintColor={item.statusColor}
             />
             <ThemedText
-              style={[
-                styles.exerciseStatusText,
-                { color: item.statusColor },
-              ]}>
+              style={[styles.exerciseStatusText, { color: item.statusColor }]}
+            >
               {item.status}
             </ThemedText>
           </View>
@@ -551,12 +604,9 @@ export default function HomePage() {
                 ? XP_CHIP_BG
                 : Colors.light.surfaceContainer,
           },
-        ]}>
-        <ThemedText
-          style={[
-            styles.exerciseXpText,
-            { color: item.xpColor },
-          ]}>
+        ]}
+      >
+        <ThemedText style={[styles.exerciseXpText, { color: item.xpColor }]}>
           {item.xp}
         </ThemedText>
       </View>
@@ -572,9 +622,16 @@ export default function HomePage() {
         <Pressable
           style={styles.helpButton}
           onPress={() => setShowTutorial(true)}
-          hitSlop={8}>
+          hitSlop={8}
+        >
           <SymbolView
-            name={{ ios: "questionmark.circle", android: "help", web: "help" } as any}
+            name={
+              {
+                ios: "questionmark.circle",
+                android: "help",
+                web: "help",
+              } as any
+            }
             size={24}
             tintColor="#15803d"
           />
@@ -583,7 +640,8 @@ export default function HomePage() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.statsSection}>
           <ThemedText style={styles.sectionTitle}>Your Stats</ThemedText>
           <View style={styles.statGrid}>
@@ -599,7 +657,9 @@ export default function HomePage() {
         <View style={styles.weeklySection}>
           <View style={styles.weeklyHeader}>
             <View>
-              <ThemedText style={styles.sectionTitle}>Weekly Progress</ThemedText>
+              <ThemedText style={styles.sectionTitle}>
+                Weekly Progress
+              </ThemedText>
               <Pressable onPress={() => setShowWeekPicker(true)}>
                 <ThemedText style={styles.weekLabel}>
                   {selectedWeek?.label ?? "Select Week"}
@@ -626,7 +686,9 @@ export default function HomePage() {
             ) : recentExercises.length > 0 ? (
               recentExercises.map(renderRecentExercise)
             ) : (
-              <ThemedText style={styles.emptyText}>No recent exercises yet.</ThemedText>
+              <ThemedText style={styles.emptyText}>
+                No recent exercises yet.
+              </ThemedText>
             )}
           </View>
           {recentTotalCount > RECENT_PAGE_SIZE && (
@@ -634,37 +696,50 @@ export default function HomePage() {
               <Pressable
                 style={[
                   styles.paginationButton,
-                  (recentPage === 1 || loadingRecentPage) && styles.paginationButtonDisabled,
+                  (recentPage === 1 || loadingRecentPage) &&
+                    styles.paginationButtonDisabled,
                 ]}
                 onPress={() => handlePageChange(recentPage - 1)}
-                disabled={recentPage === 1 || loadingRecentPage}>
+                disabled={recentPage === 1 || loadingRecentPage}
+              >
                 <ThemedText
                   style={[
                     styles.paginationButtonText,
-                    (recentPage === 1 || loadingRecentPage) && styles.paginationButtonTextDisabled,
-                  ]}>
+                    (recentPage === 1 || loadingRecentPage) &&
+                      styles.paginationButtonTextDisabled,
+                  ]}
+                >
                   Prev
                 </ThemedText>
               </Pressable>
               <ThemedText style={styles.paginationInfo}>
-                Page {recentPage} of {Math.ceil(recentTotalCount / RECENT_PAGE_SIZE)}
+                Page {recentPage} of{" "}
+                {Math.ceil(recentTotalCount / RECENT_PAGE_SIZE)}
               </ThemedText>
               <Pressable
                 style={[
                   styles.paginationButton,
-                  (recentPage >= Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) || loadingRecentPage) &&
+                  (recentPage >=
+                    Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) ||
+                    loadingRecentPage) &&
                     styles.paginationButtonDisabled,
                 ]}
                 onPress={() => handlePageChange(recentPage + 1)}
                 disabled={
-                  recentPage >= Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) || loadingRecentPage
-                }>
+                  recentPage >=
+                    Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) ||
+                  loadingRecentPage
+                }
+              >
                 <ThemedText
                   style={[
                     styles.paginationButtonText,
-                    (recentPage >= Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) || loadingRecentPage) &&
+                    (recentPage >=
+                      Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) ||
+                      loadingRecentPage) &&
                       styles.paginationButtonTextDisabled,
-                  ]}>
+                  ]}
+                >
                   Next
                 </ThemedText>
               </Pressable>
@@ -677,7 +752,9 @@ export default function HomePage() {
         <View style={styles.weekPickerOverlay}>
           <View style={styles.weekPickerCard}>
             <View style={styles.weekPickerHeader}>
-              <ThemedText style={styles.weekPickerTitle}>Select Week</ThemedText>
+              <ThemedText style={styles.weekPickerTitle}>
+                Select Week
+              </ThemedText>
               <Pressable onPress={() => setShowWeekPicker(false)}>
                 <ThemedText style={styles.weekPickerDone}>Done</ThemedText>
               </Pressable>
@@ -693,12 +770,15 @@ export default function HomePage() {
                   onPress={() => {
                     setSelectedWeekIndex(idx);
                     setShowWeekPicker(false);
-                  }}>
+                  }}
+                >
                   <ThemedText
                     style={[
                       styles.weekPickerItemText,
-                      selectedWeekIndex === idx && styles.weekPickerItemTextActive,
-                    ]}>
+                      selectedWeekIndex === idx &&
+                        styles.weekPickerItemTextActive,
+                    ]}
+                  >
                     {week.label}
                   </ThemedText>
                 </Pressable>
@@ -713,40 +793,79 @@ export default function HomePage() {
           visible={showDayDetail}
           transparent
           animationType="fade"
-          onRequestClose={() => setShowDayDetail(false)}>
+          onRequestClose={() => setShowDayDetail(false)}
+        >
           <View style={styles.dayDetailOverlay}>
             <View style={styles.dayDetailCard}>
               <View style={styles.dayDetailHeader}>
                 <ThemedText style={styles.dayDetailTitle}>
-                  {selectedDayIndex !== null ? DAY_LABELS[selectedDayIndex] : ""} Progress
+                  {selectedDayIndex !== null
+                    ? DAY_LABELS[selectedDayIndex]
+                    : ""}{" "}
+                  Progress
                 </ThemedText>
                 <Pressable onPress={() => setShowDayDetail(false)}>
                   <ThemedText style={styles.dayDetailClose}>Close</ThemedText>
                 </Pressable>
               </View>
               {loadingDayDetails ? (
-                <ThemedText style={styles.dayDetailLoading}>Loading...</ThemedText>
+                <ThemedText style={styles.dayDetailLoading}>
+                  Loading...
+                </ThemedText>
               ) : dayDetails.length === 0 ? (
-                <ThemedText style={styles.dayDetailEmpty}>No exercises completed on this day.</ThemedText>
+                <ThemedText style={styles.dayDetailEmpty}>
+                  No exercises completed on this day.
+                </ThemedText>
               ) : (
-                <ScrollView style={styles.dayDetailList}>
+                <ScrollView
+                  style={styles.dayDetailList}
+                  contentContainerStyle={styles.dayDetailListContent}
+                >
                   {dayDetails.map((item) => (
                     <View key={item.id} style={styles.dayDetailItem}>
                       <View style={styles.dayDetailItemHeader}>
-                        <ThemedText style={styles.dayDetailTopic}>{item.topic_title}</ThemedText>
+                        <ThemedText style={styles.dayDetailTopic}>
+                          {item.topic_title}
+                        </ThemedText>
                         <View style={styles.dayDetailBadges}>
                           <View style={styles.dayDetailBadge}>
-                            <ThemedText style={styles.dayDetailBadgeText}>{item.level}</ThemedText>
+                            <ThemedText style={styles.dayDetailBadgeText}>
+                              {item.level}
+                            </ThemedText>
                           </View>
-                          <View style={[styles.dayDetailBadge, styles.dayDetailBadgeXP]}>
-                            <ThemedText style={[styles.dayDetailBadgeText, styles.dayDetailBadgeTextXP]}>+{item.xp ?? 5} XP</ThemedText>
+                          <View
+                            style={[
+                              styles.dayDetailBadge,
+                              styles.dayDetailBadgeXP,
+                            ]}
+                          >
+                            <ThemedText
+                              style={[
+                                styles.dayDetailBadgeText,
+                                styles.dayDetailBadgeTextXP,
+                              ]}
+                            >
+                              +{item.xp ?? 5} XP
+                            </ThemedText>
                           </View>
                         </View>
                       </View>
-                      <ThemedText style={styles.dayDetailPrompt}>{item.title}</ThemedText>
-                      <ThemedText style={styles.dayDetailGrammar}>{item.grammar_focus}</ThemedText>
+                      <ThemedText style={styles.dayDetailPrompt}>
+                        {item.title}
+                      </ThemedText>
+                      <ThemedText style={styles.dayDetailGrammar}>
+                        {item.grammar_focus}
+                      </ThemedText>
                       <ThemedText style={styles.dayDetailTime}>
-                        {new Date(item.recorded_at).toLocaleTimeString('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', hour12: true })}
+                        {new Date(item.recorded_at).toLocaleTimeString(
+                          "en-US",
+                          {
+                            timeZone: "Asia/Manila",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: true,
+                          },
+                        )}
                       </ThemedText>
                     </View>
                   ))}
@@ -994,7 +1113,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   weekPickerOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
@@ -1097,8 +1216,10 @@ const styles = StyleSheet.create({
     color: Colors.light.onSurfaceVariant,
   },
   dayDetailList: {
-    padding: 16,
     maxHeight: 400,
+  },
+  dayDetailListContent: {
+    padding: 16,
   },
   dayDetailItem: {
     backgroundColor: Colors.light.surfaceContainerLowest,

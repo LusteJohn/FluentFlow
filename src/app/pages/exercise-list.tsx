@@ -1,38 +1,48 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { SymbolView } from "expo-symbols";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
-  View,
   TextInput,
-  Alert,
-  Modal,
+  View,
 } from "react-native";
-import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { SymbolView } from "expo-symbols";
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
-import { SpellingExercise } from "@/components/exercise/SpellingExercise";
-import { FillBlankExercise } from "@/components/exercise/FillBlankExercise";
-import { SentenceBuilderExercise } from "@/components/exercise/SentenceBuilderExercise";
+import {
+  createExerciseAnswer,
+  deleteExerciseAnswersByExerciseId,
+  getExerciseAnswersByExerciseId,
+} from "@/backend/ExerciseAnswer";
+import {
+  getExerciseTokensByExerciseId,
+  seedExerciseTokens,
+} from "@/backend/ExerciseTokens";
 import { getTopicById } from "@/backend/Topic";
 import {
   getExercisesByTopicIdAndLevel,
   seedExercises,
 } from "@/backend/TopicExercise";
 import {
-  getExerciseTokensByExerciseId,
-  seedExerciseTokens,
-} from "@/backend/ExerciseTokens";
-import { createExerciseAnswer, getExerciseAnswersByExerciseId, deleteExerciseAnswersByExerciseId } from "@/backend/ExerciseAnswer";
-import { getUserProfile } from "@/backend/UserProfile";
-import { getUserExerciseProgressByUserAndExercise, createUserExerciseProgress, updateUserExerciseProgress } from "@/backend/UserExerciseProgress";
+  createUserExerciseProgress,
+  getUserExerciseProgressByUserAndExercise,
+  updateUserExerciseProgress,
+} from "@/backend/UserExerciseProgress";
 import { upsertLevelProgressAfterExercise } from "@/backend/UserLevelProgress";
+import { getUserProfile } from "@/backend/UserProfile";
+import { FillBlankExercise } from "@/components/exercise/FillBlankExercise";
+import { SentenceBuilderExercise } from "@/components/exercise/SentenceBuilderExercise";
+import { SpellingExercise } from "@/components/exercise/SpellingExercise";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Colors } from "@/constants/theme";
 import { getDatabase } from "@/database/database";
-import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
+import NavBar from "../(tabs)/navBar";
 
 interface Exercise {
   exercise_id: number;
@@ -78,16 +88,16 @@ export default function ExerciseListPage() {
   const [submittedAnswers, setSubmittedAnswers] = useState<
     Record<number, string>
   >({});
-  const [letterInputs, setLetterInputs] = useState<
-    Record<number, string[]>
-  >({});
+  const [letterInputs, setLetterInputs] = useState<Record<number, string[]>>(
+    {},
+  );
   const [selectedWords, setSelectedWords] = useState<
     Record<number, ExerciseToken[]>
   >({});
   const letterInputRefs = useRef<Record<number, (TextInput | null)[]>>({});
-  const [answerResults, setAnswerResults] = useState<
-    Record<number, boolean>
-  >({});
+  const [answerResults, setAnswerResults] = useState<Record<number, boolean>>(
+    {},
+  );
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
@@ -115,7 +125,9 @@ export default function ExerciseListPage() {
           const topicId = parseInt(topic_id ?? "1", 10);
           const lvl = level ?? "beginner";
 
-          const topic = (await getTopicById(db, topicId)) as { title?: string } | null;
+          const topic = (await getTopicById(db, topicId)) as {
+            title?: string;
+          } | null;
           if (isActive) {
             setTopicTitle(topic?.title ?? "Exercises");
           }
@@ -136,7 +148,8 @@ export default function ExerciseListPage() {
             if (firstTokens.length === 0) {
               await seedExercises(db);
               await seedExerciseTokens(db);
-              exs = (await getExercisesByTopicIdAndLevel(db, topicId, lvl)) ?? [];
+              exs =
+                (await getExercisesByTopicIdAndLevel(db, topicId, lvl)) ?? [];
             }
           }
 
@@ -162,10 +175,14 @@ export default function ExerciseListPage() {
             if (answers.length > 0) {
               const savedAnswer = answers[0].answer_text ?? "";
               const exerciseTokens = tokensMap[exercise.exercise_id] ?? [];
-              const correctAnswer = getCorrectAnswer(exerciseTokens, exercise.type);
+              const correctAnswer = getCorrectAnswer(
+                exerciseTokens,
+                exercise.type,
+              );
               const isCorrect =
                 correctAnswer !== "" &&
-                savedAnswer.trim().toLowerCase() === correctAnswer.toLowerCase();
+                savedAnswer.trim().toLowerCase() ===
+                  correctAnswer.toLowerCase();
 
               savedAnswerResults[exercise.exercise_id] = isCorrect;
 
@@ -232,14 +249,15 @@ export default function ExerciseListPage() {
   };
 
   const goToNext = () => {
-    setCurrentExerciseIndex((prev) =>
-      Math.min(prev + 1, exercises.length - 1),
-    );
+    setCurrentExerciseIndex((prev) => Math.min(prev + 1, exercises.length - 1));
   };
 
   const handleSubmitAnswer = async (exercise: Exercise) => {
     if (answerResults[exercise.exercise_id] === true) {
-      Alert.alert("Already submitted", "You can only submit one answer per exercise.");
+      Alert.alert(
+        "Already submitted",
+        "You can only submit one answer per exercise.",
+      );
       return;
     }
 
@@ -249,7 +267,10 @@ export default function ExerciseListPage() {
 
     if (exercise.type === "spelling") {
       const letters = letterInputs[exercise.exercise_id] ?? [];
-      submitted = letters.map((l) => (l ?? "").trim()).filter(Boolean).join("");
+      submitted = letters
+        .map((l) => (l ?? "").trim())
+        .filter(Boolean)
+        .join("");
     } else if (exercise.type === "fill_blank_spelling") {
       submitted = submittedAnswers[exercise.exercise_id] ?? "";
     } else if (exercise.type === "sentence_builder") {
@@ -280,8 +301,6 @@ export default function ExerciseListPage() {
         );
         const attempts = (existing?.attempts_count ?? 0) + 1;
         const now = new Date();
-        const recordedAt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
-
         if (existing) {
           await updateUserExerciseProgress(db, userId, exercise.exercise_id, {
             attempts_count: attempts,
@@ -307,7 +326,10 @@ export default function ExerciseListPage() {
         );
       }
 
-      const newResults = { ...answerResults, [exercise.exercise_id]: isCorrect };
+      const newResults = {
+        ...answerResults,
+        [exercise.exercise_id]: isCorrect,
+      };
       setAnswerResults(newResults);
 
       const allSubmitted = exercises.every(
@@ -370,20 +392,25 @@ export default function ExerciseListPage() {
 
   const levelTitle = LEVEL_TITLES[level ?? "beginner"] ?? "Exercises";
 
-  const totalXP = exercises.reduce((sum, ex) => sum + (ex as any).xp ?? 5, 0);
+  const totalXP = exercises.reduce((sum, ex) => sum + ((ex as any).xp ?? 5), 0);
 
   const displayExercises = reviewMode
     ? exercises.filter((ex) => answerResults[ex.exercise_id] === false)
     : exercises;
 
-  const completedCount = exercises.filter((ex) => answerResults[ex.exercise_id] === true).length;
+  const completedCount = exercises.filter(
+    (ex) => answerResults[ex.exercise_id] === true,
+  ).length;
   const totalEarnedXP = exercises.reduce((sum, ex) => {
     if (answerResults[ex.exercise_id] === true) {
       return sum + ((ex as any).xp ?? 5);
     }
     return sum;
   }, 0);
-  const accuracy = exercises.length > 0 ? Math.round((completedCount / exercises.length) * 100) : 0;
+  const accuracy =
+    exercises.length > 0
+      ? Math.round((completedCount / exercises.length) * 100)
+      : 0;
 
   return (
     <ThemedView style={styles.container}>
@@ -392,11 +419,13 @@ export default function ExerciseListPage() {
       <View style={styles.headerSection}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <SymbolView
-            name={{
-              ios: "chevron.left",
-              android: "arrow_back_ios",
-              web: "arrow_back_ios",
-            } as any}
+            name={
+              {
+                ios: "chevron.left",
+                android: "arrow_back_ios",
+                web: "arrow_back_ios",
+              } as any
+            }
             size={24}
             tintColor={Colors.light.onSurface}
           />
@@ -406,127 +435,143 @@ export default function ExerciseListPage() {
             {topicTitle} — {levelTitle}
           </ThemedText>
           <View style={styles.xpBadge}>
-            <ThemedText style={styles.xpText}>
-              {totalXP} XP
-            </ThemedText>
+            <ThemedText style={styles.xpText}>{totalXP} XP</ThemedText>
           </View>
         </View>
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {loading && (
-          <ThemedText style={styles.loadingText}>Loading exercises...</ThemedText>
-        )}
-        {!loading && displayExercises.length === 0 && (
-          <ThemedText style={styles.noExercisesText}>
-            {reviewMode
-              ? "No incorrect exercises to review. Great job!"
-              : "No exercises available for this level yet."}
-          </ThemedText>
-        )}
-        {!loading && displayExercises.length > 0 && (
-          <>
-            <View style={styles.progressIndicator}>
-              <ThemedText style={styles.progressIndicatorText}>
-                {reviewMode
-                  ? `Reviewing ${displayExercises.length} incorrect exercise${displayExercises.length !== 1 ? "s" : ""}`
-                  : `Exercise ${currentExerciseIndex + 1} of ${displayExercises.length}`}
-              </ThemedText>
-            </View>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
+        >
+          {loading && (
+            <ThemedText style={styles.loadingText}>
+              Loading exercises...
+            </ThemedText>
+          )}
+          {!loading && displayExercises.length === 0 && (
+            <ThemedText style={styles.noExercisesText}>
+              {reviewMode
+                ? "No incorrect exercises to review. Great job!"
+                : "No exercises available for this level yet."}
+            </ThemedText>
+          )}
+          {!loading && displayExercises.length > 0 && (
+            <>
+              <View style={styles.progressIndicator}>
+                <ThemedText style={styles.progressIndicatorText}>
+                  {reviewMode
+                    ? `Reviewing ${displayExercises.length} incorrect exercise${displayExercises.length !== 1 ? "s" : ""}`
+                    : `Exercise ${currentExerciseIndex + 1} of ${displayExercises.length}`}
+                </ThemedText>
+              </View>
 
-            {(() => {
-              const exercise = displayExercises[currentExerciseIndex];
-              if (!exercise) return null;
+              {(() => {
+                const exercise = displayExercises[currentExerciseIndex];
+                if (!exercise) return null;
 
-              const typeLabel =
-                EXERCISE_TYPE_LABELS[exercise.type] ?? exercise.type;
-              const exerciseTokens =
-                tokensByExercise[exercise.exercise_id] ?? [];
-              const correctAnswer = getCorrectAnswer(
-                exerciseTokens,
-                exercise.type,
-              );
-              const answerResult = answerResults[exercise.exercise_id];
-
-              const handleLetterChange = (pos: number, value: string) => {
-                const letters = letterInputs[exercise.exercise_id] ?? [];
-                const newLetters = [...letters];
-                newLetters[pos] = value;
-                setLetterInputs((prev) => ({
-                  ...prev,
-                  [exercise.exercise_id]: newLetters,
-                }));
-              };
-
-              const handleWordToggle = (token: ExerciseToken) => {
-                const current = selectedWords[exercise.exercise_id] ?? [];
-                const isSelected = current.some(
-                  (t) => t.exercise_token_id === token.exercise_token_id,
+                const typeLabel =
+                  EXERCISE_TYPE_LABELS[exercise.type] ?? exercise.type;
+                const exerciseTokens =
+                  tokensByExercise[exercise.exercise_id] ?? [];
+                const correctAnswer = getCorrectAnswer(
+                  exerciseTokens,
+                  exercise.type,
                 );
-                if (isSelected) {
+                const answerResult = answerResults[exercise.exercise_id];
+
+                const handleLetterChange = (pos: number, value: string) => {
+                  const letters = letterInputs[exercise.exercise_id] ?? [];
+                  const newLetters = [...letters];
+                  newLetters[pos] = value;
+                  setLetterInputs((prev) => ({
+                    ...prev,
+                    [exercise.exercise_id]: newLetters,
+                  }));
+                };
+
+                const handleWordToggle = (token: ExerciseToken) => {
+                  const current = selectedWords[exercise.exercise_id] ?? [];
+                  const isSelected = current.some(
+                    (t) => t.exercise_token_id === token.exercise_token_id,
+                  );
+                  if (isSelected) {
+                    setSelectedWords((prev) => ({
+                      ...prev,
+                      [exercise.exercise_id]:
+                        prev[exercise.exercise_id]?.filter(
+                          (t) =>
+                            t.exercise_token_id !== token.exercise_token_id,
+                        ) ?? [],
+                    }));
+                  } else {
+                    setSelectedWords((prev) => ({
+                      ...prev,
+                      [exercise.exercise_id]: [
+                        ...(prev[exercise.exercise_id] ?? []),
+                        token,
+                      ],
+                    }));
+                  }
+                };
+
+                const handleWordRemove = (idx: number) => {
                   setSelectedWords((prev) => ({
                     ...prev,
-                    [exercise.exercise_id]: prev[exercise.exercise_id]?.filter(
-                      (t) => t.exercise_token_id !== token.exercise_token_id,
-                    ) ?? [],
+                    [exercise.exercise_id]:
+                      prev[exercise.exercise_id]?.filter((_, i) => i !== idx) ??
+                      [],
                   }));
-                } else {
-                  setSelectedWords((prev) => ({
-                    ...prev,
-                    [exercise.exercise_id]: [...(prev[exercise.exercise_id] ?? []), token],
-                  }));
-                }
-              };
+                };
 
-              const handleWordRemove = (idx: number) => {
-                setSelectedWords((prev) => ({
-                  ...prev,
-                  [exercise.exercise_id]: prev[exercise.exercise_id]?.filter(
-                    (_, i) => i !== idx,
-                  ) ?? [],
-                }));
-              };
-
-              return (
-                <View style={styles.exerciseItem}>
-                  <View style={styles.exerciseHeader}>
-                    <ThemedText style={styles.exerciseNumber}>
-                      #{exercise.order_index}
-                    </ThemedText>
-                    <View
-                      style={[
-                        styles.exerciseTypeBadge,
-                        { backgroundColor: Colors.light.surfaceContainer },
-                      ]}
-                    >
-                      <ThemedText
+                return (
+                  <View style={styles.exerciseItem}>
+                    <View style={styles.exerciseHeader}>
+                      <ThemedText style={styles.exerciseNumber}>
+                        #{exercise.order_index}
+                      </ThemedText>
+                      <View
                         style={[
-                          styles.exerciseType,
-                           { color: Colors.light.secondaryContainer },
+                          styles.exerciseTypeBadge,
+                          { backgroundColor: Colors.light.surfaceContainer },
                         ]}
                       >
-                        {typeLabel}
-                      </ThemedText>
+                        <ThemedText
+                          style={[
+                            styles.exerciseType,
+                            { color: Colors.light.secondaryContainer },
+                          ]}
+                        >
+                          {typeLabel}
+                        </ThemedText>
+                      </View>
                     </View>
-                  </View>
-                  <ThemedText style={styles.exercisePrompt}>
-                    {exercise.prompt}
-                  </ThemedText>
-                  {exercise.context_sentence && (
-                    <ThemedText style={styles.exerciseContext}>
-                      {exercise.context_sentence}
+                    <ThemedText style={styles.exercisePrompt}>
+                      {exercise.prompt}
                     </ThemedText>
-                  )}
-                   {exercise.type === "sentence_builder" &&
-                      exerciseTokens.length > 0 && (() => {
+                    {exercise.context_sentence && (
+                      <ThemedText style={styles.exerciseContext}>
+                        {exercise.context_sentence}
+                      </ThemedText>
+                    )}
+                    {exercise.type === "sentence_builder" &&
+                      exerciseTokens.length > 0 &&
+                      (() => {
                         const shuffledTokens =
                           answerResult === undefined
-                            ? [...exerciseTokens].sort(() => Math.random() - 0.5)
+                            ? [...exerciseTokens].sort(
+                                () => Math.random() - 0.5,
+                              )
                             : exerciseTokens;
                         return (
                           <View style={styles.tokensContainer}>
@@ -535,7 +580,9 @@ export default function ExerciseListPage() {
                             </ThemedText>
                             <SentenceBuilderExercise
                               tokens={shuffledTokens}
-                              selectedWords={selectedWords[exercise.exercise_id] ?? []}
+                              selectedWords={
+                                selectedWords[exercise.exercise_id] ?? []
+                              }
                               answerResult={answerResult}
                               onWordToggle={handleWordToggle}
                               onWordRemove={handleWordRemove}
@@ -543,139 +590,139 @@ export default function ExerciseListPage() {
                           </View>
                         );
                       })()}
-                   {correctAnswer && (
-                    <View style={styles.tokensContainer}>
-                      <ThemedText style={styles.tokensLabel}>
-                        Answer:
-                      </ThemedText>
-                      <ThemedText style={styles.tokenText}>
-                        {correctAnswer}
-                      </ThemedText>
-                    </View>
-                  )}
-                  <View style={styles.answerForm}>
-                    {exercise.type === "spelling" ? (
-                      <>
-                        {exerciseTokens.length > 0 && (
-                          <SpellingExercise
-                            tokens={exerciseTokens}
-                            letters={letterInputs[exercise.exercise_id] ?? []}
-                            answerResult={answerResult}
-                            letterRefs={letterInputRefs}
-                            exerciseId={exercise.exercise_id}
-                            onLetterChange={handleLetterChange}
-                          />
-                        )}
-                      </>
-                    ) : exercise.type === "sentence_builder" ? (
-                      <View>
-                        {(selectedWords[exercise.exercise_id] ?? []).length > 0 && (
-                          <View style={styles.arrangedWordsContainer}>
-                            <ScrollView
-                              horizontal
-                              showsHorizontalScrollIndicator={false}
-                              contentContainerStyle={styles.arrangedWordsRow}
-                            >
-                              {(selectedWords[exercise.exercise_id] ?? []).map(
-                                (word, idx) => (
-                                  <Pressable
-                                    key={`${word.exercise_token_id}-${idx}`}
-                                    style={styles.arrangedWordBox}
-                                    onPress={() => handleWordRemove(idx)}
-                                  >
-                                    <ThemedText style={styles.arrangedWordText}>
-                                      {word.token}
-                                    </ThemedText>
-                                  </Pressable>
-                                ),
-                              )}
-                            </ScrollView>
-                          </View>
-                        )}
+                    <View style={styles.answerForm}>
+                      <View style={styles.answerHeader}>
+                        <ThemedText style={styles.answerLabel}>
+                          Your answer
+                        </ThemedText>
+                        <ThemedText style={styles.answerHint}>
+                          {exercise.type === "sentence_builder"
+                            ? "Tap words to build the sentence"
+                            : exercise.type === "spelling"
+                              ? "One letter per box"
+                              : "Enter the missing word"}
+                        </ThemedText>
                       </View>
-                    ) : (
-                      <FillBlankExercise
-                        value={submittedAnswers[exercise.exercise_id] ?? ""}
-                        onChangeText={(text) =>
-                          setSubmittedAnswers((prev) => ({
-                            ...prev,
-                            [exercise.exercise_id]: text,
-                          }))
-                        }
-                        answerResult={answerResult}
-                      />
-                    )}
-                    <Pressable
-                      style={[
-                        styles.submitButton,
-                        isSubmitDisabled(exercise) && styles.submitButtonDisabled,
-                      ]}
-                      onPress={() => handleSubmitAnswer(exercise)}
-                      disabled={isSubmitDisabled(exercise)}
-                    >
-                      <ThemedText
+                      {exercise.type === "spelling" ? (
+                        <>
+                          {exerciseTokens.length > 0 && (
+                            <SpellingExercise
+                              tokens={exerciseTokens}
+                              letters={letterInputs[exercise.exercise_id] ?? []}
+                              answerResult={answerResult}
+                              letterRefs={letterInputRefs}
+                              exerciseId={exercise.exercise_id}
+                              onLetterChange={handleLetterChange}
+                            />
+                          )}
+                        </>
+                      ) : exercise.type === "sentence_builder" ? null : (
+                        <FillBlankExercise
+                          value={submittedAnswers[exercise.exercise_id] ?? ""}
+                          onChangeText={(text) =>
+                            setSubmittedAnswers((prev) => ({
+                              ...prev,
+                              [exercise.exercise_id]: text,
+                            }))
+                          }
+                          answerResult={answerResult}
+                        />
+                      )}
+                      <Pressable
                         style={[
-                          styles.submitButtonText,
+                          styles.submitButton,
                           isSubmitDisabled(exercise) &&
-                            styles.submitButtonTextDisabled,
+                            styles.submitButtonDisabled,
                         ]}
+                        onPress={() => handleSubmitAnswer(exercise)}
+                        disabled={isSubmitDisabled(exercise)}
                       >
-                        {answerResult === true ? "Correct!" : "Submit"}
-                      </ThemedText>
-                    </Pressable>
+                        <ThemedText
+                          style={[
+                            styles.submitButtonText,
+                            isSubmitDisabled(exercise) &&
+                              styles.submitButtonTextDisabled,
+                          ]}
+                        >
+                          {answerResult === true ? "Correct!" : "Submit"}
+                        </ThemedText>
+                      </Pressable>
+                    </View>
+                    {answerResult === true && (
+                      <View style={styles.successBanner}>
+                        <ThemedText style={styles.successBannerText}>
+                          Correct!
+                        </ThemedText>
+                      </View>
+                    )}
+                    {answerResult === false && (
+                      <View style={styles.errorBanner}>
+                        <ThemedText style={styles.errorBannerText}>
+                          Incorrect. The correct answer is: {correctAnswer}
+                        </ThemedText>
+                      </View>
+                    )}
                   </View>
-                  {answerResult === true && (
-                    <View style={styles.successBanner}>
-                      <ThemedText style={styles.successBannerText}>
-                        Correct!
-                      </ThemedText>
-                    </View>
-                  )}
-                  {answerResult === false && (
-                    <View style={styles.errorBanner}>
-                      <ThemedText style={styles.errorBannerText}>
-                        Incorrect. The correct answer is: {correctAnswer}
-                      </ThemedText>
-                    </View>
-                  )}
-                </View>
-              );
-            })()}
+                );
+              })()}
 
-
-            <View style={styles.arrowNav}>
-              <Pressable
-                style={[
-                  styles.arrowButton,
-                  currentExerciseIndex === 0 && styles.arrowButtonDisabled,
-                ]}
-                onPress={goToPrev}
-                disabled={currentExerciseIndex === 0}
-              >
-                <SymbolView
-                  name={{ ios: "chevron.left", android: "arrow_back_ios", web: "arrow_back_ios" } as any}
-                  size={28}
-                   tintColor={currentExerciseIndex === 0 ? Colors.light.onSurfaceVariant : Colors.light.primary}
-                />
-              </Pressable>
-              <Pressable
-                style={[
-                  styles.arrowButton,
-                  currentExerciseIndex === displayExercises.length - 1 && styles.arrowButtonDisabled,
-                ]}
-                onPress={goToNext}
-                disabled={currentExerciseIndex === displayExercises.length - 1}
-              >
-                <SymbolView
-                  name={{ ios: "chevron.right", android: "arrow_forward_ios", web: "arrow_forward_ios" } as any}
-                  size={28}
-                   tintColor={currentExerciseIndex === displayExercises.length - 1 ? Colors.light.onSurfaceVariant : Colors.light.primary}
-                />
-              </Pressable>
-            </View>
-          </>
-        )}
-      </ScrollView>
+              <View style={styles.arrowNav}>
+                <Pressable
+                  style={[
+                    styles.arrowButton,
+                    currentExerciseIndex === 0 && styles.arrowButtonDisabled,
+                  ]}
+                  onPress={goToPrev}
+                  disabled={currentExerciseIndex === 0}
+                >
+                  <SymbolView
+                    name={
+                      {
+                        ios: "chevron.left",
+                        android: "arrow_back_ios",
+                        web: "arrow_back_ios",
+                      } as any
+                    }
+                    size={28}
+                    tintColor={
+                      currentExerciseIndex === 0
+                        ? Colors.light.onSurfaceVariant
+                        : Colors.light.primary
+                    }
+                  />
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.arrowButton,
+                    currentExerciseIndex === displayExercises.length - 1 &&
+                      styles.arrowButtonDisabled,
+                  ]}
+                  onPress={goToNext}
+                  disabled={
+                    currentExerciseIndex === displayExercises.length - 1
+                  }
+                >
+                  <SymbolView
+                    name={
+                      {
+                        ios: "chevron.right",
+                        android: "arrow_forward_ios",
+                        web: "arrow_forward_ios",
+                      } as any
+                    }
+                    size={28}
+                    tintColor={
+                      currentExerciseIndex === displayExercises.length - 1
+                        ? Colors.light.onSurfaceVariant
+                        : Colors.light.primary
+                    }
+                  />
+                </Pressable>
+              </View>
+            </>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {!loading && displayExercises.length > 1 && (
         <View style={styles.pagination}>
@@ -698,53 +745,90 @@ export default function ExerciseListPage() {
           visible={showCompletionModal}
           transparent
           animationType="fade"
-          onRequestClose={() => setShowCompletionModal(false)}>
+          onRequestClose={() => setShowCompletionModal(false)}
+        >
           <View style={styles.completionOverlay}>
             <ScrollView contentContainerStyle={styles.completionContent}>
               <View style={styles.completionIconContainer}>
                 <View style={styles.completionIconInner}>
                   <SymbolView
-                    name={{ ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" } as any}
+                    name={
+                      {
+                        ios: "checkmark.circle.fill",
+                        android: "check_circle",
+                        web: "check_circle",
+                      } as any
+                    }
                     size={48}
                     tintColor={Colors.light.primary}
                   />
                 </View>
               </View>
 
-              <ThemedText style={styles.completionTitle}>Lesson Complete!</ThemedText>
-              <ThemedText style={styles.completionSubtitle}>{topicTitle}</ThemedText>
+              <ThemedText style={styles.completionTitle}>
+                Lesson Complete!
+              </ThemedText>
+              <ThemedText style={styles.completionSubtitle}>
+                {topicTitle}
+              </ThemedText>
 
               <View style={styles.completionStatsGrid}>
                 <View style={styles.completionStatCard}>
                   <SymbolView
-                    name={{ ios: "bolt.fill", android: "flash_on", web: "flash_on" } as any}
+                    name={
+                      {
+                        ios: "bolt.fill",
+                        android: "flash_on",
+                        web: "flash_on",
+                      } as any
+                    }
                     size={28}
                     tintColor={Colors.light.secondary}
                   />
-                  <ThemedText style={styles.completionStatValue}>+{totalEarnedXP} XP</ThemedText>
-                  <ThemedText style={styles.completionStatLabel}>Earned</ThemedText>
+                  <ThemedText style={styles.completionStatValue}>
+                    +{totalEarnedXP} XP
+                  </ThemedText>
+                  <ThemedText style={styles.completionStatLabel}>
+                    Earned
+                  </ThemedText>
                 </View>
                 <View style={styles.completionStatCard}>
                   <SymbolView
-                    name={{ ios: "checkmark.circle.fill", android: "check_circle", web: "check_circle" } as any}
+                    name={
+                      {
+                        ios: "checkmark.circle.fill",
+                        android: "check_circle",
+                        web: "check_circle",
+                      } as any
+                    }
                     size={28}
                     tintColor={Colors.light.primary}
                   />
-                  <ThemedText style={styles.completionStatValue}>{accuracy}%</ThemedText>
-                  <ThemedText style={styles.completionStatLabel}>Accuracy</ThemedText>
+                  <ThemedText style={styles.completionStatValue}>
+                    {accuracy}%
+                  </ThemedText>
+                  <ThemedText style={styles.completionStatLabel}>
+                    Accuracy
+                  </ThemedText>
                 </View>
               </View>
 
               <View style={styles.completionActions}>
                 <Pressable
                   style={styles.completionContinueButton}
-                  onPress={handleContinue}>
-                  <ThemedText style={styles.completionContinueButtonText}>Continue</ThemedText>
+                  onPress={handleContinue}
+                >
+                  <ThemedText style={styles.completionContinueButtonText}>
+                    Continue
+                  </ThemedText>
                 </Pressable>
                 <Pressable
                   style={styles.completionReviewButton}
-                  onPress={handleReviewMistakes}>
-                  <ThemedText style={styles.completionReviewButtonText}>Review Mistakes</ThemedText>
+                  onPress={handleReviewMistakes}
+                >
+                  <ThemedText style={styles.completionReviewButtonText}>
+                    Review Mistakes
+                  </ThemedText>
                 </Pressable>
               </View>
             </ScrollView>
@@ -760,6 +844,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.light.surface,
     position: "relative",
+  },
+  keyboardAvoidingView: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
@@ -840,7 +927,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: Colors.light.surfaceContainer,
-     shadowColor: Colors.light.primary,
+    shadowColor: Colors.light.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
@@ -899,11 +986,25 @@ const styles = StyleSheet.create({
     color: Colors.light.onSurfaceVariant,
     marginTop: 2,
   },
-   answerForm: {
+  answerForm: {
     flexDirection: "column",
     gap: 12,
     marginTop: 8,
-     alignItems: "stretch",
+    alignItems: "stretch",
+  },
+  answerHeader: {
+    gap: 2,
+  },
+  answerLabel: {
+    color: Colors.light.onSurface,
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+  answerHint: {
+    color: Colors.light.onSurfaceVariant,
+    fontSize: 13,
+    lineHeight: 18,
   },
   arrangedWordsContainer: {
     marginTop: 12,

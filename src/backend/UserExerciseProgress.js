@@ -1,90 +1,60 @@
-const parseLocalFromISO = (iso) => {
-  const match = iso.match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
-  if (!match) return new Date(iso);
-  const [, year, month, day, hours, minutes, seconds] = match;
-  return new Date(
-    parseInt(year, 10),
-    parseInt(month, 10) - 1,
-    parseInt(day, 10),
-    parseInt(hours, 10),
-    parseInt(minutes, 10),
-    parseInt(seconds, 10),
-  );
-};
+const parseStoredDateTime = (stored) => {
+  if (stored instanceof Date) {
+    return Number.isNaN(stored.getTime()) ? null : stored;
+  }
+  if (typeof stored === "number") {
+    const date = new Date(stored);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
 
-const parseLocalDate = (localStr) => {
-  const [datePart] = localStr.split(' ');
-  const [year, month, day] = datePart.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const parseLocalDateTime = (localStr) => {
-  const m = String(localStr).match(
-    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/,
-  );
-  if (!m) return null;
-  const [, y, mo, d, h, mi, s] = m;
-  return new Date(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(s));
-};
-
-const parseIsoDateTime = (isoStr) => {
-  const d = new Date(isoStr);
+  const raw = String(stored ?? "");
+  if (!raw) return null;
+  if (/^\d+$/.test(raw)) {
+    const date = new Date(Number(raw));
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+  if (raw.endsWith("Z") || /[+-]\d{2}:?\d{2}$/.test(raw)) {
+    const d = new Date(raw);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(raw)) {
+    return new Date(raw.replace(" ", "T") + "Z");
+  }
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(raw)) {
+    return new Date(raw + "Z");
+  }
+  const d = new Date(raw);
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
-const formatUtcIso = (date) => date.toISOString().replace("T", " ").replace("Z", "");
+const getManilaDateKey = (stored) => {
+  const date = parseStoredDateTime(stored);
+  if (!date) return null;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${values.year}-${values.month}-${values.day}`;
+};
 
-export async function getWeeklyProgress(db, userId, startOfWeek, endOfWeek) {
-  const start = parseLocalDate(startOfWeek);
-  const end = parseLocalDate(endOfWeek);
-  end.setDate(end.getDate() + 1);
+const getProgressDateKey = (row) =>
+  getManilaDateKey(row.recorded_at ?? row.completed_at);
 
-  const rows = await db.getAllAsync(
-    `SELECT
-      p.recorded_at,
-      e.xp
-     FROM user_exercise_progress p
-     JOIN exercises e ON p.exercise_id = e.exercise_id
-     WHERE p.user_id = ?
-       AND p.is_completed = 1
-       AND p.recorded_at >= ?
-       AND p.recorded_at < ?`,
-    userId,
-    formatUtcIso(start),
-    formatUtcIso(end),
-  );
+const addDaysToDateKey = (dateKey, days) => {
+  const date = new Date(`${dateKey}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
 
-  const dayMap = {};
-  for (let i = 0; i < 7; i++) {
-    dayMap[i] = { day_of_week: String(i), completed_count: 0, total_xp: 0 };
-  }
-
-  for (const row of rows ?? []) {
-    const recordedAt = String(row.recorded_at ?? "");
-    const localDate = parseLocalDateTime(recordedAt) ?? parseIsoDateTime(recordedAt);
-    if (!localDate) continue;
-    const dayNum = localDate.getDay();
-    dayMap[dayNum].completed_count += 1;
-    dayMap[dayNum].total_xp += Number(row.xp ?? 0);
-  }
-
-  return Object.values(dayMap);
-}
-
-export async function getWeeklyProgressDetails(db, userId, weekStart, weekEnd, dayIndex) {
-  const dayOffset = dayIndex === 0 ? 6 : dayIndex - 1;
-  const baseDate = parseLocalDate(weekStart);
-  const dayStart = new Date(baseDate);
-  dayStart.setDate(baseDate.getDate() + dayOffset);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(dayStart);
-  dayEnd.setDate(dayStart.getDate() + 1);
-  dayEnd.setHours(0, 0, 0, 0);
-
-  const result = await db.getAllAsync(
+const getCompletedProgressRows = async (db, userId) =>
+  db.getAllAsync(
     `SELECT
       p.id,
       p.recorded_at,
+      p.completed_at,
       e.exercise_id,
       e.level,
       e.type,
@@ -96,16 +66,40 @@ export async function getWeeklyProgressDetails(db, userId, weekStart, weekEnd, d
      FROM user_exercise_progress p
      JOIN exercises e ON p.exercise_id = e.exercise_id
      LEFT JOIN topics t ON e.topic_id = t.topic_id
-     WHERE p.user_id = ?
-       AND p.is_completed = 1
-       AND p.recorded_at >= ?
-       AND p.recorded_at < ?
+     WHERE p.user_id = ? AND p.is_completed = 1
      ORDER BY p.recorded_at ASC`,
     userId,
-    formatUtcIso(dayStart),
-    formatUtcIso(dayEnd),
   );
-  return result;
+
+export async function getWeeklyProgress(db, userId, startOfWeek, endOfWeek) {
+  const startKey = startOfWeek.slice(0, 10);
+  const endKey = endOfWeek.slice(0, 10);
+  const rows = (await getCompletedProgressRows(db, userId)).filter((row) => {
+    const dateKey = getProgressDateKey(row);
+    return dateKey && dateKey >= startKey && dateKey <= endKey;
+  });
+
+  const dayMap = {};
+  for (let i = 0; i < 7; i++) {
+    dayMap[i] = { day_of_week: String(i), completed_count: 0, total_xp: 0 };
+  }
+
+  for (const row of rows ?? []) {
+    const dateKey = getProgressDateKey(row);
+    if (!dateKey) continue;
+    const dayNum = new Date(`${dateKey}T00:00:00Z`).getUTCDay();
+    dayMap[dayNum].completed_count += 1;
+    dayMap[dayNum].total_xp += Number(row.xp ?? 0);
+  }
+
+  return Object.values(dayMap);
+}
+
+export async function getWeeklyProgressDetails(db, userId, weekStart, weekEnd, dayIndex) {
+  const dayOffset = dayIndex === 0 ? 6 : dayIndex - 1;
+  const targetDateKey = addDaysToDateKey(weekStart.slice(0, 10), dayOffset);
+  const rows = await getCompletedProgressRows(db, userId);
+  return rows.filter((row) => getProgressDateKey(row) === targetDateKey);
 }
 
 export async function getRecentCompletedExercises(db, userId, limit = 5, offset = 0) {
