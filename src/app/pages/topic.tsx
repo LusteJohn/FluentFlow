@@ -1,19 +1,19 @@
-import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { useCallback, useMemo, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
 import { getJourneyById } from "@/backend/Journey";
 import { getTopicsByJourneyId } from "@/backend/Topic";
 import { getTopicIntrosByTopicId } from "@/backend/TopicIntro";
 import { getTopicVocabularyByTopicId } from "@/backend/TopicVocabulary";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useTheme } from "@/contexts/theme-context";
 import { getDatabase } from "@/database/database";
-import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
+import NavBar from "../(tabs)/navBar";
 
 interface Journey {
   journey_id: number;
@@ -67,22 +67,28 @@ const TOPIC_ICONS = [
   { ios: "text.book.closed.fill", android: "menu_book", web: "menu_book" },
 ];
 
-const TOPIC_ICON_COLORS = [
-  { bg: Colors.light.primaryContainer, text: Colors.light.onPrimaryContainer },
-  { bg: Colors.light.secondaryContainer, text: Colors.light.onSecondaryContainer },
-  { bg: Colors.light.tertiaryContainer, text: Colors.light.onTertiaryContainer },
-  { bg: Colors.light.primaryFixed, text: Colors.light.onPrimaryFixed },
-  { bg: Colors.light.secondaryFixed, text: Colors.light.onSecondaryFixed },
-];
-
 export default function TopicPage() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { journey_id } = useLocalSearchParams<{ journey_id: string }>();
+
+  const TOPIC_ICON_COLORS = [
+    { bg: theme.primaryContainer, text: theme.onPrimaryContainer },
+    { bg: theme.secondaryContainer, text: theme.onSecondaryContainer },
+    { bg: theme.tertiaryContainer, text: theme.onTertiaryContainer },
+    { bg: theme.primaryFixed, text: theme.onPrimaryFixed },
+    { bg: theme.secondaryFixed, text: theme.onSecondaryFixed },
+  ];
   const router = useRouter();
   const [journey, setJourney] = useState<Journey | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [topicIntros, setTopicIntros] = useState<Record<number, TopicIntro>>({});
+  const [topicIntros, setTopicIntros] = useState<Record<number, TopicIntro>>(
+    {},
+  );
   const [expandedTopic, setExpandedTopic] = useState<number | null>(null);
-  const [topicVocabulary, setTopicVocabulary] = useState<Record<number, TopicVocabulary[]>>({});
+  const [topicVocabulary, setTopicVocabulary] = useState<
+    Record<number, TopicVocabulary[]>
+  >({});
 
   useFocusEffect(
     useCallback(() => {
@@ -152,33 +158,39 @@ export default function TopicPage() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
             <Pressable
               style={styles.backButton}
-              onPress={() => router.push("/pages/journey")}>
+              onPress={() => router.push("/pages/journey")}
+            >
               <SymbolView
-                name={{
-                  ios: "chevron.left",
-                  android: "arrow_back_ios",
-                  web: "arrow_back_ios",
-                } as any}
+                name={
+                  {
+                    ios: "chevron.left",
+                    android: "arrow_back_ios",
+                    web: "arrow_back_ios",
+                  } as any
+                }
                 size={24}
-                tintColor={Colors.light.onSurface}
+                tintColor={theme.onSurface}
               />
             </Pressable>
             <ThemedText style={styles.pageTitle}>
               {journey?.title ?? "Grammar Guide"}
             </ThemedText>
             <SymbolView
-              name={{
-                ios: "menu.book",
-                android: "menu_book",
-                web: "menu_book",
-              } as any}
+              name={
+                {
+                  ios: "menu.book",
+                  android: "menu_book",
+                  web: "menu_book",
+                } as any
+              }
               size={24}
-              tintColor={Colors.light.outline}
+              tintColor={theme.outline}
             />
           </View>
 
@@ -220,7 +232,8 @@ export default function TopicPage() {
                       style={[
                         styles.exampleIcon,
                         { backgroundColor: iconColor.bg },
-                      ]}>
+                      ]}
+                    >
                       <SymbolView
                         name={iconName as any}
                         size={20}
@@ -250,29 +263,32 @@ export default function TopicPage() {
                       <View style={styles.actionButtonsRow}>
                         <Pressable
                           style={styles.viewDetailsButton}
-                          onPress={() => handleViewDetails(topic.topic_id)}>
+                          onPress={() => handleViewDetails(topic.topic_id)}
+                        >
                           <ThemedText style={styles.viewDetailsButtonText}>
                             {expandedTopic === topic.topic_id
                               ? "Hide Details"
                               : "View Details"}
                           </ThemedText>
                           <SymbolView
-                            name={{
-                              ios:
-                                expandedTopic === topic.topic_id
-                                  ? "chevron.down"
-                                  : "chevron.right",
-                              android:
-                                expandedTopic === topic.topic_id
-                                  ? "arrow_drop_down"
-                                  : "arrow_forward_ios",
-                              web:
-                                expandedTopic === topic.topic_id
-                                  ? "arrow_drop_down"
-                                  : "arrow_forward_ios",
-                            } as any}
+                            name={
+                              {
+                                ios:
+                                  expandedTopic === topic.topic_id
+                                    ? "chevron.down"
+                                    : "chevron.right",
+                                android:
+                                  expandedTopic === topic.topic_id
+                                    ? "arrow_drop_down"
+                                    : "arrow_forward_ios",
+                                web:
+                                  expandedTopic === topic.topic_id
+                                    ? "arrow_drop_down"
+                                    : "arrow_forward_ios",
+                              } as any
+                            }
                             size={16}
-                            tintColor={Colors.light.onPrimaryContainer}
+                            tintColor={theme.onPrimaryContainer}
                           />
                         </Pressable>
                         <Pressable
@@ -281,18 +297,21 @@ export default function TopicPage() {
                             router.push(
                               `/pages/exercise?topic_id=${topic.topic_id}` as any,
                             )
-                          }>
+                          }
+                        >
                           <ThemedText style={styles.startPracticeButtonText}>
                             Start Practice
                           </ThemedText>
                           <SymbolView
-                            name={{
-                              ios: "arrow.forward",
-                              android: "arrow_forward",
-                              web: "arrow_forward",
-                            } as any}
+                            name={
+                              {
+                                ios: "arrow.forward",
+                                android: "arrow_forward",
+                                web: "arrow_forward",
+                              } as any
+                            }
                             size={16}
-                            tintColor={Colors.light.onPrimaryContainer}
+                            tintColor={theme.onPrimaryContainer}
                           />
                         </Pressable>
                       </View>
@@ -305,7 +324,8 @@ export default function TopicPage() {
                             {topicVocabulary[topic.topic_id].map((vocab) => (
                               <View
                                 key={vocab.topic_vocabulary_id}
-                                style={styles.vocabularyItem}>
+                                style={styles.vocabularyItem}
+                              >
                                 <View style={styles.vocabularyItemHeader}>
                                   <ThemedText style={styles.vocabularyWord}>
                                     {vocab.word}
@@ -333,261 +353,262 @@ export default function TopicPage() {
             })}
           </View>
         </View>
-
-       </ScrollView>
+      </ScrollView>
 
       <NavBar />
     </ThemedView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.surface,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-    gap: 32,
-  },
-  titleSection: {
-    marginTop: 24,
-    gap: 16,
-  },
-   titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-   backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 20,
-    backgroundColor: Colors.light.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  pageTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 24,
-    fontWeight: "700",
-    lineHeight: 32,
-    letterSpacing: -0.24,
-  },
-  descriptionCard: {
-    backgroundColor: Colors.light.surfaceContainerLow,
-    borderRadius: 16,
-    padding: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    position: "relative",
-    overflow: "hidden",
-  },
-  mascotImage: {
-    width: 128,
-    height: 128,
-  },
-  descriptionContent: {
-    flex: 1,
-    gap: 8,
-  },
-  cardTitle: {
-    color: Colors.light.primary,
-    fontSize: 20,
-    fontWeight: "600",
-    lineHeight: 28,
-  },
-  cardDescription: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: "500",
-  },
-  decorativeBlob: {
-    position: "absolute",
-    right: -48,
-    top: -48,
-    width: 192,
-    height: 192,
-    borderRadius: 9999,
-    backgroundColor: Colors.light.primaryFixed,
-    opacity: 0.3,
-    pointerEvents: "none",
-  },
-  examplesSection: {
-    gap: 16,
-  },
-  sectionTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 20,
-    fontWeight: "600",
-    lineHeight: 28,
-  },
-  examplesGrid: {
-    gap: 12,
-  },
-  exampleCard: {
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 12,
-    padding: 20,
-    gap: 12,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: Colors.light.surfaceContainer,
-  },
-  exampleCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  exampleIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  exampleTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 18,
-    fontWeight: "600",
-    lineHeight: 24,
-  },
-  exampleGrammarFocus: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: "600",
-    lineHeight: 20,
-  },
-  exampleDescription: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: "500",
-  },
-  exampleSentence: {
-    color: Colors.light.onSurface,
-    fontSize: 15,
-    lineHeight: 22,
-    fontStyle: "italic",
-    opacity: 0.8,
-  },
-  exampleRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 6,
-  },
-  exampleLabel: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  viewDetailsButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: Colors.light.primaryContainer,
-  },
-  viewDetailsButtonText: {
-    color: Colors.light.onPrimaryContainer,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  actionButtonsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    width: "100%",
-    marginTop: 8,
-  },
-  startPracticeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    flex: 1,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: Colors.light.secondaryContainer,
-  },
-  startPracticeButtonText: {
-    color: Colors.light.onSecondaryContainer,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  vocabularySection: {
-    width: "100%",
-    gap: 12,
-    marginTop: 4,
-  },
-  vocabularySectionTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 16,
-    fontWeight: "600",
-    lineHeight: 22,
-  },
-  vocabularyItem: {
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 12,
-    padding: 16,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.light.surfaceContainer,
-    marginBottom: 12,
-  },
-  vocabularyItemHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 4,
-  },
-  vocabularyWord: {
-    color: Colors.light.primary,
-    fontSize: 18,
-    fontWeight: "700",
-    lineHeight: 24,
-  },
-  vocabularyPosBadge: {
-    backgroundColor: Colors.light.secondaryContainer,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  vocabularyPos: {
-    color: Colors.light.onSecondaryContainer,
-    fontSize: 12,
-    fontWeight: "600",
-    lineHeight: 16,
-  },
-  vocabularyDefinition: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: "500",
-    marginBottom: 4,
-  },
-  vocabularyExample: {
-    color: Colors.light.onSurface,
-    fontSize: 14,
-    lineHeight: 20,
-    fontStyle: "italic",
-    opacity: 0.8,
-     marginTop: 4,
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.surface,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingBottom: 32,
+      gap: 32,
+    },
+    titleSection: {
+      marginTop: 24,
+      gap: 16,
+    },
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 20,
+      backgroundColor: theme.surfaceContainerLow,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    pageTitle: {
+      color: theme.onSurface,
+      fontSize: 24,
+      fontWeight: "700",
+      lineHeight: 32,
+      letterSpacing: -0.24,
+    },
+    descriptionCard: {
+      backgroundColor: theme.surfaceContainerLow,
+      borderRadius: 16,
+      padding: 20,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 16,
+      position: "relative",
+      overflow: "hidden",
+    },
+    mascotImage: {
+      width: 128,
+      height: 128,
+    },
+    descriptionContent: {
+      flex: 1,
+      gap: 8,
+    },
+    cardTitle: {
+      color: theme.primary,
+      fontSize: 20,
+      fontWeight: "600",
+      lineHeight: 28,
+    },
+    cardDescription: {
+      color: theme.onSurfaceVariant,
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: "500",
+    },
+    decorativeBlob: {
+      position: "absolute",
+      right: -48,
+      top: -48,
+      width: 192,
+      height: 192,
+      borderRadius: 9999,
+      backgroundColor: theme.primaryFixed,
+      opacity: 0.3,
+      pointerEvents: "none",
+    },
+    examplesSection: {
+      gap: 16,
+    },
+    sectionTitle: {
+      color: theme.onSurface,
+      fontSize: 20,
+      fontWeight: "600",
+      lineHeight: 28,
+    },
+    examplesGrid: {
+      gap: 12,
+    },
+    exampleCard: {
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 12,
+      padding: 20,
+      gap: 12,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: theme.surfaceContainer,
+    },
+    exampleCardHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    exampleIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    exampleTitle: {
+      color: theme.onSurface,
+      fontSize: 18,
+      fontWeight: "600",
+      lineHeight: 24,
+    },
+    exampleGrammarFocus: {
+      color: theme.primary,
+      fontSize: 14,
+      fontWeight: "600",
+      lineHeight: 20,
+    },
+    exampleDescription: {
+      color: theme.onSurfaceVariant,
+      fontSize: 15,
+      lineHeight: 22,
+      fontWeight: "500",
+    },
+    exampleSentence: {
+      color: theme.onSurface,
+      fontSize: 15,
+      lineHeight: 22,
+      fontStyle: "italic",
+      opacity: 0.8,
+    },
+    exampleRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 6,
+    },
+    exampleLabel: {
+      color: theme.primary,
+      fontSize: 14,
+      fontWeight: "700",
+      lineHeight: 20,
+    },
+    viewDetailsButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 8,
+      backgroundColor: theme.primaryContainer,
+    },
+    viewDetailsButtonText: {
+      color: theme.onPrimaryContainer,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    actionButtonsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      width: "100%",
+      marginTop: 8,
+    },
+    startPracticeButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      flex: 1,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 8,
+      backgroundColor: theme.secondaryContainer,
+    },
+    startPracticeButtonText: {
+      color: theme.onSecondaryContainer,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    vocabularySection: {
+      width: "100%",
+      gap: 12,
+      marginTop: 4,
+    },
+    vocabularySectionTitle: {
+      color: theme.onSurface,
+      fontSize: 16,
+      fontWeight: "600",
+      lineHeight: 22,
+    },
+    vocabularyItem: {
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 12,
+      padding: 16,
+      gap: 8,
+      borderWidth: 1,
+      borderColor: theme.surfaceContainer,
+      marginBottom: 12,
+    },
+    vocabularyItemHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 4,
+    },
+    vocabularyWord: {
+      color: theme.primary,
+      fontSize: 18,
+      fontWeight: "700",
+      lineHeight: 24,
+    },
+    vocabularyPosBadge: {
+      backgroundColor: theme.secondaryContainer,
+      borderRadius: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    vocabularyPos: {
+      color: theme.onSecondaryContainer,
+      fontSize: 12,
+      fontWeight: "600",
+      lineHeight: 16,
+    },
+    vocabularyDefinition: {
+      color: theme.onSurfaceVariant,
+      fontSize: 15,
+      lineHeight: 22,
+      fontWeight: "500",
+      marginBottom: 4,
+    },
+    vocabularyExample: {
+      color: theme.onSurface,
+      fontSize: 14,
+      lineHeight: 20,
+      fontStyle: "italic",
+      opacity: 0.8,
+      marginTop: 4,
+    },
+  });
+}

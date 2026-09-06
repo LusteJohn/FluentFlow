@@ -1,5 +1,6 @@
 import { usePathname, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { useMemo } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import Animated, {
     useAnimatedStyle,
@@ -8,7 +9,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 
 const NAV_ITEMS = [
   {
@@ -39,6 +40,8 @@ const NAV_ITEMS = [
 ];
 
 export default function NavBar() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
@@ -70,6 +73,7 @@ export default function NavBar() {
                 isActive={isActive}
                 pressed={pressed}
                 indicatorOffset={indicatorOffset}
+                styles={styles}
               />
             )}
           </Pressable>
@@ -86,12 +90,15 @@ function NavItemContent({
   isActive,
   pressed,
   indicatorOffset,
+  styles,
 }: {
   item: (typeof NAV_ITEMS)[number];
   isActive: boolean;
   pressed: boolean;
   indicatorOffset: number;
+  styles: ReturnType<typeof createStyles>;
 }) {
+  const theme = useTheme();
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       {
@@ -113,7 +120,7 @@ function NavItemContent({
         <SymbolView
           name={item.name as any}
           size={24}
-          tintColor={isActive ? "#15803d" : Colors.light.onSurfaceVariant}
+          tintColor={isActive ? "#15803d" : theme.onSurfaceVariant}
         />
       </View>
       <ThemedText
@@ -129,64 +136,66 @@ function NavItemContent({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingTop: 10,
-    backgroundColor: Colors.light.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.outlineVariant,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  itemContainer: {
-    flex: 1,
-    alignItems: "center",
-  },
-  item: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    gap: 4,
-    minWidth: 72,
-    position: "relative",
-  },
-  itemActive: {
-    backgroundColor: "#dcfce7",
-  },
-  itemPressed: {
-    backgroundColor: Colors.light.surfaceContainerHigh,
-    transform: [{ scale: 0.95 }],
-  },
-  iconWrapper: {
-    width: 28,
-    height: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  itemLabel: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 11,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  itemLabelActive: {
-    color: "#15803d",
-    fontWeight: "700",
-  },
-  activeIndicator: {
-    position: "absolute",
-    width: 24,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: "#15803d",
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      alignItems: "center",
+      paddingHorizontal: 8,
+      paddingTop: 10,
+      backgroundColor: theme.surface,
+      borderTopWidth: 1,
+      borderTopColor: theme.outlineVariant,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    itemContainer: {
+      flex: 1,
+      alignItems: "center",
+    },
+    item: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 16,
+      gap: 4,
+      minWidth: 72,
+      position: "relative",
+    },
+    itemActive: {
+      backgroundColor: "#dcfce7",
+    },
+    itemPressed: {
+      backgroundColor: theme.surfaceContainerHigh,
+      transform: [{ scale: 0.95 }],
+    },
+    iconWrapper: {
+      width: 28,
+      height: 28,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    itemLabel: {
+      color: theme.onSurfaceVariant,
+      fontSize: 11,
+      fontWeight: "600",
+      textAlign: "center",
+    },
+    itemLabelActive: {
+      color: "#15803d",
+      fontWeight: "700",
+    },
+    activeIndicator: {
+      position: "absolute",
+      width: 24,
+      height: 3,
+      borderRadius: 2,
+      backgroundColor: "#15803d",
+    },
+  });
+}

@@ -1,8 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useColorScheme } from 'react-native';
 
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/contexts/theme-context';
 
 export const TabBarContext = createContext<{
   isTabBarHidden: boolean;
@@ -13,8 +12,7 @@ export const TabBarContext = createContext<{
 });
 
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const colors = useTheme();
   const [isTabBarHidden, setIsTabBarHidden] = useState(false);
 
   return (

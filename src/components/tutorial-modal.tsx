@@ -1,8 +1,9 @@
-import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { SymbolView } from "expo-symbols";
+import { useMemo } from "react";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface TutorialStep {
   number: number;
@@ -27,7 +28,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     number: 1,
     title: "Import Data Resources",
     description:
-      "Open the Settings page from the bottom navigation and tap \"Import All Data\" to load the lessons, vocabulary, and exercises.",
+      'Open the Settings page from the bottom navigation and tap "Import All Data" to load the lessons, vocabulary, and exercises.',
   },
   {
     number: 2,
@@ -50,31 +51,39 @@ export default function TutorialModal({
   steps = TUTORIAL_STEPS,
   onClose,
 }: TutorialModalProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}>
+      onRequestClose={onClose}
+    >
       <View style={styles.overlay}>
         <View style={styles.card}>
           <View style={styles.headerRow}>
             <View style={styles.iconCircle}>
               <SymbolView
-                name={{ ios: "hand.wave.fill", android: "waving_hand", web: "waving_hand" } as any}
+                name={
+                  {
+                    ios: "hand.wave.fill",
+                    android: "waving_hand",
+                    web: "waving_hand",
+                  } as any
+                }
                 size={26}
                 tintColor="#15803d"
               />
             </View>
-            <ThemedText style={styles.welcomeText}>{welcomingPhrase}</ThemedText>
-            <Pressable
-              style={styles.closeButton}
-              onPress={onClose}
-              hitSlop={8}>
+            <ThemedText style={styles.welcomeText}>
+              {welcomingPhrase}
+            </ThemedText>
+            <Pressable style={styles.closeButton} onPress={onClose} hitSlop={8}>
               <SymbolView
                 name={{ ios: "xmark", android: "close", web: "close" } as any}
                 size={18}
-                tintColor={Colors.light.onSurfaceVariant}
+                tintColor={theme.onSurfaceVariant}
               />
             </Pressable>
           </View>
@@ -88,7 +97,9 @@ export default function TutorialModal({
             {steps.map((step) => (
               <View key={step.number} style={styles.stepRow}>
                 <View style={styles.stepNumberCircle}>
-                  <ThemedText style={styles.stepNumberText}>{step.number}</ThemedText>
+                  <ThemedText style={styles.stepNumberText}>
+                    {step.number}
+                  </ThemedText>
                 </View>
                 <View style={styles.stepText}>
                   <ThemedText style={styles.stepTitle}>{step.title}</ThemedText>
@@ -105,7 +116,8 @@ export default function TutorialModal({
               styles.gotItButton,
               pressed && styles.gotItButtonPressed,
             ]}
-            onPress={onClose}>
+            onPress={onClose}
+          >
             <ThemedText style={styles.gotItButtonText}>Got it</ThemedText>
           </Pressable>
         </View>
@@ -114,127 +126,129 @@ export default function TutorialModal({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 24,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 400,
-    backgroundColor: Colors.light.surface,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 8,
-    gap: 12,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#dcfce7",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  welcomeText: {
-    flex: 1,
-    color: Colors.light.onSurface,
-    fontSize: 15,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  closeButton: {
-    width: 28,
-    height: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 14,
-    backgroundColor: Colors.light.surfaceContainer,
-  },
-  title: {
-    color: Colors.light.onSurface,
-    fontSize: 22,
-    fontWeight: "700",
-    lineHeight: 28,
-    marginTop: 4,
-  },
-  subtitle: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 14,
-    fontWeight: "500",
-    lineHeight: 20,
-  },
-  stepsContainer: {
-    gap: 12,
-    marginTop: 4,
-  },
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-    backgroundColor: "#dcfce7",
-    borderRadius: 14,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#86efac",
-  },
-  stepNumberCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#15803d",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepNumberText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  stepText: {
-    flex: 1,
-    gap: 4,
-  },
-  stepTitle: {
-    color: "#15803d",
-    fontSize: 15,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  stepDescription: {
-    color: "#15803d",
-    fontSize: 13,
-    fontWeight: "500",
-    lineHeight: 18,
-  },
-  gotItButton: {
-    backgroundColor: "#15803d",
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 4,
-  },
-  gotItButtonPressed: {
-    opacity: 0.8,
-  },
-  gotItButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 24,
+    },
+    card: {
+      width: "100%",
+      maxWidth: 400,
+      backgroundColor: theme.surface,
+      borderRadius: 20,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 16,
+      elevation: 8,
+      gap: 12,
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+    iconCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: "#dcfce7",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    welcomeText: {
+      flex: 1,
+      color: theme.onSurface,
+      fontSize: 15,
+      fontWeight: "700",
+      lineHeight: 20,
+    },
+    closeButton: {
+      width: 28,
+      height: 28,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 14,
+      backgroundColor: theme.surfaceContainer,
+    },
+    title: {
+      color: theme.onSurface,
+      fontSize: 22,
+      fontWeight: "700",
+      lineHeight: 28,
+      marginTop: 4,
+    },
+    subtitle: {
+      color: theme.onSurfaceVariant,
+      fontSize: 14,
+      fontWeight: "500",
+      lineHeight: 20,
+    },
+    stepsContainer: {
+      gap: 12,
+      marginTop: 4,
+    },
+    stepRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 12,
+      backgroundColor: "#dcfce7",
+      borderRadius: 14,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: "#86efac",
+    },
+    stepNumberCircle: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: "#15803d",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    stepNumberText: {
+      color: "#ffffff",
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    stepText: {
+      flex: 1,
+      gap: 4,
+    },
+    stepTitle: {
+      color: "#15803d",
+      fontSize: 15,
+      fontWeight: "700",
+      lineHeight: 20,
+    },
+    stepDescription: {
+      color: "#15803d",
+      fontSize: 13,
+      fontWeight: "500",
+      lineHeight: 18,
+    },
+    gotItButton: {
+      backgroundColor: "#15803d",
+      paddingVertical: 12,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 4,
+    },
+    gotItButtonPressed: {
+      opacity: 0.8,
+    },
+    gotItButtonText: {
+      color: "#ffffff",
+      fontSize: 15,
+      fontWeight: "700",
+    },
+  });
+}

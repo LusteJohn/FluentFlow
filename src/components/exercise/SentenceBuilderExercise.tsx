@@ -1,7 +1,9 @@
+import { useMemo } from "react";
+
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface ExerciseToken {
   exercise_token_id: number;
@@ -25,6 +27,8 @@ export function SentenceBuilderExercise({
   onWordToggle,
   onWordRemove,
 }: SentenceBuilderExerciseProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const isCorrect = answerResult === true;
 
   return (
@@ -85,76 +89,78 @@ export function SentenceBuilderExercise({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-  },
-  wordBoxContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 8,
-  },
-  wordBox: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    minHeight: 48,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    marginRight: 8,
-    marginBottom: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  wordBoxSelected: {
-    backgroundColor: Colors.light.secondaryContainer,
-    borderColor: Colors.light.primary,
-  },
-  tokenText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: Colors.light.onSurface,
-  },
-  tokenTextSelected: {
-    color: Colors.light.primary,
-    fontWeight: "600",
-  },
-  arrangedWordsContainer: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    backgroundColor: Colors.light.surfaceContainerLow,
-  },
-  arrangedWordsLabel: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 12,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  arrangedWordsRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-  },
-  arrangedWordBox: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 44,
-    backgroundColor: "#fff4e5",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.light.secondaryContainer,
-    marginRight: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  arrangedWordText: {
-    color: "#6f5100",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      width: "100%",
+    },
+    wordBoxContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      marginTop: 8,
+    },
+    wordBox: {
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      minHeight: 48,
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      marginRight: 8,
+      marginBottom: 8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    wordBoxSelected: {
+      backgroundColor: theme.secondaryContainer,
+      borderColor: theme.primary,
+    },
+    tokenText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: theme.onSurface,
+    },
+    tokenTextSelected: {
+      color: theme.primary,
+      fontWeight: "600",
+    },
+    arrangedWordsContainer: {
+      marginTop: 12,
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      backgroundColor: theme.surfaceContainerLow,
+    },
+    arrangedWordsLabel: {
+      color: theme.onSurfaceVariant,
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: 8,
+    },
+    arrangedWordsRow: {
+      flexDirection: "row",
+      gap: 8,
+      alignItems: "center",
+    },
+    arrangedWordBox: {
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      minHeight: 44,
+      backgroundColor: "#fff4e5",
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.secondaryContainer,
+      marginRight: 8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    arrangedWordText: {
+      color: "#6f5100",
+      fontSize: 16,
+      fontWeight: "500",
+    },
+  });
+}
