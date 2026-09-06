@@ -37,10 +37,7 @@ export function SentenceBuilderExercise({
           return (
             <Pressable
               key={token.exercise_token_id}
-              style={[
-                styles.wordBox,
-                isSelected && styles.wordBoxSelected,
-              ]}
+              style={[styles.wordBox, isSelected && styles.wordBoxSelected]}
               disabled={isCorrect}
               onPress={() => onWordToggle(token)}
             >
@@ -59,6 +56,9 @@ export function SentenceBuilderExercise({
 
       {selectedWords.length > 0 && (
         <View style={styles.arrangedWordsContainer}>
+          <ThemedText style={styles.arrangedWordsLabel}>
+            Your sentence
+          </ThemedText>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -69,6 +69,8 @@ export function SentenceBuilderExercise({
                 key={`${word.exercise_token_id}-${idx}`}
                 style={styles.arrangedWordBox}
                 disabled={isCorrect}
+                accessibilityLabel={`Remove ${word.token}`}
+                accessibilityHint="Tap to remove this word from your sentence"
                 onPress={() => onWordRemove(idx)}
               >
                 <ThemedText style={styles.arrangedWordText}>
@@ -96,6 +98,7 @@ const styles = StyleSheet.create({
   wordBox: {
     paddingHorizontal: 16,
     paddingVertical: 10,
+    minHeight: 48,
     backgroundColor: Colors.light.surfaceContainerLowest,
     borderRadius: 12,
     borderWidth: 1,
@@ -110,7 +113,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.light.primary,
   },
   tokenText: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: "600",
     color: Colors.light.onSurface,
   },
   tokenTextSelected: {
@@ -119,6 +123,17 @@ const styles = StyleSheet.create({
   },
   arrangedWordsContainer: {
     marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.light.outlineVariant,
+    backgroundColor: Colors.light.surfaceContainerLow,
+  },
+  arrangedWordsLabel: {
+    color: Colors.light.onSurfaceVariant,
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 8,
   },
   arrangedWordsRow: {
     flexDirection: "row",
@@ -127,7 +142,8 @@ const styles = StyleSheet.create({
   },
   arrangedWordBox: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
+    minHeight: 44,
     backgroundColor: "#fff4e5",
     borderRadius: 8,
     borderWidth: 1,

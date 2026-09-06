@@ -33,9 +33,15 @@ export function FillBlankExercise({
         ]}
         placeholder="Type your answer..."
         placeholderTextColor={Colors.light.onSurfaceVariant}
+        accessibilityLabel="Answer"
+        accessibilityHint="Enter the missing word"
         value={value}
         onChangeText={onChangeText}
         editable={answerResult !== true}
+        autoCapitalize="sentences"
+        autoCorrect={false}
+        returnKeyType="done"
+        blurOnSubmit
       />
     </View>
   );
@@ -48,8 +54,10 @@ const styles = StyleSheet.create({
   answerInput: {
     width: "100%",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
+    minHeight: 54,
     fontSize: 16,
+    lineHeight: 22,
     color: Colors.light.onSurface,
     backgroundColor: Colors.light.surfaceContainerLowest,
     borderRadius: 12,

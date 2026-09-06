@@ -1,8 +1,4 @@
-import {
-  ScrollView,
-  StyleSheet,
-  TextInput,
-} from "react-native";
+import { ScrollView, StyleSheet, TextInput } from "react-native";
 
 import { Colors } from "@/constants/theme";
 
@@ -66,6 +62,8 @@ export function SpellingExercise({
               isCorrect && styles.letterBoxCorrect,
               hasError && styles.letterBoxIncorrect,
             ]}
+            accessibilityLabel={`Letter ${pos + 1}`}
+            accessibilityHint="Enter one letter, then the next box will be selected"
             maxLength={1}
             textAlign="center"
             value={currentLetter}
@@ -79,6 +77,7 @@ export function SpellingExercise({
                 focusNext(pos);
               }
             }}
+            returnKeyType={pos < tokens.length - 1 ? "next" : "done"}
             onSubmitEditing={() => focusNext(pos)}
           />
         );
@@ -92,6 +91,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    paddingVertical: 4,
+    paddingRight: 8,
   },
   letterBox: {
     width: 48,
