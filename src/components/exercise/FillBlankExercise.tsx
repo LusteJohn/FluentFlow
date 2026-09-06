@@ -1,6 +1,8 @@
+import { useMemo } from "react";
+
 import { StyleSheet, TextInput, View } from "react-native";
 
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface ExerciseToken {
   exercise_token_id: number;
@@ -20,6 +22,8 @@ export function FillBlankExercise({
   onChangeText,
   answerResult,
 }: FillBlankExerciseProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const isCorrect = answerResult === true;
   const hasError = answerResult === false;
 
@@ -32,7 +36,7 @@ export function FillBlankExercise({
           hasError && styles.answerInputIncorrect,
         ]}
         placeholder="Type your answer..."
-        placeholderTextColor={Colors.light.onSurfaceVariant}
+        placeholderTextColor={theme.onSurfaceVariant}
         accessibilityLabel="Answer"
         accessibilityHint="Enter the missing word"
         value={value}
@@ -47,29 +51,31 @@ export function FillBlankExercise({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-  },
-  answerInput: {
-    width: "100%",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    minHeight: 54,
-    fontSize: 16,
-    lineHeight: 22,
-    color: Colors.light.onSurface,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  answerInputCorrect: {
-    borderColor: Colors.light.primary,
-    backgroundColor: Colors.light.primaryContainer,
-  },
-  answerInputIncorrect: {
-    borderColor: Colors.light.error,
-    backgroundColor: Colors.light.errorContainer,
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      width: "100%",
+    },
+    answerInput: {
+      width: "100%",
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      minHeight: 54,
+      fontSize: 16,
+      lineHeight: 22,
+      color: theme.onSurface,
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    answerInputCorrect: {
+      borderColor: theme.primary,
+      backgroundColor: theme.primaryContainer,
+    },
+    answerInputIncorrect: {
+      borderColor: theme.error,
+      backgroundColor: theme.errorContainer,
+    },
+  });
+}

@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BackHandler,
   Modal,
@@ -24,7 +24,7 @@ import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import TutorialModal, { getWelcomingPhrase } from "@/components/tutorial-modal";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 import {
   getDatabase,
   hasSeenTutorial,
@@ -76,36 +76,38 @@ interface RecentExercise {
   xpColor: string;
 }
 
-const STAT_CARDS: StatCard[] = [
-  {
-    id: "1",
-    value: "7",
-    label: "Day Streak",
-    icon: {
-      ios: "flame.fill",
-      android: "local_fire_department",
-      web: "local_fire_department",
+function getStatCards(theme: ReturnType<typeof useTheme>): StatCard[] {
+  return [
+    {
+      id: "1",
+      value: "7",
+      label: "Day Streak",
+      icon: {
+        ios: "flame.fill",
+        android: "local_fire_department",
+        web: "local_fire_department",
+      },
+      iconBg: theme.surface,
+      iconColor: theme.tertiary,
     },
-    iconBg: Colors.light.surface,
-    iconColor: Colors.light.tertiary,
-  },
-  {
-    id: "2",
-    value: "245",
-    label: "Words",
-    icon: { ios: "book.fill", android: "menu_book", web: "menu_book" },
-    iconBg: Colors.light.surface,
-    iconColor: Colors.light.primary,
-  },
-  {
-    id: "3",
-    value: "1.2k",
-    label: "Total XP",
-    icon: { ios: "star.fill", android: "stars", web: "stars" },
-    iconBg: Colors.light.surface,
-    iconColor: Colors.light.secondary,
-  },
-];
+    {
+      id: "2",
+      value: "245",
+      label: "Words",
+      icon: { ios: "book.fill", android: "menu_book", web: "menu_book" },
+      iconBg: theme.surface,
+      iconColor: theme.primary,
+    },
+    {
+      id: "3",
+      value: "1.2k",
+      label: "Total XP",
+      icon: { ios: "star.fill", android: "stars", web: "stars" },
+      iconBg: theme.surface,
+      iconColor: theme.secondary,
+    },
+  ];
+}
 
 const DAY_LABELS = ["Su", "M", "T", "W", "Th", "F", "Sa"];
 
@@ -159,6 +161,9 @@ function formatXP(value: number): string {
 }
 
 export default function HomePage() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const statCards = getStatCards(theme);
   const router = useRouter();
   const [showExitDialog, setShowExitDialog] = useState(false);
   const mountedRef = useRef(false);
@@ -360,8 +365,8 @@ export default function HomePage() {
             android: "construction",
             web: "construction",
           },
-          bg: Colors.light.tertiaryContainer,
-          color: Colors.light.onTertiary,
+          bg: theme.tertiaryContainer,
+          color: theme.onTertiary,
         },
         spelling: {
           icon: {
@@ -369,13 +374,13 @@ export default function HomePage() {
             android: "text_fields",
             web: "text_fields",
           },
-          bg: Colors.light.primaryContainer,
-          color: Colors.light.onPrimaryContainer,
+          bg: theme.primaryContainer,
+          color: theme.onPrimaryContainer,
         },
         fill_blank_spelling: {
           icon: { ios: "textbox", android: "edit", web: "edit" },
-          bg: Colors.light.surfaceContainer,
-          color: Colors.light.onSurfaceVariant,
+          bg: theme.surfaceContainer,
+          color: theme.onSurfaceVariant,
         },
       };
 
@@ -395,7 +400,7 @@ export default function HomePage() {
             android: "check_circle",
             web: "check_circle",
           },
-          statusColor: Colors.light.primary,
+          statusColor: theme.primary,
           xp: `+${row.xp ?? 5} XP`,
           xpColor: XP_COLOR,
         };
@@ -459,8 +464,8 @@ export default function HomePage() {
                       android: "construction",
                       web: "construction",
                     },
-                    bg: Colors.light.tertiaryContainer,
-                    color: Colors.light.onTertiary,
+                    bg: theme.tertiaryContainer,
+                    color: theme.onTertiary,
                   },
                   spelling: {
                     icon: {
@@ -468,19 +473,19 @@ export default function HomePage() {
                       android: "text_fields",
                       web: "text_fields",
                     },
-                    bg: Colors.light.primaryContainer,
-                    color: Colors.light.onPrimaryContainer,
+                    bg: theme.primaryContainer,
+                    color: theme.onPrimaryContainer,
                   },
                   fill_blank_spelling: {
                     icon: { ios: "textbox", android: "edit", web: "edit" },
-                    bg: Colors.light.surfaceContainer,
-                    color: Colors.light.onSurfaceVariant,
+                    bg: theme.surfaceContainer,
+                    color: theme.onSurfaceVariant,
                   },
                 } as Record<string, { icon: any; bg: string; color: string }>
               )[row.type] ?? {
                 icon: { ios: "textbox", android: "edit", web: "edit" },
-                bg: Colors.light.surfaceContainer,
-                color: Colors.light.onSurfaceVariant,
+                bg: theme.surfaceContainer,
+                color: theme.onSurfaceVariant,
               };
               return {
                 id: String(row.id),
@@ -495,7 +500,7 @@ export default function HomePage() {
                   android: "check_circle",
                   web: "check_circle",
                 },
-                statusColor: Colors.light.primary,
+                statusColor: theme.primary,
                 xp: `+${row.xp ?? 5} XP`,
                 xpColor: XP_COLOR,
               };
@@ -601,9 +606,7 @@ export default function HomePage() {
           styles.exerciseXpChip,
           {
             backgroundColor:
-              item.xpColor === XP_COLOR
-                ? XP_CHIP_BG
-                : Colors.light.surfaceContainer,
+              item.xpColor === XP_COLOR ? XP_CHIP_BG : theme.surfaceContainer,
           },
         ]}
       >
@@ -648,10 +651,10 @@ export default function HomePage() {
             <ThemedText style={styles.sectionTitle}>Your Stats</ThemedText>
             <View style={styles.statGrid}>
               <View style={styles.statGridRow}>
-                {STAT_CARDS.slice(0, 2).map(renderStatCard)}
+                {statCards.slice(0, 2).map(renderStatCard)}
               </View>
               <View style={styles.statGridRow}>
-                {renderStatCard(STAT_CARDS[2])}
+                {renderStatCard(statCards[2])}
               </View>
             </View>
           </View>
@@ -690,8 +693,8 @@ export default function HomePage() {
                       size={18}
                       tintColor={
                         selectedWeekIndex >= weekOptions.length - 1
-                          ? Colors.light.onSurfaceVariant
-                          : Colors.light.primary
+                          ? theme.onSurfaceVariant
+                          : theme.primary
                       }
                     />
                   </Pressable>
@@ -729,8 +732,8 @@ export default function HomePage() {
                       size={18}
                       tintColor={
                         selectedWeekIndex === 0
-                          ? Colors.light.onSurfaceVariant
-                          : Colors.light.primary
+                          ? theme.onSurfaceVariant
+                          : theme.primary
                       }
                     />
                   </Pressable>
@@ -971,467 +974,469 @@ export default function HomePage() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.surface,
-    position: "relative",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-    gap: 32,
-  },
-  sectionTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 20,
-    fontWeight: "600",
-    lineHeight: 28,
-  },
-  statsSection: {
-    gap: 12,
-  },
-  statGrid: {
-    gap: 12,
-  },
-  statGridRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  statCard: {
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-    overflow: "hidden",
-    position: "relative",
-    flex: 1,
-  },
-  statCardInner: {
-    alignItems: "center",
-    gap: 4,
-  },
-  statIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  statValue: {
-    color: Colors.light.onSurface,
-    fontSize: 24,
-    fontWeight: "700",
-    lineHeight: 32,
-    letterSpacing: -0.24,
-  },
-  statLabel: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 18,
-  },
-  statHoverOverlay: {
-    position: "absolute",
-    inset: 0,
-    opacity: 0,
-    borderRadius: 16,
-  },
-  weeklySection: {
-    gap: 12,
-  },
-  weeklyHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  weekSelectorRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 4,
-  },
-  weekLabelButton: {
-    flexShrink: 1,
-  },
-  weekArrowButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.light.primaryFixed,
-  },
-  weekArrowButtonPressed: {
-    transform: [{ scale: 0.92 }],
-    backgroundColor: Colors.light.primaryFixedDim,
-  },
-  weekArrowButtonDisabled: {
-    backgroundColor: Colors.light.surfaceContainer,
-    opacity: 0.65,
-  },
-  weeklySeeAll: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: "600",
-    lineHeight: 20,
-  },
-  weeklyChart: {
-    padding: 24,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  weeklyChartInner: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    gap: 8,
-    height: 128,
-  },
-  weekBarContainer: {
-    flex: 1,
-    alignItems: "center",
-    gap: 8,
-  },
-  weekBarTrack: {
-    width: "100%",
-    height: 96,
-    borderRadius: 9999,
-    backgroundColor: Colors.light.surfaceContainerHigh,
-    overflow: "hidden",
-    justifyContent: "flex-end",
-  },
-  weekBarFill: {
-    width: "100%",
-    minHeight: 4,
-    borderRadius: 9999,
-  },
-  weekBarLabel: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 18,
-  },
-  weekBarLabelActive: {
-    color: "#15803d",
-    fontWeight: "700",
-  },
-  recentSection: {
-    gap: 12,
-  },
-  recentList: {
-    gap: 12,
-  },
-  exerciseItem: {
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  exerciseItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    flex: 1,
-  },
-  exerciseIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  exerciseItemInfo: {
-    flex: 1,
-  },
-  exerciseTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 16,
-    fontWeight: "600",
-    lineHeight: 22,
-  },
-  exerciseStatusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 2,
-  },
-  exerciseStatusText: {
-    fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 18,
-  },
-  exerciseXpChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 9999,
-  },
-  exerciseXpText: {
-    fontSize: 14,
-    fontWeight: "600",
-    lineHeight: 20,
-  },
-  loadingText: {
-    textAlign: "center",
-    paddingVertical: 24,
-    color: Colors.light.onSurfaceVariant,
-  },
-  emptyText: {
-    textAlign: "center",
-    paddingVertical: 16,
-    color: Colors.light.onSurfaceVariant,
-  },
-  weekLabel: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: "600",
-    lineHeight: 20,
-    marginTop: 4,
-  },
-  weekPickerOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-  },
-  weekPickerCard: {
-    width: "90%",
-    maxWidth: 360,
-    backgroundColor: Colors.light.surface,
-    borderRadius: 20,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  weekPickerHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.outlineVariant,
-  },
-  weekPickerTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  weekPickerDone: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  weekPickerList: {
-    maxHeight: 300,
-  },
-  weekPickerItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.outlineVariant,
-  },
-  weekPickerItemActive: {
-    backgroundColor: Colors.light.primaryContainer,
-  },
-  weekPickerItemText: {
-    color: Colors.light.onSurface,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  weekPickerItemTextActive: {
-    color: Colors.light.primary,
-    fontWeight: "700",
-  },
-  dayDetailOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-    elevation: 1000,
-  },
-  dayDetailCard: {
-    width: "90%",
-    maxWidth: 400,
-    maxHeight: "80%",
-    backgroundColor: Colors.light.surface,
-    borderRadius: 20,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  dayDetailHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.outlineVariant,
-  },
-  dayDetailTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  dayDetailClose: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  dayDetailLoading: {
-    textAlign: "center",
-    paddingVertical: 24,
-    color: Colors.light.onSurfaceVariant,
-  },
-  dayDetailEmpty: {
-    textAlign: "center",
-    paddingVertical: 24,
-    color: Colors.light.onSurfaceVariant,
-  },
-  dayDetailList: {
-    maxHeight: 400,
-  },
-  dayDetailListContent: {
-    padding: 16,
-  },
-  dayDetailItem: {
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    gap: 8,
-  },
-  dayDetailItemHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  dayDetailTopic: {
-    color: Colors.light.onSurface,
-    fontSize: 16,
-    fontWeight: "700",
-    flex: 1,
-  },
-  dayDetailBadges: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  dayDetailBadge: {
-    backgroundColor: "#dcfce7",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 9999,
-  },
-  dayDetailBadgeXP: {
-    backgroundColor: "#dcfce7",
-  },
-  dayDetailBadgeText: {
-    color: "#15803d",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "capitalize",
-  },
-  dayDetailBadgeTextXP: {
-    color: "#15803d",
-  },
-  dayDetailPrompt: {
-    color: Colors.light.onSurface,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  dayDetailGrammar: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  dayDetailTime: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 12,
-    fontWeight: "500",
-    marginTop: 4,
-  },
-  loadMoreButton: {
-    alignSelf: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 9999,
-    backgroundColor: Colors.light.primaryContainer,
-    marginTop: 4,
-  },
-  loadMoreText: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  paginationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 8,
-    gap: 12,
-  },
-  paginationButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 9999,
-    backgroundColor: Colors.light.primaryContainer,
-  },
-  paginationButtonDisabled: {
-    backgroundColor: Colors.light.surfaceContainer,
-  },
-  paginationButtonText: {
-    color: Colors.light.primary,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  paginationButtonTextDisabled: {
-    color: Colors.light.onSurfaceVariant,
-  },
-  paginationInfo: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingRight: 16,
-  },
-  helpButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#dcfce7",
-    marginTop: 8,
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.surface,
+      position: "relative",
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingBottom: 32,
+      gap: 32,
+    },
+    sectionTitle: {
+      color: theme.onSurface,
+      fontSize: 20,
+      fontWeight: "600",
+      lineHeight: 28,
+    },
+    statsSection: {
+      gap: 12,
+    },
+    statGrid: {
+      gap: 12,
+    },
+    statGridRow: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    statCard: {
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+      overflow: "hidden",
+      position: "relative",
+      flex: 1,
+    },
+    statCardInner: {
+      alignItems: "center",
+      gap: 4,
+    },
+    statIconContainer: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    statValue: {
+      color: theme.onSurface,
+      fontSize: 24,
+      fontWeight: "700",
+      lineHeight: 32,
+      letterSpacing: -0.24,
+    },
+    statLabel: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "600",
+      lineHeight: 18,
+    },
+    statHoverOverlay: {
+      position: "absolute",
+      inset: 0,
+      opacity: 0,
+      borderRadius: 16,
+    },
+    weeklySection: {
+      gap: 12,
+    },
+    weeklyHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    weekSelectorRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 4,
+    },
+    weekLabelButton: {
+      flexShrink: 1,
+    },
+    weekArrowButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.primaryFixed,
+    },
+    weekArrowButtonPressed: {
+      transform: [{ scale: 0.92 }],
+      backgroundColor: theme.primaryFixedDim,
+    },
+    weekArrowButtonDisabled: {
+      backgroundColor: theme.surfaceContainer,
+      opacity: 0.65,
+    },
+    weeklySeeAll: {
+      color: theme.primary,
+      fontSize: 14,
+      fontWeight: "600",
+      lineHeight: 20,
+    },
+    weeklyChart: {
+      padding: 24,
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    weeklyChartInner: {
+      flexDirection: "row",
+      alignItems: "flex-end",
+      justifyContent: "space-between",
+      gap: 8,
+      height: 128,
+    },
+    weekBarContainer: {
+      flex: 1,
+      alignItems: "center",
+      gap: 8,
+    },
+    weekBarTrack: {
+      width: "100%",
+      height: 96,
+      borderRadius: 9999,
+      backgroundColor: theme.surfaceContainerHigh,
+      overflow: "hidden",
+      justifyContent: "flex-end",
+    },
+    weekBarFill: {
+      width: "100%",
+      minHeight: 4,
+      borderRadius: 9999,
+    },
+    weekBarLabel: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "600",
+      lineHeight: 18,
+    },
+    weekBarLabelActive: {
+      color: "#15803d",
+      fontWeight: "700",
+    },
+    recentSection: {
+      gap: 12,
+    },
+    recentList: {
+      gap: 12,
+    },
+    exerciseItem: {
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    exerciseItemLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 16,
+      flex: 1,
+    },
+    exerciseIconContainer: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    exerciseItemInfo: {
+      flex: 1,
+    },
+    exerciseTitle: {
+      color: theme.onSurface,
+      fontSize: 16,
+      fontWeight: "600",
+      lineHeight: 22,
+    },
+    exerciseStatusRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      marginTop: 2,
+    },
+    exerciseStatusText: {
+      fontSize: 13,
+      fontWeight: "600",
+      lineHeight: 18,
+    },
+    exerciseXpChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 9999,
+    },
+    exerciseXpText: {
+      fontSize: 14,
+      fontWeight: "600",
+      lineHeight: 20,
+    },
+    loadingText: {
+      textAlign: "center",
+      paddingVertical: 24,
+      color: theme.onSurfaceVariant,
+    },
+    emptyText: {
+      textAlign: "center",
+      paddingVertical: 16,
+      color: theme.onSurfaceVariant,
+    },
+    weekLabel: {
+      color: theme.primary,
+      fontSize: 14,
+      fontWeight: "600",
+      lineHeight: 20,
+      marginTop: 4,
+    },
+    weekPickerOverlay: {
+      ...StyleSheet.absoluteFill,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1000,
+    },
+    weekPickerCard: {
+      width: "90%",
+      maxWidth: 360,
+      backgroundColor: theme.surface,
+      borderRadius: 20,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    weekPickerHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.outlineVariant,
+    },
+    weekPickerTitle: {
+      color: theme.onSurface,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    weekPickerDone: {
+      color: theme.primary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    weekPickerList: {
+      maxHeight: 300,
+    },
+    weekPickerItem: {
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.outlineVariant,
+    },
+    weekPickerItemActive: {
+      backgroundColor: theme.primaryContainer,
+    },
+    weekPickerItemText: {
+      color: theme.onSurface,
+      fontSize: 14,
+      fontWeight: "500",
+    },
+    weekPickerItemTextActive: {
+      color: theme.primary,
+      fontWeight: "700",
+    },
+    dayDetailOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1000,
+      elevation: 1000,
+    },
+    dayDetailCard: {
+      width: "90%",
+      maxWidth: 400,
+      maxHeight: "80%",
+      backgroundColor: theme.surface,
+      borderRadius: 20,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    dayDetailHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.outlineVariant,
+    },
+    dayDetailTitle: {
+      color: theme.onSurface,
+      fontSize: 18,
+      fontWeight: "700",
+    },
+    dayDetailClose: {
+      color: theme.primary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    dayDetailLoading: {
+      textAlign: "center",
+      paddingVertical: 24,
+      color: theme.onSurfaceVariant,
+    },
+    dayDetailEmpty: {
+      textAlign: "center",
+      paddingVertical: 24,
+      color: theme.onSurfaceVariant,
+    },
+    dayDetailList: {
+      maxHeight: 400,
+    },
+    dayDetailListContent: {
+      padding: 16,
+    },
+    dayDetailItem: {
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      gap: 8,
+    },
+    dayDetailItemHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    dayDetailTopic: {
+      color: theme.onSurface,
+      fontSize: 16,
+      fontWeight: "700",
+      flex: 1,
+    },
+    dayDetailBadges: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    dayDetailBadge: {
+      backgroundColor: "#dcfce7",
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 9999,
+    },
+    dayDetailBadgeXP: {
+      backgroundColor: "#dcfce7",
+    },
+    dayDetailBadgeText: {
+      color: "#15803d",
+      fontSize: 12,
+      fontWeight: "700",
+      textTransform: "capitalize",
+    },
+    dayDetailBadgeTextXP: {
+      color: "#15803d",
+    },
+    dayDetailPrompt: {
+      color: theme.onSurface,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    dayDetailGrammar: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "500",
+    },
+    dayDetailTime: {
+      color: theme.onSurfaceVariant,
+      fontSize: 12,
+      fontWeight: "500",
+      marginTop: 4,
+    },
+    loadMoreButton: {
+      alignSelf: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 9999,
+      backgroundColor: theme.primaryContainer,
+      marginTop: 4,
+    },
+    loadMoreText: {
+      color: theme.primary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    paginationRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 8,
+      gap: 12,
+    },
+    paginationButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 9999,
+      backgroundColor: theme.primaryContainer,
+    },
+    paginationButtonDisabled: {
+      backgroundColor: theme.surfaceContainer,
+    },
+    paginationButtonText: {
+      color: theme.primary,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    paginationButtonTextDisabled: {
+      color: theme.onSurfaceVariant,
+    },
+    paginationInfo: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingRight: 16,
+    },
+    helpButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#dcfce7",
+      marginTop: 8,
+    },
+  });
+}

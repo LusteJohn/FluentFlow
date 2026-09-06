@@ -1,7 +1,6 @@
-import { StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
 import { Image } from "expo-image";
-import { Pressable } from "react-native";
+import { useRouter } from "expo-router";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -12,25 +11,33 @@ export default function LoginPage() {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+      >
         <Image
           source={require("@/assets/images/logo.png")}
           style={styles.logo}
           contentFit="contain"
         />
-        <ThemedText type="displayMobile" style={styles.title}>
+        <ThemedText type="title" style={styles.title}>
           A Situational English Learning App
         </ThemedText>
-        <ThemedText type="bodyMd" style={styles.subtitle}>
+        <ThemedText type="default" style={styles.subtitle}>
           Start learning English through real-world situations.
         </ThemedText>
 
         <View style={styles.buttonContainer}>
-          <Pressable style={styles.button} onPress={() => router.replace("/pages/homepage")}>
+          <Pressable
+            style={styles.button}
+            onPress={() => router.replace("/pages/homepage")}
+          >
             <ThemedText style={styles.buttonText}>Get Started</ThemedText>
           </Pressable>
         </View>
-      </View>
+      </ScrollView>
     </ThemedView>
   );
 }
@@ -39,6 +46,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.light.surface,
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     flex: 1,
@@ -58,7 +68,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     lineHeight: 32,
-    letterSpacing: -0.01,
   },
   subtitle: {
     color: Colors.light.onSurfaceVariant,

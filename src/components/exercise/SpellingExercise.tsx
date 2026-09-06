@@ -1,6 +1,8 @@
+import { useMemo } from "react";
+
 import { ScrollView, StyleSheet, TextInput } from "react-native";
 
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 
 export interface ExerciseToken {
   exercise_token_id: number;
@@ -26,6 +28,8 @@ export function SpellingExercise({
   exerciseId,
   onLetterChange,
 }: SpellingExerciseProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const isCorrect = answerResult === true;
   const hasError = answerResult === false;
 
@@ -86,31 +90,33 @@ export function SpellingExercise({
   );
 }
 
-const styles = StyleSheet.create({
-  letterBoxesRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 4,
-    paddingRight: 8,
-  },
-  letterBox: {
-    width: 48,
-    height: 56,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: Colors.light.outlineVariant,
-    fontSize: 24,
-    fontWeight: "600",
-    color: Colors.light.onSurface,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-  },
-  letterBoxCorrect: {
-    borderColor: Colors.light.primary,
-    backgroundColor: Colors.light.primaryContainer,
-  },
-  letterBoxIncorrect: {
-    borderColor: Colors.light.error,
-    backgroundColor: Colors.light.errorContainer,
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    letterBoxesRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingVertical: 4,
+      paddingRight: 8,
+    },
+    letterBox: {
+      width: 48,
+      height: 56,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: theme.outlineVariant,
+      fontSize: 24,
+      fontWeight: "600",
+      color: theme.onSurface,
+      backgroundColor: theme.surfaceContainerLowest,
+    },
+    letterBoxCorrect: {
+      borderColor: theme.primary,
+      backgroundColor: theme.primaryContainer,
+    },
+    letterBoxIncorrect: {
+      borderColor: theme.error,
+      backgroundColor: theme.errorContainer,
+    },
+  });
+}

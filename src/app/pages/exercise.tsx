@@ -1,6 +1,6 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { getTopicById } from "@/backend/Topic";
@@ -13,7 +13,7 @@ import { getUserProfile } from "@/backend/UserProfile";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 import { getDatabase } from "@/database/database";
 import AppHeader from "../(tabs)/header";
 import NavBar from "../(tabs)/navBar";
@@ -149,6 +149,8 @@ const JOURNEY_ICONS: Record<number, any> = {
 };
 
 export default function ExercisePage() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { topic_id } = useLocalSearchParams<{ topic_id: string }>();
   const router = useRouter();
   const [topicTitle, setTopicTitle] = useState<string>("Exercises");
@@ -220,7 +222,7 @@ export default function ExercisePage() {
                   } as any
                 }
                 size={24}
-                tintColor={Colors.light.onSurface}
+                tintColor={theme.onSurface}
               />
             </Pressable>
             <ThemedText style={styles.pageTitle}>{topicTitle}</ThemedText>
@@ -232,7 +234,7 @@ export default function ExercisePage() {
               <SymbolView
                 name={JOURNEY_ICONS[journeyId ?? 1]}
                 size={48}
-                tintColor={Colors.light.secondaryContainer}
+                tintColor={theme.secondaryContainer}
               />
             </View>
             <ThemedText style={styles.introTitle}>Select Difficulty</ThemedText>
@@ -336,189 +338,191 @@ export default function ExercisePage() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.surface,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-    gap: 32,
-  },
-  headerSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginTop: 8,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 20,
-    backgroundColor: Colors.light.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  pageTitle: {
-    color: Colors.light.primary,
-    fontSize: 22,
-    fontWeight: "700",
-    lineHeight: 28,
-    flex: 1,
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  introSection: {
-    alignItems: "center",
-    gap: 12,
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.light.surfaceContainerHigh,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  introTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 24,
-    fontWeight: "700",
-    lineHeight: 32,
-    letterSpacing: -0.24,
-  },
-  introDescription: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 16,
-    fontWeight: "500",
-    lineHeight: 24,
-    textAlign: "center",
-    maxWidth: 280,
-  },
-  levelsSection: {
-    gap: 12,
-  },
-  sectionTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 18,
-    fontWeight: "600",
-    lineHeight: 24,
-  },
-  levelCard: {
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.light.surfaceContainer,
-    overflow: "hidden",
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  levelCardActive: {
-    borderWidth: 2,
-    borderColor: Colors.light.secondaryContainer,
-    backgroundColor: "#fff4e5",
-  },
-  levelCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    padding: 16,
-  },
-  levelIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  levelContent: {
-    flex: 1,
-  },
-  levelTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  levelTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    lineHeight: 28,
-    color: Colors.light.onSurface,
-  },
-  levelBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderRadius: 9999,
-  },
-  levelBadgeText: {
-    fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 16,
-  },
-  levelDescription: {
-    fontSize: 15,
-    fontWeight: "500",
-    lineHeight: 22,
-    color: Colors.light.onSurfaceVariant,
-    marginTop: 2,
-  },
-  progressDots: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 8,
-  },
-  progressDot: {
-    width: 32,
-    height: 6,
-    borderRadius: 3,
-  },
-  progressDotFilled: {},
-  progressDotEmpty: {
-    backgroundColor: Colors.light.surfaceVariant,
-  },
-  progressPercentText: {
-    marginTop: 8,
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#15803d",
-  },
-  viewButtonContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.surfaceContainer,
-  },
-  viewButton: {
-    backgroundColor: "#dcfce7",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: "#86efac",
-  },
-  viewButtonPressed: {
-    borderBottomWidth: 0,
-    transform: [{ translateY: 2 }],
-  },
-  viewButtonText: {
-    color: "#15803d",
-    fontSize: 14,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.surface,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingBottom: 32,
+      gap: 32,
+    },
+    headerSection: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginTop: 8,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 20,
+      backgroundColor: theme.surfaceContainerLow,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    pageTitle: {
+      color: theme.primary,
+      fontSize: 22,
+      fontWeight: "700",
+      lineHeight: 28,
+      flex: 1,
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    introSection: {
+      alignItems: "center",
+      gap: 12,
+    },
+    iconContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: theme.surfaceContainerHigh,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    introTitle: {
+      color: theme.onSurface,
+      fontSize: 24,
+      fontWeight: "700",
+      lineHeight: 32,
+      letterSpacing: -0.24,
+    },
+    introDescription: {
+      color: theme.onSurfaceVariant,
+      fontSize: 16,
+      fontWeight: "500",
+      lineHeight: 24,
+      textAlign: "center",
+      maxWidth: 280,
+    },
+    levelsSection: {
+      gap: 12,
+    },
+    sectionTitle: {
+      color: theme.onSurface,
+      fontSize: 18,
+      fontWeight: "600",
+      lineHeight: 24,
+    },
+    levelCard: {
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.surfaceContainer,
+      overflow: "hidden",
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    levelCardActive: {
+      borderWidth: 2,
+      borderColor: theme.secondaryContainer,
+      backgroundColor: "#fff4e5",
+    },
+    levelCardHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 16,
+      padding: 16,
+    },
+    levelIconCircle: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    },
+    levelContent: {
+      flex: 1,
+    },
+    levelTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 4,
+    },
+    levelTitle: {
+      fontSize: 20,
+      fontWeight: "600",
+      lineHeight: 28,
+      color: theme.onSurface,
+    },
+    levelBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 2,
+      borderRadius: 9999,
+    },
+    levelBadgeText: {
+      fontSize: 13,
+      fontWeight: "600",
+      lineHeight: 16,
+    },
+    levelDescription: {
+      fontSize: 15,
+      fontWeight: "500",
+      lineHeight: 22,
+      color: theme.onSurfaceVariant,
+      marginTop: 2,
+    },
+    progressDots: {
+      flexDirection: "row",
+      gap: 8,
+      marginTop: 8,
+    },
+    progressDot: {
+      width: 32,
+      height: 6,
+      borderRadius: 3,
+    },
+    progressDotFilled: {},
+    progressDotEmpty: {
+      backgroundColor: theme.surfaceVariant,
+    },
+    progressPercentText: {
+      marginTop: 8,
+      fontSize: 12,
+      fontWeight: "600",
+      color: "#15803d",
+    },
+    viewButtonContainer: {
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: theme.surfaceContainer,
+    },
+    viewButton: {
+      backgroundColor: "#dcfce7",
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      borderBottomWidth: 2,
+      borderBottomColor: "#86efac",
+    },
+    viewButtonPressed: {
+      borderBottomWidth: 0,
+      transform: [{ translateY: 2 }],
+    },
+    viewButtonText: {
+      color: "#15803d",
+      fontSize: 14,
+      fontWeight: "700",
+      lineHeight: 20,
+    },
+  });
+}

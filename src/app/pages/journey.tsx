@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import {
@@ -11,7 +11,7 @@ import { getUserProfile } from "@/backend/UserProfile";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 import { getDatabase } from "@/database/database";
 import AppHeader from "../(tabs)/header";
 import NavBar from "../(tabs)/navBar";
@@ -44,6 +44,8 @@ const JOURNEY_BG_IMAGES: Record<number, any> = {
 };
 
 export default function JourneyPage() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +74,16 @@ export default function JourneyPage() {
               profile.user_id,
             );
             if (isActive) {
-              setJourneyProgress(progress ?? {});
+              setJourneyProgress(
+                (progress ?? {}) as Record<
+                  number,
+                  {
+                    totalExercises: number;
+                    completedExercises: number;
+                    percent: number;
+                  }
+                >,
+              );
             }
           } else if (isActive) {
             setJourneyProgress({});
@@ -114,10 +125,10 @@ export default function JourneyPage() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.titleSection}>
-            <ThemedText type="headlineMd" style={styles.pageTitle}>
+            <ThemedText type="title" style={styles.pageTitle}>
               Journey Map
             </ThemedText>
-            <ThemedText type="bodyMd" style={styles.pageSubtitle}>
+            <ThemedText type="default" style={styles.pageSubtitle}>
               Master real-world situations
             </ThemedText>
           </View>
@@ -225,9 +236,7 @@ export default function JourneyPage() {
                     )}
                     <View style={styles.cardContent}>
                       <ThemedText
-                        type={
-                          isCompleted || isInProgress ? "headlineMd" : "labelSm"
-                        }
+                        type={isCompleted || isInProgress ? "title" : "small"}
                         style={[
                           styles.cardTitle,
                           isLocked && styles.cardTitleLocked,
@@ -236,7 +245,7 @@ export default function JourneyPage() {
                         {journey.title}
                       </ThemedText>
                       {isCompleted && (
-                        <ThemedText type="bodySm" style={styles.cardStatus}>
+                        <ThemedText type="small" style={styles.cardStatus}>
                           Mastered
                         </ThemedText>
                       )}
@@ -250,10 +259,7 @@ export default function JourneyPage() {
                               ]}
                             />
                           </View>
-                          <ThemedText
-                            type="labelSm"
-                            style={styles.progressText}
-                          >
+                          <ThemedText type="small" style={styles.progressText}>
                             {percent}% Complete (
                             {progress?.completedExercises ?? 0}/
                             {progress?.totalExercises ?? 0})
@@ -261,13 +267,13 @@ export default function JourneyPage() {
                         </View>
                       )}
                       {isNotStarted && !isLocked && (
-                        <ThemedText type="bodySm" style={styles.cardStatus}>
+                        <ThemedText type="small" style={styles.cardStatus}>
                           Not started yet
                         </ThemedText>
                       )}
                       {isLocked && (
                         <ThemedText
-                          type="bodySm"
+                          type="small"
                           style={styles.cardStatusLocked}
                         >
                           Complete previous to unlock
@@ -287,227 +293,227 @@ export default function JourneyPage() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.surface,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-  },
-  titleSection: {
-    alignItems: "center",
-    marginTop: 32,
-    marginBottom: 40,
-  },
-  pageTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  pageSubtitle: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  pathContainer: {
-    position: "relative",
-    alignItems: "center",
-  },
-  pathLine: {
-    position: "absolute",
-    width: 4,
-    backgroundColor: Colors.light.surfaceContainerHigh,
-    borderRadius: 2,
-    top: 32,
-    bottom: 32,
-    left: "50%",
-    marginLeft: -2,
-  },
-  pathNodeContainer: {
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 48,
-    position: "relative",
-  },
-  pathNode: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-    borderWidth: 4,
-    borderColor: Colors.light.surface,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-    position: "relative",
-    zIndex: 10,
-  },
-  nodeCompleted: {
-    backgroundColor: Colors.light.primary,
-  },
-  nodeInProgress: {
-    backgroundColor: Colors.light.primaryContainer,
-    borderWidth: 4,
-    borderColor: Colors.light.surface,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 12,
-    ringWidth: 4,
-    ringColor: Colors.light.primary,
-  },
-  nodeLocked: {
-    backgroundColor: Colors.light.surfaceContainerHigh,
-    shadowColor: "transparent",
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  nodeIcon: {
-    color: Colors.light.onPrimary,
-    fontWeight: "700",
-  },
-  nodeIconLocked: {
-    color: Colors.light.outline,
-  },
-  nodeImage: {
-    borderRadius: 9999,
-  },
-  nodeImageLocked: {
-    opacity: 0.5,
-  },
-  statusBadge: {
-    position: "absolute",
-    right: -8,
-    bottom: -8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#34d399",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.light.surface,
-  },
-  statusBadgeText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  lockBadge: {
-    position: "absolute",
-    right: -8,
-    bottom: -8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.light.surfaceContainerHighest,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.light.surface,
-  },
-  lockBadgeText: {
-    fontSize: 14,
-  },
-  nodeCard: {
-    width: "100%",
-    maxWidth: 320,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: Colors.light.surfaceContainer,
-  },
-  nodeCardActive: {
-    borderWidth: 1,
-    borderColor: Colors.light.primaryFixedDim,
-  },
-  nodeCardLocked: {
-    backgroundColor: Colors.light.surface,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    opacity: 0.75,
-  },
-  cardImagePlaceholder: {
-    height: 128,
-    borderRadius: 12,
-    backgroundColor: Colors.light.surfaceContainerHigh,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 16,
-    overflow: "hidden",
-  },
-  cardImage: {
-    width: "100%",
-    height: "100%",
-  },
-  cardImageCompleted: {
-    opacity: 0.9,
-  },
-  cardImageCompletedInner: {
-    opacity: 0.7,
-  },
-  cardImageLocked: {
-    backgroundColor: Colors.light.surfaceContainerHigh,
-  },
-  cardImageLockedInner: {
-    opacity: 0.4,
-  },
-  cardContent: {
-    alignItems: "center",
-  },
-  cardTitle: {
-    color: Colors.light.onSurface,
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  cardTitleLocked: {
-    color: Colors.light.onSurfaceVariant,
-  },
-  cardStatus: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 14,
-    marginTop: 4,
-  },
-  cardStatusLocked: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 14,
-    marginTop: 4,
-    fontStyle: "italic",
-  },
-  progressContainer: {
-    width: "100%",
-    marginTop: 12,
-    gap: 8,
-  },
-  progressTrack: {
-    width: "100%",
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.light.primaryContainer,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 6,
-    backgroundColor: Colors.light.primary,
-  },
-  progressText: {
-    color: Colors.light.primary,
-    textAlign: "center",
-    fontWeight: "600",
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.surface,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingBottom: 32,
+    },
+    titleSection: {
+      alignItems: "center",
+      marginTop: 32,
+      marginBottom: 40,
+    },
+    pageTitle: {
+      color: theme.onSurface,
+      fontSize: 20,
+      fontWeight: "600",
+      marginBottom: 8,
+    },
+    pageSubtitle: {
+      color: theme.onSurfaceVariant,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    pathContainer: {
+      position: "relative",
+      alignItems: "center",
+    },
+    pathLine: {
+      position: "absolute",
+      width: 4,
+      backgroundColor: theme.surfaceContainerHigh,
+      borderRadius: 2,
+      top: 32,
+      bottom: 32,
+      left: "50%",
+      marginLeft: -2,
+    },
+    pathNodeContainer: {
+      width: "100%",
+      alignItems: "center",
+      marginBottom: 48,
+      position: "relative",
+    },
+    pathNode: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 16,
+      borderWidth: 4,
+      borderColor: theme.surface,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
+      elevation: 8,
+      position: "relative",
+      zIndex: 10,
+    },
+    nodeCompleted: {
+      backgroundColor: theme.primary,
+    },
+    nodeInProgress: {
+      backgroundColor: theme.primaryContainer,
+      borderWidth: 4,
+      borderColor: theme.surface,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.25,
+      shadowRadius: 16,
+      elevation: 12,
+    },
+    nodeLocked: {
+      backgroundColor: theme.surfaceContainerHigh,
+      shadowColor: "transparent",
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+    nodeIcon: {
+      color: theme.onPrimary,
+      fontWeight: "700",
+    },
+    nodeIconLocked: {
+      color: theme.outline,
+    },
+    nodeImage: {
+      borderRadius: 9999,
+    },
+    nodeImageLocked: {
+      opacity: 0.5,
+    },
+    statusBadge: {
+      position: "absolute",
+      right: -8,
+      bottom: -8,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: "#34d399",
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: theme.surface,
+    },
+    statusBadgeText: {
+      color: "#ffffff",
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    lockBadge: {
+      position: "absolute",
+      right: -8,
+      bottom: -8,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.surfaceContainerHighest,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 2,
+      borderColor: theme.surface,
+    },
+    lockBadgeText: {
+      fontSize: 14,
+    },
+    nodeCard: {
+      width: "100%",
+      maxWidth: 320,
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 16,
+      padding: 20,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: theme.surfaceContainer,
+    },
+    nodeCardActive: {
+      borderWidth: 1,
+      borderColor: theme.primaryFixedDim,
+    },
+    nodeCardLocked: {
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      opacity: 0.75,
+    },
+    cardImagePlaceholder: {
+      height: 128,
+      borderRadius: 12,
+      backgroundColor: theme.surfaceContainerHigh,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 16,
+      overflow: "hidden",
+    },
+    cardImage: {
+      width: "100%",
+      height: "100%",
+    },
+    cardImageCompleted: {
+      opacity: 0.9,
+    },
+    cardImageCompletedInner: {
+      opacity: 0.7,
+    },
+    cardImageLocked: {
+      backgroundColor: theme.surfaceContainerHigh,
+    },
+    cardImageLockedInner: {
+      opacity: 0.4,
+    },
+    cardContent: {
+      alignItems: "center",
+    },
+    cardTitle: {
+      color: theme.onSurface,
+      marginBottom: 4,
+      textAlign: "center",
+    },
+    cardTitleLocked: {
+      color: theme.onSurfaceVariant,
+    },
+    cardStatus: {
+      color: theme.onSurfaceVariant,
+      fontSize: 14,
+      marginTop: 4,
+    },
+    cardStatusLocked: {
+      color: theme.onSurfaceVariant,
+      fontSize: 14,
+      marginTop: 4,
+      fontStyle: "italic",
+    },
+    progressContainer: {
+      width: "100%",
+      marginTop: 12,
+      gap: 8,
+    },
+    progressTrack: {
+      width: "100%",
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: theme.primaryContainer,
+      overflow: "hidden",
+    },
+    progressFill: {
+      height: "100%",
+      borderRadius: 6,
+      backgroundColor: theme.primary,
+    },
+    progressText: {
+      color: theme.primary,
+      textAlign: "center",
+      fontWeight: "600",
+    },
+  });
+}

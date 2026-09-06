@@ -1,6 +1,6 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -40,7 +40,7 @@ import { SpellingExercise } from "@/components/exercise/SpellingExercise";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 import { getDatabase } from "@/database/database";
 import AppHeader from "../(tabs)/header";
 import NavBar from "../(tabs)/navBar";
@@ -75,6 +75,8 @@ const EXERCISE_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function ExerciseListPage() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { topic_id, level } = useLocalSearchParams<{
     topic_id: string;
     level: string;
@@ -430,7 +432,7 @@ export default function ExerciseListPage() {
                 } as any
               }
               size={24}
-              tintColor={Colors.light.onSurface}
+              tintColor={theme.onSurface}
             />
           </Pressable>
           <View style={styles.titleContainer}>
@@ -547,13 +549,13 @@ export default function ExerciseListPage() {
                         <View
                           style={[
                             styles.exerciseTypeBadge,
-                            { backgroundColor: Colors.light.surfaceContainer },
+                            { backgroundColor: theme.surfaceContainer },
                           ]}
                         >
                           <ThemedText
                             style={[
                               styles.exerciseType,
-                              { color: Colors.light.secondaryContainer },
+                              { color: theme.secondaryContainer },
                             ]}
                           >
                             {typeLabel}
@@ -702,8 +704,8 @@ export default function ExerciseListPage() {
                       size={28}
                       tintColor={
                         currentExerciseIndex === 0
-                          ? Colors.light.onSurfaceVariant
-                          : Colors.light.primary
+                          ? theme.onSurfaceVariant
+                          : theme.primary
                       }
                     />
                   </Pressable>
@@ -729,8 +731,8 @@ export default function ExerciseListPage() {
                       size={28}
                       tintColor={
                         currentExerciseIndex === displayExercises.length - 1
-                          ? Colors.light.onSurfaceVariant
-                          : Colors.light.primary
+                          ? theme.onSurfaceVariant
+                          : theme.primary
                       }
                     />
                   </Pressable>
@@ -776,7 +778,7 @@ export default function ExerciseListPage() {
                         } as any
                       }
                       size={48}
-                      tintColor={Colors.light.primary}
+                      tintColor={theme.primary}
                     />
                   </View>
                 </View>
@@ -799,7 +801,7 @@ export default function ExerciseListPage() {
                         } as any
                       }
                       size={28}
-                      tintColor={Colors.light.secondary}
+                      tintColor={theme.secondary}
                     />
                     <ThemedText style={styles.completionStatValue}>
                       +{totalEarnedXP} XP
@@ -818,7 +820,7 @@ export default function ExerciseListPage() {
                         } as any
                       }
                       size={28}
-                      tintColor={Colors.light.primary}
+                      tintColor={theme.primary}
                     />
                     <ThemedText style={styles.completionStatValue}>
                       {accuracy}%
@@ -856,409 +858,411 @@ export default function ExerciseListPage() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.surface,
-    position: "relative",
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-    gap: 16,
-  },
-  headerSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  titleContainer: {
-    flex: 1,
-    gap: 4,
-  },
-  pageTitle: {
-    color: Colors.light.primary,
-    fontSize: 22,
-    fontWeight: "700",
-    lineHeight: 28,
-  },
-  xpBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: Colors.light.secondaryContainer,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  xpText: {
-    color: Colors.light.onSecondaryContainer,
-    fontSize: 12,
-    fontWeight: "700",
-    lineHeight: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 20,
-    backgroundColor: Colors.light.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: Colors.light.onSurfaceVariant,
-    fontStyle: "italic",
-    textAlign: "center",
-    paddingVertical: 12,
-  },
-  noExercisesText: {
-    fontSize: 14,
-    color: Colors.light.onSurfaceVariant,
-    textAlign: "center",
-    paddingVertical: 24,
-  },
-  progressIndicator: {
-    alignSelf: "center",
-    paddingVertical: 4,
-  },
-  progressIndicatorText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.light.onSurfaceVariant,
-  },
-  exerciseItem: {
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: Colors.light.surfaceContainer,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  tokensContainer: {
-    marginTop: 8,
-    gap: 6,
-  },
-  tokensLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: Colors.light.onSurfaceVariant,
-    marginBottom: 4,
-  },
-  tokensScrollContent: {
-    gap: 8,
-    alignItems: "center",
-  },
-  tokenText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.light.onSurface,
-  },
-  exerciseHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  exerciseNumber: {
-    fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 18,
-    color: Colors.light.onSurface,
-  },
-  exerciseTypeBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  exerciseType: {
-    fontSize: 12,
-    fontWeight: "600",
-    lineHeight: 16,
-  },
-  exercisePrompt: {
-    fontSize: 15,
-    fontWeight: "500",
-    lineHeight: 22,
-    color: Colors.light.onSurface,
-  },
-  exerciseContext: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontStyle: "italic",
-    color: Colors.light.onSurfaceVariant,
-    marginTop: 2,
-  },
-  answerForm: {
-    flexDirection: "column",
-    gap: 12,
-    marginTop: 8,
-    alignItems: "stretch",
-  },
-  answerHeader: {
-    gap: 2,
-  },
-  answerLabel: {
-    color: Colors.light.onSurface,
-    fontSize: 15,
-    fontWeight: "700",
-    lineHeight: 20,
-  },
-  answerHint: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  answerReference: {
-    gap: 4,
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.primaryFixed,
-    backgroundColor: Colors.light.primaryContainer,
-  },
-  answerReferenceLabel: {
-    color: Colors.light.onPrimaryContainer,
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
-  },
-  answerReferenceText: {
-    color: Colors.light.onPrimaryContainer,
-    fontSize: 17,
-    fontWeight: "700",
-    lineHeight: 24,
-  },
-  arrangedWordsContainer: {
-    marginTop: 12,
-  },
-  arrangedWordsRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-  },
-  arrangedWordBox: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#fff4e5",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.light.secondaryContainer,
-    marginRight: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  arrangedWordText: {
-    color: "#6f5100",
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  submitButton: {
-    backgroundColor: Colors.light.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 48,
-  },
-  submitButtonDisabled: {
-    backgroundColor: Colors.light.surfaceVariant,
-  },
-  submitButtonText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  submitButtonTextDisabled: {
-    color: Colors.light.onSurfaceVariant,
-  },
-  successBanner: {
-    backgroundColor: Colors.light.primary,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginTop: 8,
-  },
-  successBannerText: {
-    color: Colors.light.onPrimary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  errorBanner: {
-    backgroundColor: Colors.light.error,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginTop: 8,
-  },
-  errorBannerText: {
-    color: Colors.light.onError,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  arrowNav: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 24,
-    marginTop: 16,
-  },
-  arrowButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#dcfce7",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#22c55e",
-    borderBottomWidth: 3,
-  },
-  arrowButtonDisabled: {
-    backgroundColor: Colors.light.surfaceContainer,
-    borderColor: Colors.light.outlineVariant,
-  },
-  pagination: {
-    flexDirection: "row",
-    alignSelf: "center",
-    gap: 8,
-    marginBottom: 16,
-  },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.light.surfaceVariant,
-  },
-  paginationDotActive: {
-    width: 24,
-    backgroundColor: "#22c55e",
-  },
-  completionOverlay: {
-    flex: 1,
-    backgroundColor: Colors.light.surface,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  completionContent: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    gap: 24,
-  },
-  completionIconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: Colors.light.surfaceContainerHigh,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 4,
-    borderColor: Colors.light.surfaceContainerLowest,
-  },
-  completionIconInner: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.light.primaryContainer,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  completionTitle: {
-    color: Colors.light.primary,
-    fontSize: 28,
-    fontWeight: "700",
-    letterSpacing: -0.02,
-    textAlign: "center",
-  },
-  completionSubtitle: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 16,
-    fontWeight: "500",
-    textAlign: "center",
-  },
-  completionStatsGrid: {
-    flexDirection: "row",
-    gap: 16,
-    width: "100%",
-    maxWidth: 320,
-  },
-  completionStatCard: {
-    flex: 1,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  completionStatValue: {
-    color: Colors.light.onSurface,
-    fontSize: 20,
-    fontWeight: "700",
-    lineHeight: 28,
-  },
-  completionStatLabel: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 18,
-  },
-  completionActions: {
-    width: "100%",
-    maxWidth: 320,
-    gap: 12,
-    marginTop: 8,
-  },
-  completionContinueButton: {
-    backgroundColor: Colors.light.primary,
-    paddingVertical: 14,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.light.primaryContainer,
-  },
-  completionContinueButtonText: {
-    color: Colors.light.onPrimary,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  completionReviewButton: {
-    backgroundColor: Colors.light.surfaceContainer,
-    paddingVertical: 14,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  completionReviewButtonText: {
-    color: Colors.light.primary,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.surface,
+      position: "relative",
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingBottom: 32,
+      gap: 16,
+    },
+    headerSection: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+    },
+    titleContainer: {
+      flex: 1,
+      gap: 4,
+    },
+    pageTitle: {
+      color: theme.primary,
+      fontSize: 22,
+      fontWeight: "700",
+      lineHeight: 28,
+    },
+    xpBadge: {
+      alignSelf: "flex-start",
+      backgroundColor: theme.secondaryContainer,
+      paddingHorizontal: 10,
+      paddingVertical: 2,
+      borderRadius: 8,
+    },
+    xpText: {
+      color: theme.onSecondaryContainer,
+      fontSize: 12,
+      fontWeight: "700",
+      lineHeight: 16,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 20,
+      backgroundColor: theme.surfaceContainerLow,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    headerSpacer: {
+      width: 40,
+    },
+    loadingText: {
+      fontSize: 14,
+      color: theme.onSurfaceVariant,
+      fontStyle: "italic",
+      textAlign: "center",
+      paddingVertical: 12,
+    },
+    noExercisesText: {
+      fontSize: 14,
+      color: theme.onSurfaceVariant,
+      textAlign: "center",
+      paddingVertical: 24,
+    },
+    progressIndicator: {
+      alignSelf: "center",
+      paddingVertical: 4,
+    },
+    progressIndicatorText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.onSurfaceVariant,
+    },
+    exerciseItem: {
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 20,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: theme.surfaceContainer,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    tokensContainer: {
+      marginTop: 8,
+      gap: 6,
+    },
+    tokensLabel: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: theme.onSurfaceVariant,
+      marginBottom: 4,
+    },
+    tokensScrollContent: {
+      gap: 8,
+      alignItems: "center",
+    },
+    tokenText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.onSurface,
+    },
+    exerciseHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    exerciseNumber: {
+      fontSize: 13,
+      fontWeight: "600",
+      lineHeight: 18,
+      color: theme.onSurface,
+    },
+    exerciseTypeBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 8,
+    },
+    exerciseType: {
+      fontSize: 12,
+      fontWeight: "600",
+      lineHeight: 16,
+    },
+    exercisePrompt: {
+      fontSize: 15,
+      fontWeight: "500",
+      lineHeight: 22,
+      color: theme.onSurface,
+    },
+    exerciseContext: {
+      fontSize: 13,
+      lineHeight: 18,
+      fontStyle: "italic",
+      color: theme.onSurfaceVariant,
+      marginTop: 2,
+    },
+    answerForm: {
+      flexDirection: "column",
+      gap: 12,
+      marginTop: 8,
+      alignItems: "stretch",
+    },
+    answerHeader: {
+      gap: 2,
+    },
+    answerLabel: {
+      color: theme.onSurface,
+      fontSize: 15,
+      fontWeight: "700",
+      lineHeight: 20,
+    },
+    answerHint: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    answerReference: {
+      gap: 4,
+      padding: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.primaryFixed,
+      backgroundColor: theme.primaryContainer,
+    },
+    answerReferenceLabel: {
+      color: theme.onPrimaryContainer,
+      fontSize: 12,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+    },
+    answerReferenceText: {
+      color: theme.onPrimaryContainer,
+      fontSize: 17,
+      fontWeight: "700",
+      lineHeight: 24,
+    },
+    arrangedWordsContainer: {
+      marginTop: 12,
+    },
+    arrangedWordsRow: {
+      flexDirection: "row",
+      gap: 8,
+      alignItems: "center",
+    },
+    arrangedWordBox: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: "#fff4e5",
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.secondaryContainer,
+      marginRight: 8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    arrangedWordText: {
+      color: "#6f5100",
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    submitButton: {
+      backgroundColor: theme.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: 48,
+    },
+    submitButtonDisabled: {
+      backgroundColor: theme.surfaceVariant,
+    },
+    submitButtonText: {
+      color: "#ffffff",
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    submitButtonTextDisabled: {
+      color: theme.onSurfaceVariant,
+    },
+    successBanner: {
+      backgroundColor: theme.primary,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      marginTop: 8,
+    },
+    successBannerText: {
+      color: theme.onPrimary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    errorBanner: {
+      backgroundColor: theme.error,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      marginTop: 8,
+    },
+    errorBannerText: {
+      color: theme.onError,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    arrowNav: {
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 24,
+      marginTop: 16,
+    },
+    arrowButton: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: "#dcfce7",
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: "#22c55e",
+      borderBottomWidth: 3,
+    },
+    arrowButtonDisabled: {
+      backgroundColor: theme.surfaceContainer,
+      borderColor: theme.outlineVariant,
+    },
+    pagination: {
+      flexDirection: "row",
+      alignSelf: "center",
+      gap: 8,
+      marginBottom: 16,
+    },
+    paginationDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: theme.surfaceVariant,
+    },
+    paginationDotActive: {
+      width: 24,
+      backgroundColor: "#22c55e",
+    },
+    completionOverlay: {
+      flex: 1,
+      backgroundColor: theme.surface,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    completionContent: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+      paddingVertical: 32,
+      gap: 24,
+    },
+    completionIconContainer: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      backgroundColor: theme.surfaceContainerHigh,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 4,
+      borderColor: theme.surfaceContainerLowest,
+    },
+    completionIconInner: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: theme.primaryContainer,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    completionTitle: {
+      color: theme.primary,
+      fontSize: 28,
+      fontWeight: "700",
+      letterSpacing: -0.02,
+      textAlign: "center",
+    },
+    completionSubtitle: {
+      color: theme.onSurfaceVariant,
+      fontSize: 16,
+      fontWeight: "500",
+      textAlign: "center",
+    },
+    completionStatsGrid: {
+      flexDirection: "row",
+      gap: 16,
+      width: "100%",
+      maxWidth: 320,
+    },
+    completionStatCard: {
+      flex: 1,
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 16,
+      padding: 16,
+      alignItems: "center",
+      gap: 8,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    completionStatValue: {
+      color: theme.onSurface,
+      fontSize: 20,
+      fontWeight: "700",
+      lineHeight: 28,
+    },
+    completionStatLabel: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "600",
+      lineHeight: 18,
+    },
+    completionActions: {
+      width: "100%",
+      maxWidth: 320,
+      gap: 12,
+      marginTop: 8,
+    },
+    completionContinueButton: {
+      backgroundColor: theme.primary,
+      paddingVertical: 14,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      borderBottomWidth: 3,
+      borderBottomColor: theme.primaryContainer,
+    },
+    completionContinueButtonText: {
+      color: theme.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    completionReviewButton: {
+      backgroundColor: theme.surfaceContainer,
+      paddingVertical: 14,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    completionReviewButtonText: {
+      color: theme.primary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  });
+}

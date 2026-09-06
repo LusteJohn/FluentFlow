@@ -1,19 +1,19 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    View,
 } from "react-native";
 
 import { getExerciseTokensByExerciseId } from "@/backend/ExerciseTokens";
 import { getExerciseById } from "@/backend/TopicExercise";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 import { getDatabase } from "@/database/database";
 import AppHeader from "../(tabs)/header";
 import NavBar from "../(tabs)/navBar";
@@ -52,6 +52,8 @@ function extractAnswerFromContext(context: string): string | null {
 }
 
 export default function ExerciseSessionPage() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { exercise_id } = useLocalSearchParams<{
     exercise_id: string;
   }>();
@@ -269,7 +271,7 @@ export default function ExerciseSessionPage() {
           value={spellingAnswer}
           onChangeText={setSpellingAnswer}
           placeholder={placeholder}
-          placeholderTextColor={Colors.light.onSurfaceVariant}
+          placeholderTextColor={theme.onSurfaceVariant}
           autoCapitalize="none"
         />
         {referenceItems.length > 0 && (
@@ -309,7 +311,7 @@ export default function ExerciseSessionPage() {
               } as any
             }
             size={28}
-            tintColor={Colors.light.onSurface}
+            tintColor={theme.onSurface}
           />
         </Pressable>
       </View>
@@ -329,7 +331,7 @@ export default function ExerciseSessionPage() {
                 } as any
               }
               size={40}
-              tintColor={Colors.light.primary}
+              tintColor={theme.primary}
             />
           </View>
           <ThemedText style={styles.screenTitle}>
@@ -376,235 +378,237 @@ export default function ExerciseSessionPage() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.surface,
-  },
-  simpleTopBar: {
-    paddingHorizontal: 8,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 22,
-    backgroundColor: Colors.light.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 80,
-    gap: 24,
-  },
-  headerSection: {
-    alignItems: "center",
-    gap: 12,
-  },
-  topicIconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: Colors.light.surfaceContainerHigh,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 4,
-    borderColor: Colors.light.surfaceContainerLowest,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  screenTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 24,
-    fontWeight: "700",
-    lineHeight: 32,
-    letterSpacing: -0.24,
-  },
-  screenDescription: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 16,
-    fontWeight: "500",
-    lineHeight: 24,
-    textAlign: "center",
-    maxWidth: 280,
-  },
-  workspace: {
-    minHeight: 120,
-    width: "100%",
-    borderWidth: 2,
-    borderStyle: "dashed",
-    borderColor: Colors.light.outlineVariant,
-    borderRadius: 16,
-    padding: 16,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-  },
-  workspaceEmpty: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  workspacePlaceholder: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 14,
-    fontStyle: "italic",
-    opacity: 0.5,
-    textAlign: "center",
-  },
-  selectedWordsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    alignItems: "center",
-  },
-  selectedWordChip: {
-    backgroundColor: Colors.light.primaryContainer,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.light.primary,
-  },
-  selectedWordText: {
-    color: Colors.light.onPrimaryContainer,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  wordBank: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    justifyContent: "center",
-  },
-  wordChip: {
-    backgroundColor: Colors.light.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  wordChipSelected: {
-    backgroundColor: Colors.light.surfaceContainerLow,
-    opacity: 0.5,
-  },
-  wordChipText: {
-    color: Colors.light.onSurface,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  wordChipTextDisabled: {
-    color: Colors.light.onSurfaceVariant,
-    opacity: 0.5,
-  },
-  textInputContainer: {
-    gap: 16,
-    alignItems: "center",
-  },
-  contextSentence: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 16,
-    fontWeight: "500",
-    lineHeight: 24,
-    textAlign: "center",
-    maxWidth: 280,
-  },
-  textInput: {
-    width: "100%",
-    maxWidth: 280,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.light.outlineVariant,
-    fontSize: 16,
-    fontWeight: "500",
-    color: Colors.light.onSurface,
-    textAlign: "center",
-  },
-  referenceContainer: {
-    width: "100%",
-    maxWidth: 280,
-    gap: 8,
-    alignItems: "center",
-  },
-  referenceLabel: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  referenceRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    justifyContent: "center",
-  },
-  referenceChip: {
-    backgroundColor: Colors.light.surfaceContainerLow,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    minWidth: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  referenceChipText: {
-    color: Colors.light.onSurface,
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 24,
-    paddingBottom: 12,
-    paddingTop: 16,
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.outlineVariant,
-  },
-  checkButton: {
-    backgroundColor: Colors.light.primary,
-    paddingVertical: 14,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.light.primaryContainer,
-  },
-  checkButtonDisabled: {
-    backgroundColor: Colors.light.surfaceVariant,
-    borderBottomColor: Colors.light.outline,
-  },
-  checkButtonText: {
-    color: Colors.light.onPrimary,
-    fontSize: 16,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
-  checkButtonTextDisabled: {
-    color: Colors.light.onSurfaceVariant,
-    opacity: 0.5,
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.surface,
+    },
+    simpleTopBar: {
+      paddingHorizontal: 8,
+      paddingTop: 16,
+      paddingBottom: 8,
+    },
+    backButton: {
+      width: 44,
+      height: 44,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 22,
+      backgroundColor: theme.surfaceContainerLow,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingBottom: 80,
+      gap: 24,
+    },
+    headerSection: {
+      alignItems: "center",
+      gap: 12,
+    },
+    topicIconContainer: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      backgroundColor: theme.surfaceContainerHigh,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 4,
+      borderColor: theme.surfaceContainerLowest,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    screenTitle: {
+      color: theme.onSurface,
+      fontSize: 24,
+      fontWeight: "700",
+      lineHeight: 32,
+      letterSpacing: -0.24,
+    },
+    screenDescription: {
+      color: theme.onSurfaceVariant,
+      fontSize: 16,
+      fontWeight: "500",
+      lineHeight: 24,
+      textAlign: "center",
+      maxWidth: 280,
+    },
+    workspace: {
+      minHeight: 120,
+      width: "100%",
+      borderWidth: 2,
+      borderStyle: "dashed",
+      borderColor: theme.outlineVariant,
+      borderRadius: 16,
+      padding: 16,
+      backgroundColor: theme.surfaceContainerLowest,
+    },
+    workspaceEmpty: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    workspacePlaceholder: {
+      color: theme.onSurfaceVariant,
+      fontSize: 14,
+      fontStyle: "italic",
+      opacity: 0.5,
+      textAlign: "center",
+    },
+    selectedWordsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      alignItems: "center",
+    },
+    selectedWordChip: {
+      backgroundColor: theme.primaryContainer,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 16,
+      borderBottomWidth: 3,
+      borderBottomColor: theme.primary,
+    },
+    selectedWordText: {
+      color: theme.onPrimaryContainer,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    wordBank: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 12,
+      justifyContent: "center",
+    },
+    wordChip: {
+      backgroundColor: theme.surface,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      minHeight: 48,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.04,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    wordChipSelected: {
+      backgroundColor: theme.surfaceContainerLow,
+      opacity: 0.5,
+    },
+    wordChipText: {
+      color: theme.onSurface,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    wordChipTextDisabled: {
+      color: theme.onSurfaceVariant,
+      opacity: 0.5,
+    },
+    textInputContainer: {
+      gap: 16,
+      alignItems: "center",
+    },
+    contextSentence: {
+      color: theme.onSurfaceVariant,
+      fontSize: 16,
+      fontWeight: "500",
+      lineHeight: 24,
+      textAlign: "center",
+      maxWidth: 280,
+    },
+    textInput: {
+      width: "100%",
+      maxWidth: 280,
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: theme.outlineVariant,
+      fontSize: 16,
+      fontWeight: "500",
+      color: theme.onSurface,
+      textAlign: "center",
+    },
+    referenceContainer: {
+      width: "100%",
+      maxWidth: 280,
+      gap: 8,
+      alignItems: "center",
+    },
+    referenceLabel: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    referenceRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      justifyContent: "center",
+    },
+    referenceChip: {
+      backgroundColor: theme.surfaceContainerLow,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      minWidth: 36,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    referenceChipText: {
+      color: theme.onSurface,
+      fontSize: 15,
+      fontWeight: "700",
+    },
+    footer: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      paddingHorizontal: 24,
+      paddingBottom: 12,
+      paddingTop: 16,
+      backgroundColor: theme.surfaceContainerLowest,
+      borderTopWidth: 1,
+      borderTopColor: theme.outlineVariant,
+    },
+    checkButton: {
+      backgroundColor: theme.primary,
+      paddingVertical: 14,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      borderBottomWidth: 3,
+      borderBottomColor: theme.primaryContainer,
+    },
+    checkButtonDisabled: {
+      backgroundColor: theme.surfaceVariant,
+      borderBottomColor: theme.outline,
+    },
+    checkButtonText: {
+      color: theme.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+      letterSpacing: 0.5,
+    },
+    checkButtonTextDisabled: {
+      color: theme.onSurfaceVariant,
+      opacity: 0.5,
+    },
+  });
+}

@@ -1,19 +1,18 @@
-import { useContext } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { Image } from "expo-image";
+import { useFocusEffect } from "expo-router";
+import { useContext, useMemo } from "react";
+import { Pressable, StyleSheet } from "react-native";
 import Animated, {
-  Easing,
-  useAnimatedStyle,
-  withDelay,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
-import { Image } from 'expo-image';
+    Easing,
+    useAnimatedStyle,
+    withRepeat,
+    withTiming
+} from "react-native-reanimated";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing } from '@/constants/theme';
-import { TabBarContext } from '@/components/app-tabs';
+import { TabBarContext } from "@/components/app-tabs";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useTheme } from "@/contexts/theme-context";
 
 export default function OnboardingScreen({
   onGetStarted,
@@ -23,6 +22,8 @@ export default function OnboardingScreen({
   onSignIn?: () => void;
 }) {
   const { setIsTabBarHidden } = useContext(TabBarContext);
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   useFocusEffect(() => {
     setIsTabBarHidden(true);
@@ -33,7 +34,7 @@ export default function OnboardingScreen({
     const progress = withRepeat(
       withTiming(1, { duration: 7000, easing: Easing.inOut(Easing.quad) }),
       -1,
-      true
+      true,
     );
     return {
       transform: [
@@ -48,7 +49,7 @@ export default function OnboardingScreen({
     const progress = withRepeat(
       withTiming(1, { duration: 7000, easing: Easing.inOut(Easing.quad) }),
       -1,
-      true
+      true,
     );
     return {
       transform: [
@@ -63,7 +64,7 @@ export default function OnboardingScreen({
     const progress = withRepeat(
       withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.quad) }),
       -1,
-      true
+      true,
     );
     return {
       transform: [{ translateY: progress * -20 }],
@@ -71,12 +72,14 @@ export default function OnboardingScreen({
   });
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor: Colors.light.surfaceDim }]}>
+    <ThemedView
+      style={[styles.container, { backgroundColor: theme.surfaceDim }]}
+    >
       <Animated.View
         style={[
           styles.blob,
           styles.blob1,
-          { backgroundColor: Colors.light.primaryFixedDim },
+          { backgroundColor: theme.primaryFixedDim },
           blob1Style,
         ]}
       />
@@ -84,7 +87,7 @@ export default function OnboardingScreen({
         style={[
           styles.blob,
           styles.blob2,
-          { backgroundColor: Colors.light.surfaceVariant },
+          { backgroundColor: theme.surfaceVariant },
           blob2Style,
         ]}
       />
@@ -92,21 +95,25 @@ export default function OnboardingScreen({
       <ThemedView style={styles.content}>
         <Animated.View style={[styles.imageContainer, bounceStyle]}>
           <Image
-            source={require('@/assets/images/splash.png')}
+            source={require("@/assets/images/splash.png")}
             style={styles.mascotImage}
             contentFit="contain"
           />
         </Animated.View>
 
         <ThemedView style={styles.textContainer}>
-          <ThemedText type="title" style={[styles.headline, { color: Colors.light.primary }]}>
-            Master English{'\n'}in Context
+          <ThemedText
+            type="title"
+            style={[styles.headline, { color: theme.primary }]}
+          >
+            Master English{"\n"}in Context
           </ThemedText>
           <ThemedText
             type="default"
-            style={[styles.bodyText, { color: Colors.light.onSurfaceVariant }]}
+            style={[styles.bodyText, { color: theme.onSurfaceVariant }]}
           >
-            Learn vocabulary through real-world situations and interactive exercises.
+            Learn vocabulary through real-world situations and interactive
+            exercises.
           </ThemedText>
         </ThemedView>
 
@@ -116,7 +123,8 @@ export default function OnboardingScreen({
             style={({ pressed }) => [
               styles.primaryButton,
               pressed && styles.primaryButtonPressed,
-            ]}>
+            ]}
+          >
             <ThemedText type="default" style={styles.primaryButtonText}>
               Get Started
             </ThemedText>
@@ -126,7 +134,8 @@ export default function OnboardingScreen({
             style={({ pressed }) => [
               styles.secondaryButton,
               pressed && styles.secondaryButtonPressed,
-            ]}>
+            ]}
+          >
             <ThemedText type="default" style={styles.secondaryButtonText}>
               Sign In
             </ThemedText>
@@ -137,123 +146,125 @@ export default function OnboardingScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    overflow: 'hidden',
-  },
-  blob: {
-    position: 'absolute',
-    borderRadius: 9999,
-    opacity: 0.5,
-  },
-  blob1: {
-    width: 384,
-    height: 384,
-    top: '-10%',
-    left: '-10%',
-  },
-  blob2: {
-    width: 480,
-    height: 480,
-    bottom: '-10%',
-    right: '-10%',
-  },
-  content: {
-    flex: 1,
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    maxWidth: 448,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  imageContainer: {
-    marginBottom: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mascotImage: {
-    width: 256,
-    height: 256,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  textContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
-    width: '100%',
-  },
-  headline: {
-    textAlign: 'center',
-    marginBottom: 12,
-    fontSize: 32,
-    lineHeight: 40,
-    fontWeight: '700',
-  },
-  bodyText: {
-    textAlign: 'center',
-    maxWidth: 280,
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: '500',
-  },
-  actions: {
-    width: '100%',
-    gap: 12,
-    marginTop: 'auto',
-  },
-  primaryButton: {
-    width: '100%',
-    backgroundColor: Colors.light.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.light.primaryContainer,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  primaryButtonPressed: {
-    borderBottomWidth: 0,
-    transform: [{ translateY: 3 }],
-  },
-  secondaryButton: {
-    width: '100%',
-    backgroundColor: Colors.light.surface,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  secondaryButtonPressed: {
-    backgroundColor: Colors.light.surfaceContainer,
-  },
-  primaryButtonText: {
-    color: Colors.light.onPrimary,
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: '500',
-  },
-  secondaryButtonText: {
-    color: Colors.light.primary,
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: '500',
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      overflow: "hidden",
+    },
+    blob: {
+      position: "absolute",
+      borderRadius: 9999,
+      opacity: 0.5,
+    },
+    blob1: {
+      width: 384,
+      height: 384,
+      top: "-10%",
+      left: "-10%",
+    },
+    blob2: {
+      width: 480,
+      height: 480,
+      bottom: "-10%",
+      right: "-10%",
+    },
+    content: {
+      flex: 1,
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+      paddingVertical: 32,
+      maxWidth: 448,
+      alignSelf: "center",
+      width: "100%",
+    },
+    imageContainer: {
+      marginBottom: 32,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    mascotImage: {
+      width: 256,
+      height: 256,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.25,
+      shadowRadius: 16,
+      elevation: 12,
+    },
+    textContainer: {
+      alignItems: "center",
+      marginBottom: 32,
+      width: "100%",
+    },
+    headline: {
+      textAlign: "center",
+      marginBottom: 12,
+      fontSize: 32,
+      lineHeight: 40,
+      fontWeight: "700",
+    },
+    bodyText: {
+      textAlign: "center",
+      maxWidth: 280,
+      fontSize: 18,
+      lineHeight: 26,
+      fontWeight: "500",
+    },
+    actions: {
+      width: "100%",
+      gap: 12,
+      marginTop: "auto",
+    },
+    primaryButton: {
+      width: "100%",
+      backgroundColor: theme.primary,
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "row",
+      gap: 8,
+      borderBottomWidth: 3,
+      borderBottomColor: theme.primaryContainer,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    primaryButtonPressed: {
+      borderBottomWidth: 0,
+      transform: [{ translateY: 3 }],
+    },
+    secondaryButton: {
+      width: "100%",
+      backgroundColor: theme.surface,
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    secondaryButtonPressed: {
+      backgroundColor: theme.surfaceContainer,
+    },
+    primaryButtonText: {
+      color: theme.onPrimary,
+      fontSize: 18,
+      lineHeight: 26,
+      fontWeight: "500",
+    },
+    secondaryButtonText: {
+      color: theme.primary,
+      fontSize: 18,
+      lineHeight: 26,
+      fontWeight: "500",
+    },
+  });
+}

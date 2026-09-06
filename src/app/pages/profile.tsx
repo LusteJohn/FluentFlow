@@ -1,32 +1,33 @@
 import { useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
 } from "react-native";
 
 import {
-    createUserProfile,
-    getUserProfile,
-    updateUserProfile,
+  createUserProfile,
+  getUserProfile,
+  updateUserProfile,
 } from "@/backend/UserProfile";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 import { getDatabase } from "@/database/database";
 import AppHeader from "../(tabs)/header";
 import NavBar from "../(tabs)/navBar";
 
 interface UserProfile {
   user_id: number;
+  created_at?: string;
   firstname: string;
   middlename: string | null;
   lastname: string;
@@ -61,6 +62,8 @@ const MONTHS = [
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 export default function ProfilePage() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -258,36 +261,38 @@ export default function ProfilePage() {
                       web: "person",
                     }}
                     size={48}
-                    tintColor={Colors.light.onPrimaryContainer}
+                    tintColor={theme.onPrimaryContainer}
                   />
                 </View>
               </View>
-              <ThemedText type="headlineMd" style={styles.profileName}>
+              <ThemedText type="title" style={styles.profileName}>
                 {fullName || "Your Profile"}
               </ThemedText>
               {profile && (
                 <ThemedText style={styles.profileSubtitle}>
                   Member since{" "}
-                  {new Date(profile.created_at).toLocaleDateString()}
+                  {profile.created_at
+                    ? new Date(profile.created_at).toLocaleDateString()
+                    : "-"}
                 </ThemedText>
               )}
             </View>
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <ThemedText type="headlineMd" style={styles.sectionTitle}>
+                <ThemedText type="title" style={styles.sectionTitle}>
                   Personal Information
                 </ThemedText>
                 {!isEditing && (
                   <Pressable onPress={() => setIsEditing(true)}>
                     <SymbolView
                       name={{
-                        ios: "edit",
+                        ios: "pencil",
                         android: "edit",
                         web: "edit",
                       }}
                       size={20}
-                      tintColor={Colors.light.primary}
+                      tintColor={theme.primary}
                     />
                   </Pressable>
                 )}
@@ -302,7 +307,7 @@ export default function ProfilePage() {
                       value={firstname}
                       onChangeText={setFirstname}
                       placeholder="Enter first name"
-                      placeholderTextColor={Colors.light.onSurfaceVariant}
+                      placeholderTextColor={theme.onSurfaceVariant}
                       editable={isEditing}
                     />
                   </View>
@@ -313,7 +318,7 @@ export default function ProfilePage() {
                       value={middlename}
                       onChangeText={setMiddlename}
                       placeholder="Enter middle name"
-                      placeholderTextColor={Colors.light.onSurfaceVariant}
+                      placeholderTextColor={theme.onSurfaceVariant}
                       editable={isEditing}
                     />
                   </View>
@@ -327,7 +332,7 @@ export default function ProfilePage() {
                       value={lastname}
                       onChangeText={setLastname}
                       placeholder="Enter last name"
-                      placeholderTextColor={Colors.light.onSurfaceVariant}
+                      placeholderTextColor={theme.onSurfaceVariant}
                       editable={isEditing}
                     />
                   </View>
@@ -338,7 +343,7 @@ export default function ProfilePage() {
                       value={nameExt}
                       onChangeText={setNameExt}
                       placeholder="e.g. Jr., Sr., III"
-                      placeholderTextColor={Colors.light.onSurfaceVariant}
+                      placeholderTextColor={theme.onSurfaceVariant}
                       editable={isEditing}
                     />
                   </View>
@@ -371,7 +376,7 @@ export default function ProfilePage() {
                           web: "calendar_today",
                         }}
                         size={20}
-                        tintColor={Colors.light.primary}
+                        tintColor={theme.primary}
                       />
                     )}
                   </Pressable>
@@ -406,7 +411,7 @@ export default function ProfilePage() {
                       style={[styles.input, styles.inputDisabled]}
                       value={gender}
                       placeholder="Select gender"
-                      placeholderTextColor={Colors.light.onSurfaceVariant}
+                      placeholderTextColor={theme.onSurfaceVariant}
                       editable={false}
                     />
                   )}
@@ -423,7 +428,7 @@ export default function ProfilePage() {
                     value={address}
                     onChangeText={setAddress}
                     placeholder="Enter your address"
-                    placeholderTextColor={Colors.light.onSurfaceVariant}
+                    placeholderTextColor={theme.onSurfaceVariant}
                     multiline
                     numberOfLines={3}
                     editable={isEditing}
@@ -562,296 +567,298 @@ export default function ProfilePage() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.light.surface,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-    gap: 24,
-  },
-  loadingText: {
-    textAlign: "center",
-    marginTop: 24,
-    color: Colors.light.onSurfaceVariant,
-  },
-  profileHeader: {
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 24,
-  },
-  avatarContainer: {
-    marginBottom: 8,
-  },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: Colors.light.primaryContainer,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 3,
-    borderColor: Colors.light.primaryFixed,
-  },
-  profileName: {
-    color: Colors.light.onSurface,
-    textAlign: "center",
-  },
-  profileSubtitle: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 14,
-    textAlign: "center",
-  },
-  section: {
-    backgroundColor: Colors.light.surfaceContainerLowest,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    gap: 16,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  sectionTitle: {
-    color: Colors.light.onSurface,
-  },
-  form: {
-    gap: 16,
-  },
-  formRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  formField: {
-    flex: 1,
-    gap: 6,
-  },
-  label: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  input: {
-    backgroundColor: Colors.light.surface,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: Colors.light.onSurface,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  inputDisabled: {
-    backgroundColor: Colors.light.surfaceContainer,
-    color: Colors.light.onSurface,
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  dateInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  dateText: {
-    color: Colors.light.onSurface,
-    fontSize: 16,
-  },
-  datePlaceholder: {
-    color: Colors.light.onSurfaceVariant,
-  },
-  genderContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  genderOption: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 9999,
-    backgroundColor: Colors.light.surface,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  genderOptionSelected: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
-  },
-  genderOptionText: {
-    color: Colors.light.onSurface,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  genderOptionTextSelected: {
-    color: Colors.light.onPrimary,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 16,
-    backgroundColor: Colors.light.surfaceContainer,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelButtonText: {
-    color: Colors.light.onSurface,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  saveButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 16,
-    backgroundColor: Colors.light.primary,
-    borderBottomWidth: 3,
-    borderBottomColor: Colors.light.primaryContainer,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    color: Colors.light.onPrimary,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  datePickerOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-  },
-  datePickerCard: {
-    width: "90%",
-    maxWidth: 360,
-    backgroundColor: Colors.light.surface,
-    borderRadius: 20,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  datePickerHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.outlineVariant,
-  },
-  datePickerCancel: {
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  datePickerTitle: {
-    color: Colors.light.onSurface,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  datePickerDone: {
-    color: Colors.light.primary,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  datePickerBody: {
-    padding: 16,
-    gap: 16,
-  },
-  monthScroll: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  monthChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 9999,
-    backgroundColor: Colors.light.surfaceContainer,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-  },
-  monthChipActive: {
-    backgroundColor: Colors.light.primary,
-    borderColor: Colors.light.primary,
-  },
-  monthChipText: {
-    color: Colors.light.onSurface,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  monthChipTextActive: {
-    color: Colors.light.onPrimary,
-  },
-  yearScroll: {
-    maxHeight: 120,
-    borderWidth: 1,
-    borderColor: Colors.light.outlineVariant,
-    borderRadius: 12,
-  },
-  yearItem: {
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  yearItemActive: {
-    backgroundColor: Colors.light.primaryContainer,
-  },
-  yearText: {
-    color: Colors.light.onSurface,
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  yearTextActive: {
-    color: Colors.light.primary,
-    fontWeight: "700",
-  },
-  dayGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 4,
-    justifyContent: "center",
-  },
-  dayHeader: {
-    width: 36,
-    textAlign: "center",
-    color: Colors.light.onSurfaceVariant,
-    fontSize: 12,
-    fontWeight: "600",
-    paddingVertical: 4,
-  },
-  dayCell: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 18,
-  },
-  dayText: {
-    color: Colors.light.onSurface,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  dayTextActive: {
-    color: Colors.light.onPrimary,
-    fontWeight: "700",
-  },
-});
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.surface,
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingBottom: 32,
+      gap: 24,
+    },
+    loadingText: {
+      textAlign: "center",
+      marginTop: 24,
+      color: theme.onSurfaceVariant,
+    },
+    profileHeader: {
+      alignItems: "center",
+      gap: 12,
+      paddingVertical: 24,
+    },
+    avatarContainer: {
+      marginBottom: 8,
+    },
+    avatar: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      backgroundColor: theme.primaryContainer,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 3,
+      borderColor: theme.primaryFixed,
+    },
+    profileName: {
+      color: theme.onSurface,
+      textAlign: "center",
+    },
+    profileSubtitle: {
+      color: theme.onSurfaceVariant,
+      fontSize: 14,
+      textAlign: "center",
+    },
+    section: {
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 16,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      gap: 16,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    sectionTitle: {
+      color: theme.onSurface,
+    },
+    form: {
+      gap: 16,
+    },
+    formRow: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    formField: {
+      flex: 1,
+      gap: 6,
+    },
+    label: {
+      color: theme.onSurfaceVariant,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    input: {
+      backgroundColor: theme.surface,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: theme.onSurface,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    inputDisabled: {
+      backgroundColor: theme.surfaceContainer,
+      color: theme.onSurface,
+    },
+    textArea: {
+      minHeight: 80,
+      textAlignVertical: "top",
+    },
+    dateInput: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    dateText: {
+      color: theme.onSurface,
+      fontSize: 16,
+    },
+    datePlaceholder: {
+      color: theme.onSurfaceVariant,
+    },
+    genderContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    genderOption: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 9999,
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    genderOptionSelected: {
+      backgroundColor: theme.primary,
+      borderColor: theme.primary,
+    },
+    genderOptionText: {
+      color: theme.onSurface,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    genderOptionTextSelected: {
+      color: theme.onPrimary,
+    },
+    actionButtons: {
+      flexDirection: "row",
+      gap: 12,
+    },
+    cancelButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 16,
+      backgroundColor: theme.surfaceContainer,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cancelButtonText: {
+      color: theme.onSurface,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    saveButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 16,
+      backgroundColor: theme.primary,
+      borderBottomWidth: 3,
+      borderBottomColor: theme.primaryContainer,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveButtonText: {
+      color: theme.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    datePickerOverlay: {
+      ...StyleSheet.absoluteFill,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1000,
+    },
+    datePickerCard: {
+      width: "90%",
+      maxWidth: 360,
+      backgroundColor: theme.surface,
+      borderRadius: 20,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    datePickerHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.outlineVariant,
+    },
+    datePickerCancel: {
+      color: theme.onSurfaceVariant,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    datePickerTitle: {
+      color: theme.onSurface,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    datePickerDone: {
+      color: theme.primary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    datePickerBody: {
+      padding: 16,
+      gap: 16,
+    },
+    monthScroll: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    monthChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 9999,
+      backgroundColor: theme.surfaceContainer,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    monthChipActive: {
+      backgroundColor: theme.primary,
+      borderColor: theme.primary,
+    },
+    monthChipText: {
+      color: theme.onSurface,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    monthChipTextActive: {
+      color: theme.onPrimary,
+    },
+    yearScroll: {
+      maxHeight: 120,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      borderRadius: 12,
+    },
+    yearItem: {
+      paddingVertical: 10,
+      alignItems: "center",
+    },
+    yearItemActive: {
+      backgroundColor: theme.primaryContainer,
+    },
+    yearText: {
+      color: theme.onSurface,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    yearTextActive: {
+      color: theme.primary,
+      fontWeight: "700",
+    },
+    dayGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 4,
+      justifyContent: "center",
+    },
+    dayHeader: {
+      width: 36,
+      textAlign: "center",
+      color: theme.onSurfaceVariant,
+      fontSize: 12,
+      fontWeight: "600",
+      paddingVertical: 4,
+    },
+    dayCell: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 18,
+    },
+    dayText: {
+      color: theme.onSurface,
+      fontSize: 14,
+      fontWeight: "500",
+    },
+    dayTextActive: {
+      color: theme.onPrimary,
+      fontWeight: "700",
+    },
+  });
+}

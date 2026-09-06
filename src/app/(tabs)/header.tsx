@@ -1,9 +1,73 @@
+import { useMemo } from "react";
+
 import { StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Colors } from "@/constants/theme";
+import { useTheme } from "@/contexts/theme-context";
 
 export default function AppHeader() {
+  const theme = useTheme();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        header: {
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 24,
+          paddingTop: 16,
+          paddingBottom: 12,
+          backgroundColor: theme.surface,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.outlineVariant,
+        },
+        headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+        avatarContainer: { position: "relative", width: 40, height: 40 },
+        avatar: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: theme.primaryContainer,
+          alignItems: "center",
+          justifyContent: "center",
+          borderWidth: 2,
+          borderColor: theme.primaryFixed,
+        },
+        avatarText: {
+          color: theme.onPrimaryContainer,
+          fontSize: 18,
+          fontWeight: "700",
+        },
+        levelBadge: {
+          position: "absolute",
+          bottom: -4,
+          right: -4,
+          backgroundColor: theme.secondaryContainer,
+          paddingHorizontal: 4,
+          paddingVertical: 1,
+          borderRadius: 4,
+          borderWidth: 1,
+          borderColor: theme.surface,
+        },
+        levelText: {
+          color: theme.onSecondaryContainer,
+          fontSize: 10,
+          fontWeight: "700",
+        },
+        headerTitle: { color: theme.primary, fontSize: 20, fontWeight: "700" },
+        notificationButton: {
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: theme.surfaceContainerLow,
+        },
+        notificationIcon: { fontSize: 20 },
+      }),
+    [theme],
+  );
+
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
@@ -14,12 +78,12 @@ export default function AppHeader() {
             </ThemedText>
           </View>
           <View style={styles.levelBadge}>
-            <ThemedText type="labelSm" style={styles.levelText}>
+            <ThemedText type="small" style={styles.levelText}>
               L3
             </ThemedText>
           </View>
         </View>
-        <ThemedText type="displayMobile" style={styles.headerTitle}>
+        <ThemedText type="title" style={styles.headerTitle}>
           FluentFlow
         </ThemedText>
       </View>
@@ -29,75 +93,3 @@ export default function AppHeader() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 12,
-    backgroundColor: Colors.light.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.outlineVariant,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  avatarContainer: {
-    position: "relative",
-    width: 40,
-    height: 40,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.light.primaryContainer,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.light.primaryFixed,
-  },
-  avatarText: {
-    color: Colors.light.onPrimaryContainer,
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  levelBadge: {
-    position: "absolute",
-    bottom: -4,
-    right: -4,
-    backgroundColor: Colors.light.secondaryContainer,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: Colors.light.surface,
-  },
-  levelText: {
-    color: Colors.light.onSecondaryContainer,
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  headerTitle: {
-    color: Colors.light.primary,
-    fontSize: 20,
-    fontWeight: "700",
-    letterSpacing: -0.01,
-  },
-  notificationButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.light.surfaceContainerLow,
-  },
-  notificationIcon: {
-    fontSize: 20,
-  },
-});
