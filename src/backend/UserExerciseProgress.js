@@ -41,7 +41,14 @@ const getManilaDateKey = (stored) => {
 };
 
 const getProgressDateKey = (row) =>
-  getManilaDateKey(row.recorded_at ?? row.completed_at);
+  (() => {
+    const stored = row.recorded_at ?? row.completed_at;
+    if (typeof stored === "string") {
+      const localTimestamp = stored.match(/^(\d{4}-\d{2}-\d{2})[ T]\d{2}:\d{2}:\d{2}$/);
+      if (localTimestamp) return localTimestamp[1];
+    }
+    return getManilaDateKey(stored);
+  })();
 
 const addDaysToDateKey = (dateKey, days) => {
   const date = new Date(`${dateKey}T00:00:00Z`);
