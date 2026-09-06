@@ -20,6 +20,7 @@ import {
 } from "@/backend/UserExerciseProgress";
 import { getUserProfile } from "@/backend/UserProfile";
 import AlertDialog from "@/components/alert-dialog";
+import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import TutorialModal, { getWelcomingPhrase } from "@/components/tutorial-modal";
@@ -616,285 +617,289 @@ export default function HomePage() {
   const selectedWeek = weekOptions[selectedWeekIndex];
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.headerRow}>
-        <AppHeader />
-        <Pressable
-          style={styles.helpButton}
-          onPress={() => setShowTutorial(true)}
-          hitSlop={8}
-        >
-          <SymbolView
-            name={
-              {
-                ios: "questionmark.circle",
-                android: "help",
-                web: "help",
-              } as any
-            }
-            size={24}
-            tintColor="#15803d"
-          />
-        </Pressable>
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <View style={styles.statsSection}>
-          <ThemedText style={styles.sectionTitle}>Your Stats</ThemedText>
-          <View style={styles.statGrid}>
-            <View style={styles.statGridRow}>
-              {STAT_CARDS.slice(0, 2).map(renderStatCard)}
-            </View>
-            <View style={styles.statGridRow}>
-              {renderStatCard(STAT_CARDS[2])}
-            </View>
-          </View>
+    <ScreenMotion>
+      <ThemedView style={styles.container}>
+        <View style={styles.headerRow}>
+          <AppHeader />
+          <Pressable
+            style={styles.helpButton}
+            onPress={() => setShowTutorial(true)}
+            hitSlop={8}
+          >
+            <SymbolView
+              name={
+                {
+                  ios: "questionmark.circle",
+                  android: "help",
+                  web: "help",
+                } as any
+              }
+              size={24}
+              tintColor="#15803d"
+            />
+          </Pressable>
         </View>
 
-        <View style={styles.weeklySection}>
-          <View style={styles.weeklyHeader}>
-            <View>
-              <ThemedText style={styles.sectionTitle}>
-                Weekly Progress
-              </ThemedText>
-              <Pressable onPress={() => setShowWeekPicker(true)}>
-                <ThemedText style={styles.weekLabel}>
-                  {selectedWeek?.label ?? "Select Week"}
-                </ThemedText>
-              </Pressable>
-            </View>
-          </View>
-          {loading ? (
-            <ThemedText style={styles.loadingText}>Loading...</ThemedText>
-          ) : (
-            <View style={styles.weeklyChart}>
-              <View style={styles.weeklyChartInner}>
-                {weeklyBars.map(renderWeeklyBar)}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.statsSection}>
+            <ThemedText style={styles.sectionTitle}>Your Stats</ThemedText>
+            <View style={styles.statGrid}>
+              <View style={styles.statGridRow}>
+                {STAT_CARDS.slice(0, 2).map(renderStatCard)}
+              </View>
+              <View style={styles.statGridRow}>
+                {renderStatCard(STAT_CARDS[2])}
               </View>
             </View>
-          )}
-        </View>
+          </View>
 
-        <View style={styles.recentSection}>
-          <ThemedText style={styles.sectionTitle}>Recent Exercises</ThemedText>
-          <View style={styles.recentList}>
-            {loadingRecentPage && recentExercises.length === 0 ? (
-              <ThemedText style={styles.emptyText}>Loading...</ThemedText>
-            ) : recentExercises.length > 0 ? (
-              recentExercises.map(renderRecentExercise)
+          <View style={styles.weeklySection}>
+            <View style={styles.weeklyHeader}>
+              <View>
+                <ThemedText style={styles.sectionTitle}>
+                  Weekly Progress
+                </ThemedText>
+                <Pressable onPress={() => setShowWeekPicker(true)}>
+                  <ThemedText style={styles.weekLabel}>
+                    {selectedWeek?.label ?? "Select Week"}
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </View>
+            {loading ? (
+              <ThemedText style={styles.loadingText}>Loading...</ThemedText>
             ) : (
-              <ThemedText style={styles.emptyText}>
-                No recent exercises yet.
-              </ThemedText>
+              <View style={styles.weeklyChart}>
+                <View style={styles.weeklyChartInner}>
+                  {weeklyBars.map(renderWeeklyBar)}
+                </View>
+              </View>
             )}
           </View>
-          {recentTotalCount > RECENT_PAGE_SIZE && (
-            <View style={styles.paginationRow}>
-              <Pressable
-                style={[
-                  styles.paginationButton,
-                  (recentPage === 1 || loadingRecentPage) &&
-                    styles.paginationButtonDisabled,
-                ]}
-                onPress={() => handlePageChange(recentPage - 1)}
-                disabled={recentPage === 1 || loadingRecentPage}
-              >
-                <ThemedText
-                  style={[
-                    styles.paginationButtonText,
-                    (recentPage === 1 || loadingRecentPage) &&
-                      styles.paginationButtonTextDisabled,
-                  ]}
-                >
-                  Prev
-                </ThemedText>
-              </Pressable>
-              <ThemedText style={styles.paginationInfo}>
-                Page {recentPage} of{" "}
-                {Math.ceil(recentTotalCount / RECENT_PAGE_SIZE)}
-              </ThemedText>
-              <Pressable
-                style={[
-                  styles.paginationButton,
-                  (recentPage >=
-                    Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) ||
-                    loadingRecentPage) &&
-                    styles.paginationButtonDisabled,
-                ]}
-                onPress={() => handlePageChange(recentPage + 1)}
-                disabled={
-                  recentPage >=
-                    Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) ||
-                  loadingRecentPage
-                }
-              >
-                <ThemedText
-                  style={[
-                    styles.paginationButtonText,
-                    (recentPage >=
-                      Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) ||
-                      loadingRecentPage) &&
-                      styles.paginationButtonTextDisabled,
-                  ]}
-                >
-                  Next
-                </ThemedText>
-              </Pressable>
-            </View>
-          )}
-        </View>
-      </ScrollView>
 
-      {showWeekPicker && (
-        <View style={styles.weekPickerOverlay}>
-          <View style={styles.weekPickerCard}>
-            <View style={styles.weekPickerHeader}>
-              <ThemedText style={styles.weekPickerTitle}>
-                Select Week
-              </ThemedText>
-              <Pressable onPress={() => setShowWeekPicker(false)}>
-                <ThemedText style={styles.weekPickerDone}>Done</ThemedText>
-              </Pressable>
+          <View style={styles.recentSection}>
+            <ThemedText style={styles.sectionTitle}>
+              Recent Exercises
+            </ThemedText>
+            <View style={styles.recentList}>
+              {loadingRecentPage && recentExercises.length === 0 ? (
+                <ThemedText style={styles.emptyText}>Loading...</ThemedText>
+              ) : recentExercises.length > 0 ? (
+                recentExercises.map(renderRecentExercise)
+              ) : (
+                <ThemedText style={styles.emptyText}>
+                  No recent exercises yet.
+                </ThemedText>
+              )}
             </View>
-            <ScrollView style={styles.weekPickerList}>
-              {weekOptions.map((week, idx) => (
+            {recentTotalCount > RECENT_PAGE_SIZE && (
+              <View style={styles.paginationRow}>
                 <Pressable
-                  key={week.label}
                   style={[
-                    styles.weekPickerItem,
-                    selectedWeekIndex === idx && styles.weekPickerItemActive,
+                    styles.paginationButton,
+                    (recentPage === 1 || loadingRecentPage) &&
+                      styles.paginationButtonDisabled,
                   ]}
-                  onPress={() => {
-                    setSelectedWeekIndex(idx);
-                    setShowWeekPicker(false);
-                  }}
+                  onPress={() => handlePageChange(recentPage - 1)}
+                  disabled={recentPage === 1 || loadingRecentPage}
                 >
                   <ThemedText
                     style={[
-                      styles.weekPickerItemText,
-                      selectedWeekIndex === idx &&
-                        styles.weekPickerItemTextActive,
+                      styles.paginationButtonText,
+                      (recentPage === 1 || loadingRecentPage) &&
+                        styles.paginationButtonTextDisabled,
                     ]}
                   >
-                    {week.label}
+                    Prev
                   </ThemedText>
                 </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      )}
-
-      {showDayDetail && (
-        <Modal
-          visible={showDayDetail}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowDayDetail(false)}
-        >
-          <View style={styles.dayDetailOverlay}>
-            <View style={styles.dayDetailCard}>
-              <View style={styles.dayDetailHeader}>
-                <ThemedText style={styles.dayDetailTitle}>
-                  {selectedDayIndex !== null
-                    ? DAY_LABELS[selectedDayIndex]
-                    : ""}{" "}
-                  Progress
+                <ThemedText style={styles.paginationInfo}>
+                  Page {recentPage} of{" "}
+                  {Math.ceil(recentTotalCount / RECENT_PAGE_SIZE)}
                 </ThemedText>
-                <Pressable onPress={() => setShowDayDetail(false)}>
-                  <ThemedText style={styles.dayDetailClose}>Close</ThemedText>
+                <Pressable
+                  style={[
+                    styles.paginationButton,
+                    (recentPage >=
+                      Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) ||
+                      loadingRecentPage) &&
+                      styles.paginationButtonDisabled,
+                  ]}
+                  onPress={() => handlePageChange(recentPage + 1)}
+                  disabled={
+                    recentPage >=
+                      Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) ||
+                    loadingRecentPage
+                  }
+                >
+                  <ThemedText
+                    style={[
+                      styles.paginationButtonText,
+                      (recentPage >=
+                        Math.ceil(recentTotalCount / RECENT_PAGE_SIZE) ||
+                        loadingRecentPage) &&
+                        styles.paginationButtonTextDisabled,
+                    ]}
+                  >
+                    Next
+                  </ThemedText>
                 </Pressable>
               </View>
-              {loadingDayDetails ? (
-                <ThemedText style={styles.dayDetailLoading}>
-                  Loading...
+            )}
+          </View>
+        </ScrollView>
+
+        {showWeekPicker && (
+          <View style={styles.weekPickerOverlay}>
+            <View style={styles.weekPickerCard}>
+              <View style={styles.weekPickerHeader}>
+                <ThemedText style={styles.weekPickerTitle}>
+                  Select Week
                 </ThemedText>
-              ) : dayDetails.length === 0 ? (
-                <ThemedText style={styles.dayDetailEmpty}>
-                  No exercises completed on this day.
-                </ThemedText>
-              ) : (
-                <ScrollView
-                  style={styles.dayDetailList}
-                  contentContainerStyle={styles.dayDetailListContent}
-                >
-                  {dayDetails.map((item) => (
-                    <View key={item.id} style={styles.dayDetailItem}>
-                      <View style={styles.dayDetailItemHeader}>
-                        <ThemedText style={styles.dayDetailTopic}>
-                          {item.topic_title}
-                        </ThemedText>
-                        <View style={styles.dayDetailBadges}>
-                          <View style={styles.dayDetailBadge}>
-                            <ThemedText style={styles.dayDetailBadgeText}>
-                              {item.level}
-                            </ThemedText>
-                          </View>
-                          <View
-                            style={[
-                              styles.dayDetailBadge,
-                              styles.dayDetailBadgeXP,
-                            ]}
-                          >
-                            <ThemedText
-                              style={[
-                                styles.dayDetailBadgeText,
-                                styles.dayDetailBadgeTextXP,
-                              ]}
-                            >
-                              +{item.xp ?? 5} XP
-                            </ThemedText>
-                          </View>
-                        </View>
-                      </View>
-                      <ThemedText style={styles.dayDetailPrompt}>
-                        {item.title}
-                      </ThemedText>
-                      <ThemedText style={styles.dayDetailGrammar}>
-                        {item.grammar_focus}
-                      </ThemedText>
-                      <ThemedText style={styles.dayDetailTime}>
-                        {new Date(item.recorded_at).toLocaleTimeString(
-                          "en-US",
-                          {
-                            timeZone: "Asia/Manila",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: true,
-                          },
-                        )}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </ScrollView>
-              )}
+                <Pressable onPress={() => setShowWeekPicker(false)}>
+                  <ThemedText style={styles.weekPickerDone}>Done</ThemedText>
+                </Pressable>
+              </View>
+              <ScrollView style={styles.weekPickerList}>
+                {weekOptions.map((week, idx) => (
+                  <Pressable
+                    key={week.label}
+                    style={[
+                      styles.weekPickerItem,
+                      selectedWeekIndex === idx && styles.weekPickerItemActive,
+                    ]}
+                    onPress={() => {
+                      setSelectedWeekIndex(idx);
+                      setShowWeekPicker(false);
+                    }}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.weekPickerItemText,
+                        selectedWeekIndex === idx &&
+                          styles.weekPickerItemTextActive,
+                      ]}
+                    >
+                      {week.label}
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </ScrollView>
             </View>
           </View>
-        </Modal>
-      )}
+        )}
 
-      <NavBar />
+        {showDayDetail && (
+          <Modal
+            visible={showDayDetail}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowDayDetail(false)}
+          >
+            <View style={styles.dayDetailOverlay}>
+              <View style={styles.dayDetailCard}>
+                <View style={styles.dayDetailHeader}>
+                  <ThemedText style={styles.dayDetailTitle}>
+                    {selectedDayIndex !== null
+                      ? DAY_LABELS[selectedDayIndex]
+                      : ""}{" "}
+                    Progress
+                  </ThemedText>
+                  <Pressable onPress={() => setShowDayDetail(false)}>
+                    <ThemedText style={styles.dayDetailClose}>Close</ThemedText>
+                  </Pressable>
+                </View>
+                {loadingDayDetails ? (
+                  <ThemedText style={styles.dayDetailLoading}>
+                    Loading...
+                  </ThemedText>
+                ) : dayDetails.length === 0 ? (
+                  <ThemedText style={styles.dayDetailEmpty}>
+                    No exercises completed on this day.
+                  </ThemedText>
+                ) : (
+                  <ScrollView
+                    style={styles.dayDetailList}
+                    contentContainerStyle={styles.dayDetailListContent}
+                  >
+                    {dayDetails.map((item) => (
+                      <View key={item.id} style={styles.dayDetailItem}>
+                        <View style={styles.dayDetailItemHeader}>
+                          <ThemedText style={styles.dayDetailTopic}>
+                            {item.topic_title}
+                          </ThemedText>
+                          <View style={styles.dayDetailBadges}>
+                            <View style={styles.dayDetailBadge}>
+                              <ThemedText style={styles.dayDetailBadgeText}>
+                                {item.level}
+                              </ThemedText>
+                            </View>
+                            <View
+                              style={[
+                                styles.dayDetailBadge,
+                                styles.dayDetailBadgeXP,
+                              ]}
+                            >
+                              <ThemedText
+                                style={[
+                                  styles.dayDetailBadgeText,
+                                  styles.dayDetailBadgeTextXP,
+                                ]}
+                              >
+                                +{item.xp ?? 5} XP
+                              </ThemedText>
+                            </View>
+                          </View>
+                        </View>
+                        <ThemedText style={styles.dayDetailPrompt}>
+                          {item.title}
+                        </ThemedText>
+                        <ThemedText style={styles.dayDetailGrammar}>
+                          {item.grammar_focus}
+                        </ThemedText>
+                        <ThemedText style={styles.dayDetailTime}>
+                          {new Date(item.recorded_at).toLocaleTimeString(
+                            "en-US",
+                            {
+                              timeZone: "Asia/Manila",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            },
+                          )}
+                        </ThemedText>
+                      </View>
+                    ))}
+                  </ScrollView>
+                )}
+              </View>
+            </View>
+          </Modal>
+        )}
 
-      <AlertDialog
-        visible={showExitDialog}
-        type="warning"
-        title="Exit App"
-        message="Are you sure you want to exit? Your progress will be saved."
-        confirmText="Exit"
-        cancelText="Cancel"
-        onConfirm={handleExit}
-        onCancel={handleCancel}
-      />
+        <NavBar />
 
-      <TutorialModal
-        visible={showTutorial}
-        welcomingPhrase={welcomingPhrase}
-        onClose={() => setShowTutorial(false)}
-      />
-    </ThemedView>
+        <AlertDialog
+          visible={showExitDialog}
+          type="warning"
+          title="Exit App"
+          message="Are you sure you want to exit? Your progress will be saved."
+          confirmText="Exit"
+          cancelText="Cancel"
+          onConfirm={handleExit}
+          onCancel={handleCancel}
+        />
+
+        <TutorialModal
+          visible={showTutorial}
+          welcomingPhrase={welcomingPhrase}
+          onClose={() => setShowTutorial(false)}
+        />
+      </ThemedView>
+    </ScreenMotion>
   );
 }
 

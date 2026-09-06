@@ -1,6 +1,10 @@
 import { usePathname, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
+import Animated, {
+    useAnimatedStyle,
+    withSpring,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
@@ -38,15 +42,19 @@ export default function NavBar() {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
-  const bottomPadding = Math.max(insets.bottom, Platform.OS === "ios" ? 20 : 12);
-  const indicatorOffset = -((bottomPadding - 20) + 10);
+  const bottomPadding = Math.max(
+    insets.bottom,
+    Platform.OS === "ios" ? 20 : 12,
+  );
+  const indicatorOffset = -(bottomPadding - 20 + 10);
 
   return (
     <View
       style={[
         styles.container,
         { paddingBottom: bottomPadding, minHeight: 64 + bottomPadding },
-      ]}>
+      ]}
+    >
       {NAV_ITEMS.map((item) => {
         const isActive = pathname === item.route;
 
@@ -54,40 +62,70 @@ export default function NavBar() {
           <Pressable
             key={item.route}
             style={styles.itemContainer}
-            onPress={() => router.push(item.route)}
+            onPress={() => router.push(item.route as any)}
           >
             {({ pressed }) => (
-              <View
-                style={[
-                  styles.item,
-                  isActive && styles.itemActive,
-                  pressed && !isActive && styles.itemPressed,
-                ]}
-              >
-                <View style={styles.iconWrapper}>
-                  <SymbolView
-                    name={item.name}
-                    size={24}
-                    tintColor={
-                      isActive
-                        ? "#15803d"
-                        : Colors.light.onSurfaceVariant
-                    }
-                  />
-                </View>
-                <ThemedText
-                  type="labelSm"
-                  style={[styles.itemLabel, isActive && styles.itemLabelActive]}
-                >
-                  {item.label}
-                </ThemedText>
-                {isActive && <View style={[styles.activeIndicator, { bottom: indicatorOffset }]} />}
-              </View>
+              <NavItemContent
+                item={item}
+                isActive={isActive}
+                pressed={pressed}
+                indicatorOffset={indicatorOffset}
+              />
             )}
           </Pressable>
         );
       })}
     </View>
+  );
+}
+
+const AnimatedNavItem = Animated.createAnimatedComponent(View);
+
+function NavItemContent({
+  item,
+  isActive,
+  pressed,
+  indicatorOffset,
+}: {
+  item: (typeof NAV_ITEMS)[number];
+  isActive: boolean;
+  pressed: boolean;
+  indicatorOffset: number;
+}) {
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scale: withSpring(isActive ? 1 : 0.98, { damping: 16, stiffness: 180 }),
+      },
+    ],
+  }));
+
+  return (
+    <AnimatedNavItem
+      style={[
+        styles.item,
+        isActive && styles.itemActive,
+        pressed && !isActive && styles.itemPressed,
+        animatedStyle,
+      ]}
+    >
+      <View style={styles.iconWrapper}>
+        <SymbolView
+          name={item.name as any}
+          size={24}
+          tintColor={isActive ? "#15803d" : Colors.light.onSurfaceVariant}
+        />
+      </View>
+      <ThemedText
+        type="small"
+        style={[styles.itemLabel, isActive && styles.itemLabelActive]}
+      >
+        {item.label}
+      </ThemedText>
+      {isActive && (
+        <View style={[styles.activeIndicator, { bottom: indicatorOffset }]} />
+      )}
+    </AnimatedNavItem>
   );
 }
 

@@ -1,17 +1,22 @@
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { SymbolView } from "expo-symbols";
 import { useCallback, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
-import { SymbolView } from "expo-symbols";
 
+import { getTopicById } from "@/backend/Topic";
+import {
+    EXERCISES_PER_LEVEL,
+    getAllLevelProgressForTopic,
+    LevelProgressInfo,
+} from "@/backend/UserLevelProgress";
+import { getUserProfile } from "@/backend/UserProfile";
+import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { getTopicById } from "@/backend/Topic";
-import { getUserProfile } from "@/backend/UserProfile";
-import { getAllLevelProgressForTopic, LevelProgressInfo, EXERCISES_PER_LEVEL } from "@/backend/UserLevelProgress";
 import { getDatabase } from "@/database/database";
-import NavBar from "../(tabs)/navBar";
 import AppHeader from "../(tabs)/header";
+import NavBar from "../(tabs)/navBar";
 
 interface Topic {
   topic_id: number;
@@ -38,18 +43,35 @@ interface LevelDisplay {
   progressPercent: number;
 }
 
-const LEVEL_BASE: Record<string, Omit<LevelDisplay, "badgeColor" | "badgeText" | "badgeBg" | "activeDots" | "totalDots" | "progressPercent">> = {
+const LEVEL_BASE: Record<
+  string,
+  Omit<
+    LevelDisplay,
+    | "badgeColor"
+    | "badgeText"
+    | "badgeBg"
+    | "activeDots"
+    | "totalDots"
+    | "progressPercent"
+  >
+> = {
   beginner: {
     title: "Beginner",
-    description: "Basic vocabulary & simple phrases. Checking in and finding your gate.",
-    icon: { ios: "checkmark.circle", android: "check_circle", web: "check_circle" },
+    description:
+      "Basic vocabulary & simple phrases. Checking in and finding your gate.",
+    icon: {
+      ios: "checkmark.circle",
+      android: "check_circle",
+      web: "check_circle",
+    },
     iconBg: "#dcfce7",
     iconColor: "#15803d",
     progressColor: "#22c55e",
   },
   intermediate: {
     title: "Intermediate",
-    description: "Conversational dialogues. Handling delays, lost baggage, and security questions.",
+    description:
+      "Conversational dialogues. Handling delays, lost baggage, and security questions.",
     icon: { ios: "play.fill", android: "play_arrow", web: "play_arrow" },
     iconBg: "#dcfce7",
     iconColor: "#15803d",
@@ -57,8 +79,13 @@ const LEVEL_BASE: Record<string, Omit<LevelDisplay, "badgeColor" | "badgeText" |
   },
   advanced: {
     title: "Advanced",
-    description: "Complex dialogues & technical terms. Negotiating upgrades and resolving disputes.",
-    icon: { ios: "checkmark.circle", android: "check_circle", web: "check_circle" },
+    description:
+      "Complex dialogues & technical terms. Negotiating upgrades and resolving disputes.",
+    icon: {
+      ios: "checkmark.circle",
+      android: "check_circle",
+      web: "check_circle",
+    },
     iconBg: "#dcfce7",
     iconColor: "#15803d",
     progressColor: "#22c55e",
@@ -70,9 +97,10 @@ function buildLevelDisplay(
   progress: LevelProgressInfo | undefined,
 ): LevelDisplay {
   const base = LEVEL_BASE[level];
-  const total = progress?.totalCount && progress.totalCount > 0
-    ? progress.totalCount
-    : EXERCISES_PER_LEVEL;
+  const total =
+    progress?.totalCount && progress.totalCount > 0
+      ? progress.totalCount
+      : EXERCISES_PER_LEVEL;
   const completed = progress?.completedCount ?? 0;
   const percent = Math.min(100, Math.round((completed / total) * 100));
   const filledDots = Math.min(3, Math.round((completed / total) * 3));
@@ -125,7 +153,9 @@ export default function ExercisePage() {
   const router = useRouter();
   const [topicTitle, setTopicTitle] = useState<string>("Exercises");
   const [journeyId, setJourneyId] = useState<number | null>(null);
-  const [levelProgress, setLevelProgress] = useState<Record<string, LevelProgressInfo>>({});
+  const [levelProgress, setLevelProgress] = useState<
+    Record<string, LevelProgressInfo>
+  >({});
 
   useFocusEffect(
     useCallback(() => {
@@ -171,137 +201,138 @@ export default function ExercisePage() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <AppHeader />
+    <ScreenMotion>
+      <ThemedView style={styles.container}>
+        <AppHeader />
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <View style={styles.headerSection}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <SymbolView
-              name={{
-                ios: "chevron.left",
-                android: "arrow_back_ios",
-                web: "arrow_back_ios",
-              } as any}
-              size={24}
-              tintColor={Colors.light.onSurface}
-            />
-          </Pressable>
-          <ThemedText style={styles.pageTitle}>{topicTitle}</ThemedText>
-          <View style={styles.headerSpacer} />
-        </View>
-
-        <View style={styles.introSection}>
-          <View style={styles.iconContainer}>
-            <SymbolView
-              name={JOURNEY_ICONS[journeyId ?? 1]}
-              size={48}
-              tintColor={Colors.light.secondaryContainer}
-            />
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.headerSection}>
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <SymbolView
+                name={
+                  {
+                    ios: "chevron.left",
+                    android: "arrow_back_ios",
+                    web: "arrow_back_ios",
+                  } as any
+                }
+                size={24}
+                tintColor={Colors.light.onSurface}
+              />
+            </Pressable>
+            <ThemedText style={styles.pageTitle}>{topicTitle}</ThemedText>
+            <View style={styles.headerSpacer} />
           </View>
-          <ThemedText style={styles.introTitle}>Select Difficulty</ThemedText>
-          <ThemedText style={styles.introDescription}>
-            Choose a level that matches your comfort with{" "}
-            {topicTitle.toLowerCase()}.
-          </ThemedText>
-        </View>
 
-        <View style={styles.levelsSection}>
-          <ThemedText style={styles.sectionTitle}>Exercise Levels</ThemedText>
-          {LEVELS.map((level) => {
-            const meta = buildLevelDisplay(level, levelProgress[level]);
+          <View style={styles.introSection}>
+            <View style={styles.iconContainer}>
+              <SymbolView
+                name={JOURNEY_ICONS[journeyId ?? 1]}
+                size={48}
+                tintColor={Colors.light.secondaryContainer}
+              />
+            </View>
+            <ThemedText style={styles.introTitle}>Select Difficulty</ThemedText>
+            <ThemedText style={styles.introDescription}>
+              Choose a level that matches your comfort with{" "}
+              {topicTitle.toLowerCase()}.
+            </ThemedText>
+          </View>
 
-            return (
-              <View key={level} style={styles.levelCard}>
-                <View
-                  style={[
-                    styles.levelCardHeader,
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.levelIconCircle,
-                      { backgroundColor: meta.iconBg },
-                    ]}
-                  >
-                    <SymbolView
-                      name={meta.icon as any}
-                      size={28}
-                      tintColor={meta.iconColor}
-                    />
-                  </View>
-                  <View style={styles.levelContent}>
-                    <View style={styles.levelTitleRow}>
-                      <ThemedText style={styles.levelTitle}>
-                        {meta.title}
-                      </ThemedText>
-                      <View
-                        style={[
-                          styles.levelBadge,
-                          { backgroundColor: meta.badgeBg },
-                        ]}
-                      >
-                        <ThemedText
+          <View style={styles.levelsSection}>
+            <ThemedText style={styles.sectionTitle}>Exercise Levels</ThemedText>
+            {LEVELS.map((level) => {
+              const meta = buildLevelDisplay(level, levelProgress[level]);
+
+              return (
+                <View key={level} style={styles.levelCard}>
+                  <View style={[styles.levelCardHeader]}>
+                    <View
+                      style={[
+                        styles.levelIconCircle,
+                        { backgroundColor: meta.iconBg },
+                      ]}
+                    >
+                      <SymbolView
+                        name={meta.icon as any}
+                        size={28}
+                        tintColor={meta.iconColor}
+                      />
+                    </View>
+                    <View style={styles.levelContent}>
+                      <View style={styles.levelTitleRow}>
+                        <ThemedText style={styles.levelTitle}>
+                          {meta.title}
+                        </ThemedText>
+                        <View
                           style={[
-                            styles.levelBadgeText,
-                            { color: meta.badgeColor },
+                            styles.levelBadge,
+                            { backgroundColor: meta.badgeBg },
                           ]}
                         >
-                          {meta.badgeText}
-                        </ThemedText>
-                      </View>
-                    </View>
-                    <ThemedText style={styles.levelDescription}>
-                      {meta.description}
-                    </ThemedText>
-                    <View style={styles.progressDots}>
-                      {[0, 1, 2].map((dot) => {
-                        const filled = dot < meta.activeDots;
-                        return (
-                          <View
-                            key={dot}
+                          <ThemedText
                             style={[
-                              styles.progressDot,
-                              filled
-                                ? [
-                                    styles.progressDotFilled,
-                                    { backgroundColor: meta.progressColor },
-                                  ]
-                                : styles.progressDotEmpty,
+                              styles.levelBadgeText,
+                              { color: meta.badgeColor },
                             ]}
-                          />
-                        );
-                      })}
+                          >
+                            {meta.badgeText}
+                          </ThemedText>
+                        </View>
+                      </View>
+                      <ThemedText style={styles.levelDescription}>
+                        {meta.description}
+                      </ThemedText>
+                      <View style={styles.progressDots}>
+                        {[0, 1, 2].map((dot) => {
+                          const filled = dot < meta.activeDots;
+                          return (
+                            <View
+                              key={dot}
+                              style={[
+                                styles.progressDot,
+                                filled
+                                  ? [
+                                      styles.progressDotFilled,
+                                      { backgroundColor: meta.progressColor },
+                                    ]
+                                  : styles.progressDotEmpty,
+                              ]}
+                            />
+                          );
+                        })}
+                      </View>
+                      <ThemedText style={styles.progressPercentText}>
+                        {meta.progressPercent}% ({meta.activeDots}/
+                        {meta.totalDots} milestones)
+                      </ThemedText>
                     </View>
-                    <ThemedText style={styles.progressPercentText}>
-                      {meta.progressPercent}% ({meta.activeDots}/{meta.totalDots} milestones)
-                    </ThemedText>
+                  </View>
+
+                  <View style={styles.viewButtonContainer}>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.viewButton,
+                        pressed && styles.viewButtonPressed,
+                      ]}
+                      onPress={() => handleViewExercises(level)}
+                    >
+                      <ThemedText style={styles.viewButtonText}>
+                        View Exercises
+                      </ThemedText>
+                    </Pressable>
                   </View>
                 </View>
-
-                <View style={styles.viewButtonContainer}>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.viewButton,
-                      pressed && styles.viewButtonPressed,
-                    ]}
-                    onPress={() => handleViewExercises(level)}
-                  >
-                    <ThemedText style={styles.viewButtonText}>
-                      View Exercises
-                    </ThemedText>
-                  </Pressable>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-      </ScrollView>
-      <NavBar />
-    </ThemedView>
+              );
+            })}
+          </View>
+        </ScrollView>
+        <NavBar />
+      </ThemedView>
+    </ScreenMotion>
   );
 }
 

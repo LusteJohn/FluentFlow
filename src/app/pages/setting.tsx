@@ -1,15 +1,24 @@
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 
+import { seedUserLevelProgress } from "@/backend/UserLevelProgress";
+import AlertDialog from "@/components/alert-dialog";
+import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { getDatabase, importJourneyData, importTopicData, importTopicIntroData, importTopicVocabularyData, importExerciseData, importExerciseTokenData } from "@/database/database";
-import { seedUserLevelProgress } from "@/backend/UserLevelProgress";
-import AlertDialog from "@/components/alert-dialog";
-import NavBar from "../(tabs)/navBar";
+import {
+    getDatabase,
+    importExerciseData,
+    importExerciseTokenData,
+    importJourneyData,
+    importTopicData,
+    importTopicIntroData,
+    importTopicVocabularyData,
+} from "@/database/database";
 import AppHeader from "../(tabs)/header";
+import NavBar from "../(tabs)/navBar";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -28,22 +37,34 @@ export default function SettingsPage() {
       const db = await getDatabase();
 
       await importJourneyData();
-      const journeyCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM journeys");
+      const journeyCount = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM journeys",
+      );
 
       await importTopicData();
-      const topicCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM topics");
+      const topicCount = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM topics",
+      );
 
       await importTopicIntroData();
-      const topicIntroCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM topic_introduction");
+      const topicIntroCount = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM topic_introduction",
+      );
 
       await importTopicVocabularyData();
-      const topicVocabCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM topic_vocabulary");
+      const topicVocabCount = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM topic_vocabulary",
+      );
 
       await importExerciseData();
-      const exerciseCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM exercises");
+      const exerciseCount = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM exercises",
+      );
 
       await importExerciseTokenData();
-      const tokenCount = await db.getFirstAsync("SELECT COUNT(*) as count FROM exercise_tokens");
+      const tokenCount = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM exercise_tokens",
+      );
 
       await seedUserLevelProgress(db);
 
@@ -63,8 +84,7 @@ export default function SettingsPage() {
       setDialog({
         type: "error",
         title: "Import Failed",
-        message:
-          error?.message ?? "Failed to import data. Please try again.",
+        message: error?.message ?? "Failed to import data. Please try again.",
       });
     } finally {
       setLoading(false);
@@ -72,52 +92,56 @@ export default function SettingsPage() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <AppHeader />
-      <View style={styles.content}>
-        <ThemedText type="subtitle" style={styles.title}>
-          Settings
-        </ThemedText>
-
-        <View style={styles.section}>
-          <ThemedText type="smallBold" style={styles.sectionTitle}>
-            Data Management
+    <ScreenMotion>
+      <ThemedView style={styles.container}>
+        <AppHeader />
+        <View style={styles.content}>
+          <ThemedText type="subtitle" style={styles.title}>
+            Settings
           </ThemedText>
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              pressed && styles.buttonPressed,
-              loading && styles.buttonDisabled,
-            ]}
-            onPress={handleImportData}
-            disabled={loading}>
-            {loading ? (
-              <ActivityIndicator
-                size="small"
-                color={Colors.light.onPrimary}
-              />
-            ) : null}
-            <ThemedText type="default" style={styles.buttonText}>
-              {loading ? "Importing..." : "Import All Data"}
+
+          <View style={styles.section}>
+            <ThemedText type="smallBold" style={styles.sectionTitle}>
+              Data Management
             </ThemedText>
-          </Pressable>
-          <ThemedText type="small" style={styles.hint}>
-            This will import journey, topic, topic intro, topic vocabulary, exercise, and exercise token data into the database.
-          </ThemedText>
+            <Pressable
+              style={({ pressed }) => [
+                styles.button,
+                pressed && styles.buttonPressed,
+                loading && styles.buttonDisabled,
+              ]}
+              onPress={handleImportData}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator
+                  size="small"
+                  color={Colors.light.onPrimary}
+                />
+              ) : null}
+              <ThemedText type="default" style={styles.buttonText}>
+                {loading ? "Importing..." : "Import All Data"}
+              </ThemedText>
+            </Pressable>
+            <ThemedText type="small" style={styles.hint}>
+              This will import journey, topic, topic intro, topic vocabulary,
+              exercise, and exercise token data into the database.
+            </ThemedText>
+          </View>
         </View>
-      </View>
-      <NavBar />
+        <NavBar />
 
-      {dialog && (
-        <AlertDialog
-          visible={true}
-          type={dialog.type}
-          title={dialog.title}
-          message={dialog.message}
-          onConfirm={closeDialog}
-        />
-      )}
-    </ThemedView>
+        {dialog && (
+          <AlertDialog
+            visible={true}
+            type={dialog.type}
+            title={dialog.title}
+            message={dialog.message}
+            onConfirm={closeDialog}
+          />
+        )}
+      </ThemedView>
+    </ScreenMotion>
   );
 }
 
