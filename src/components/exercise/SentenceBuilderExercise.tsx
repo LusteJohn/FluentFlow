@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/contexts/theme-context";
@@ -63,11 +63,7 @@ export function SentenceBuilderExercise({
           <ThemedText style={styles.arrangedWordsLabel}>
             Your sentence
           </ThemedText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.arrangedWordsRow}
-          >
+          <View style={styles.arrangedWordsRow}>
             {selectedWords.map((word, idx) => (
               <Pressable
                 key={`${word.exercise_token_id}-${idx}`}
@@ -82,7 +78,7 @@ export function SentenceBuilderExercise({
                 </ThemedText>
               </Pressable>
             ))}
-          </ScrollView>
+          </View>
         </View>
       )}
     </View>
@@ -108,8 +104,6 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       borderRadius: 12,
       borderWidth: 1,
       borderColor: theme.outlineVariant,
-      marginRight: 8,
-      marginBottom: 8,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -142,8 +136,10 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     arrangedWordsRow: {
       flexDirection: "row",
+      flexWrap: "wrap",
       gap: 8,
       alignItems: "center",
+      justifyContent: "center",
     },
     arrangedWordBox: {
       paddingHorizontal: 12,
@@ -153,7 +149,6 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       borderRadius: 8,
       borderWidth: 1,
       borderColor: theme.secondaryContainer,
-      marginRight: 8,
       alignItems: "center",
       justifyContent: "center",
     },

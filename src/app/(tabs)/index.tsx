@@ -293,7 +293,7 @@ export default function HomeScreen() {
               <ThemedText style={styles.primaryButtonText}>Get Started</ThemedText>
               <SymbolView
                 name={{
-                  ios: "arrow_right",
+                  ios: "arrow.right",
                   android: "arrow_forward",
                   web: "arrow_forward",
                 }}
