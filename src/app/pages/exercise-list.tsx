@@ -779,9 +779,24 @@ export default function ExerciseListPage() {
             animationType="fade"
             onRequestClose={() => setShowCompletionModal(false)}
           >
-            <View style={styles.completionOverlay}>
-              <ScrollView contentContainerStyle={styles.completionContent}>
-                <View style={styles.completionIconContainer}>
+            <Animated.View
+              entering={FadeInUp.duration(300)
+                .easing(Easing.out(Easing.quad))
+                .delay(60)}
+              style={styles.completionOverlay}
+            >
+              <Animated.ScrollView
+                entering={FadeInUp.duration(300)
+                  .easing(Easing.out(Easing.quad))
+                  .delay(100)}
+                contentContainerStyle={styles.completionContent}
+              >
+                <Animated.View
+                  entering={FadeInUp.duration(280)
+                    .easing(Easing.out(Easing.quad))
+                    .delay(130)}
+                  style={styles.completionIconContainer}
+                >
                   <View style={styles.completionIconInner}>
                     <SymbolView
                       name={
@@ -795,16 +810,27 @@ export default function ExerciseListPage() {
                       tintColor={theme.primary}
                     />
                   </View>
-                </View>
+                </Animated.View>
 
-                <ThemedText style={styles.completionTitle}>
-                  Lesson Complete!
-                </ThemedText>
-                <ThemedText style={styles.completionSubtitle}>
-                  {topicTitle}
-                </ThemedText>
+                <Animated.View
+                  entering={FadeInUp.duration(280)
+                    .easing(Easing.out(Easing.quad))
+                    .delay(170)}
+                >
+                  <ThemedText style={styles.completionTitle}>
+                    Lesson Complete!
+                  </ThemedText>
+                  <ThemedText style={styles.completionSubtitle}>
+                    {topicTitle}
+                  </ThemedText>
+                </Animated.View>
 
-                <View style={styles.completionStatsGrid}>
+                <Animated.View
+                  entering={FadeInUp.duration(300)
+                    .easing(Easing.out(Easing.quad))
+                    .delay(210)}
+                  style={styles.completionStatsGrid}
+                >
                   <View style={styles.completionStatCard}>
                     <SymbolView
                       name={
@@ -843,9 +869,14 @@ export default function ExerciseListPage() {
                       Accuracy
                     </ThemedText>
                   </View>
-                </View>
+                </Animated.View>
 
-                <View style={styles.completionActions}>
+                <Animated.View
+                  entering={FadeInUp.duration(300)
+                    .easing(Easing.out(Easing.quad))
+                    .delay(250)}
+                  style={styles.completionActions}
+                >
                   <Pressable
                     style={styles.completionContinueButton}
                     onPress={handleContinue}
@@ -862,9 +893,9 @@ export default function ExerciseListPage() {
                       Review Mistakes
                     </ThemedText>
                   </Pressable>
-                </View>
-              </ScrollView>
-            </View>
+                </Animated.View>
+              </Animated.ScrollView>
+            </Animated.View>
           </Modal>
         )}
       </ThemedView>
