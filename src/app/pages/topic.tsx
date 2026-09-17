@@ -3,6 +3,10 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import Animated, {
+  Easing,
+  FadeInUp,
+} from "react-native-reanimated";
 
 import { getJourneyById } from "@/backend/Journey";
 import { getTopicsByJourneyId } from "@/backend/Topic";
@@ -126,6 +130,8 @@ export default function TopicPage() {
     }, [journey_id]),
   );
 
+  const bgImage = journey ? JOURNEY_BG_IMAGES[journey.journey_id] : null;
+
   const handleViewDetails = async (topicId: number) => {
     if (expandedTopic === topicId) {
       setExpandedTopic(null);
@@ -149,8 +155,6 @@ export default function TopicPage() {
       console.error("Failed to load vocabulary", error);
     }
   };
-
-  const bgImage = journey ? JOURNEY_BG_IMAGES[journey.journey_id] : null;
 
   return (
     <ThemedView style={styles.container}>
@@ -317,13 +321,21 @@ export default function TopicPage() {
                       </View>
                       {expandedTopic === topic.topic_id &&
                         topicVocabulary[topic.topic_id] && (
-                          <View style={styles.vocabularySection}>
+                          <Animated.View
+                            entering={FadeInUp.duration(280)
+                              .easing(Easing.out(Easing.quad))
+                              .delay(40)}
+                            style={styles.vocabularySection}
+                          >
                             <ThemedText style={styles.vocabularySectionTitle}>
                               Vocabulary
                             </ThemedText>
-                            {topicVocabulary[topic.topic_id].map((vocab) => (
-                              <View
+                            {topicVocabulary[topic.topic_id].map((vocab, index) => (
+                              <Animated.View
                                 key={vocab.topic_vocabulary_id}
+                                entering={FadeInUp.duration(240)
+                                  .easing(Easing.out(Easing.quad))
+                                  .delay(80 + index * 25)}
                                 style={styles.vocabularyItem}
                               >
                                 <View style={styles.vocabularyItemHeader}>
@@ -342,9 +354,9 @@ export default function TopicPage() {
                                 <ThemedText style={styles.vocabularyExample}>
                                   {vocab.example_sentence}
                                 </ThemedText>
-                              </View>
+                              </Animated.View>
                             ))}
-                          </View>
+                          </Animated.View>
                         )}
                     </>
                   )}
