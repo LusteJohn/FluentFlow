@@ -25,7 +25,7 @@ export default function IndexPage() {
           style={styles.logo}
           contentFit="contain"
         />
-        <ThemedText type="displayMobile" style={styles.title}>
+        <ThemedText type="title" style={styles.title}>
           A Situational English Learning App
         </ThemedText>
       </View>

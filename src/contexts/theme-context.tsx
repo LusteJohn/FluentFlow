@@ -5,16 +5,18 @@ import { Colors } from "@/constants/theme";
 import { getDatabase } from "@/database/database";
 
 type ThemeMode = "light" | "dark" | "system";
+type ResolvedTheme = "light" | "dark";
 
 interface ThemeContextValue {
   mode: ThemeMode;
-  resolvedTheme: ThemeMode;
-  theme: typeof Colors.light;
+  resolvedTheme: ResolvedTheme;
+  theme: (typeof Colors)[ResolvedTheme];
   setMode: (mode: ThemeMode) => Promise<void>;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   mode: "system",
+  resolvedTheme: "light",
   theme: Colors.light,
   setMode: async () => {},
 });
@@ -68,7 +70,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const resolvedTheme: "light" | "dark" =
+  const resolvedTheme: ResolvedTheme =
     mode === "system" ? (systemScheme === "dark" ? "dark" : "light") : mode;
 
   const setMode = async (newMode: ThemeMode) => {
