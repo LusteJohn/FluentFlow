@@ -1,5 +1,10 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import Animated, {
+  Easing,
+  FadeInUp,
+  FadeOutUp,
+} from "react-native-reanimated";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -489,10 +494,6 @@ export default function ExerciseListPage() {
                     EXERCISE_TYPE_LABELS[exercise.type] ?? exercise.type;
                   const exerciseTokens =
                     tokensByExercise[exercise.exercise_id] ?? [];
-                  const correctAnswer = getCorrectAnswer(
-                    exerciseTokens,
-                    exercise.type,
-                  );
                   const answerResult = answerResults[exercise.exercise_id];
 
                   const handleLetterChange = (pos: number, value: string) => {
@@ -541,8 +542,20 @@ export default function ExerciseListPage() {
                   };
 
                   return (
-                    <View style={styles.exerciseItem}>
-                      <View style={styles.exerciseHeader}>
+                    <Animated.View
+                      key={exercise.exercise_id}
+                      entering={FadeInUp.duration(300)
+                        .easing(Easing.out(Easing.quad))
+                        .delay(20)}
+                      exiting={FadeOutUp.duration(180)}
+                      style={styles.exerciseItem}
+                    >
+                      <Animated.View
+                        entering={FadeInUp.duration(260)
+                          .easing(Easing.out(Easing.quad))
+                          .delay(40)}
+                        style={styles.exerciseHeader}
+                      >
                         <ThemedText style={styles.exerciseNumber}>
                           #{exercise.order_index}
                         </ThemedText>
@@ -561,15 +574,21 @@ export default function ExerciseListPage() {
                             {typeLabel}
                           </ThemedText>
                         </View>
-                      </View>
-                      <ThemedText style={styles.exercisePrompt}>
-                        {exercise.prompt}
-                      </ThemedText>
-                      {exercise.context_sentence && (
-                        <ThemedText style={styles.exerciseContext}>
-                          {exercise.context_sentence}
+                      </Animated.View>
+                      <Animated.View
+                        entering={FadeInUp.duration(280)
+                          .easing(Easing.out(Easing.quad))
+                          .delay(90)}
+                      >
+                        <ThemedText style={styles.exercisePrompt}>
+                          {exercise.prompt}
                         </ThemedText>
-                      )}
+                        {exercise.context_sentence && (
+                          <ThemedText style={styles.exerciseContext}>
+                            {exercise.context_sentence}
+                          </ThemedText>
+                        )}
+                      </Animated.View>
                       {exercise.type === "sentence_builder" &&
                         exerciseTokens.length > 0 &&
                         (() => {
@@ -596,17 +615,12 @@ export default function ExerciseListPage() {
                             </View>
                           );
                         })()}
-                      {correctAnswer && (
-                        <View style={styles.answerReference}>
-                          <ThemedText style={styles.answerReferenceLabel}>
-                            Correct answer
-                          </ThemedText>
-                          <ThemedText style={styles.answerReferenceText}>
-                            {correctAnswer}
-                          </ThemedText>
-                        </View>
-                      )}
-                      <View style={styles.answerForm}>
+                      <Animated.View
+                        entering={FadeInUp.duration(300)
+                          .easing(Easing.out(Easing.quad))
+                          .delay(140)}
+                        style={styles.answerForm}
+                      >
                         <View style={styles.answerHeader}>
                           <ThemedText style={styles.answerLabel}>
                             Your answer
@@ -665,7 +679,7 @@ export default function ExerciseListPage() {
                             {answerResult === true ? "Correct!" : "Submit"}
                           </ThemedText>
                         </Pressable>
-                      </View>
+                      </Animated.View>
                       {answerResult === true && (
                         <View style={styles.successBanner}>
                           <ThemedText style={styles.successBannerText}>
@@ -676,11 +690,11 @@ export default function ExerciseListPage() {
                       {answerResult === false && (
                         <View style={styles.errorBanner}>
                           <ThemedText style={styles.errorBannerText}>
-                            Incorrect. The correct answer is: {correctAnswer}
+                            Incorrect. Try again or review this exercise later.
                           </ThemedText>
                         </View>
                       )}
-                    </View>
+                    </Animated.View>
                   );
                 })()}
 
@@ -1025,27 +1039,6 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       color: theme.onSurfaceVariant,
       fontSize: 13,
       lineHeight: 18,
-    },
-    answerReference: {
-      gap: 4,
-      padding: 14,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: theme.primaryFixed,
-      backgroundColor: theme.primaryContainer,
-    },
-    answerReferenceLabel: {
-      color: theme.onPrimaryContainer,
-      fontSize: 12,
-      fontWeight: "700",
-      textTransform: "uppercase",
-      letterSpacing: 0.4,
-    },
-    answerReferenceText: {
-      color: theme.onPrimaryContainer,
-      fontSize: 17,
-      fontWeight: "700",
-      lineHeight: 24,
     },
     arrangedWordsContainer: {
       marginTop: 12,
