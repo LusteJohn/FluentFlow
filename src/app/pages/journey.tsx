@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 import {
     getAllJourneyProgressForUser,
@@ -57,45 +57,63 @@ export default function JourneyPage() {
   const router = useRouter();
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [journeyProgress, setJourneyProgress] = useState<
     Record<
       number,
       { totalExercises: number; completedExercises: number; percent: number }
     >
-    >({});
+  >({});
+
+  const loadJourneys = useCallback(async () => {
+    try {
+      const db = await getDatabase();
+      const result = await getAllJourneys(db);
+      setJourneys(result ?? []);
+
+      const profile = await getUserProfile(db);
+      if (profile) {
+        const progress = await getAllJourneyProgressForUser(
+          db,
+          profile.user_id,
+        );
+        setJourneyProgress(
+          (progress ?? {}) as Record<
+            number,
+            {
+              totalExercises: number;
+              completedExercises: number;
+              percent: number;
+            }
+          >,
+        );
+      } else {
+        setJourneyProgress({});
+      }
+    } catch (error) {
+      console.error("Failed to load journeys", error);
+      setJourneys([]);
+      setJourneyProgress({});
+    }
+  }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await loadJourneys();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
 
-      async function loadJourneys() {
+      async function loadData() {
+        setLoading(true);
         try {
-          const db = await getDatabase();
-          const result = await getAllJourneys(db);
-          if (isActive) {
-            setJourneys(result ?? []);
-          }
-          const profile = await getUserProfile(db);
-          if (isActive && profile) {
-            const progress = await getAllJourneyProgressForUser(
-              db,
-              profile.user_id,
-            );
-            if (isActive) {
-              setJourneyProgress(
-                (progress ?? {}) as Record<
-                  number,
-                  {
-                    totalExercises: number;
-                    completedExercises: number;
-                    percent: number;
-                  }
-                >,
-              );
-            }
-          } else if (isActive) {
-            setJourneyProgress({});
-          }
+          await loadJourneys();
         } catch (error) {
           console.error("Failed to load journeys", error);
           if (isActive) {
@@ -109,12 +127,12 @@ export default function JourneyPage() {
         }
       }
 
-      loadJourneys();
+      loadData();
 
       return () => {
         isActive = false;
       };
-    }, []),
+    }, [loadJourneys]),
   );
 
   const firstInProgressIndex = journeys.findIndex((j) => {
@@ -131,6 +149,14 @@ export default function JourneyPage() {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[theme.primary]}
+              tintColor={theme.primary}
+            />
+          }
         >
           <View style={styles.titleSection}>
             <ThemedText type="title" style={styles.pageTitle}>

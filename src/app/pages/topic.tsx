@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useCallback, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   FadeInUp,
@@ -93,41 +93,62 @@ export default function TopicPage() {
   const [topicVocabulary, setTopicVocabulary] = useState<
     Record<number, TopicVocabulary[]>
   >({});
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadData = useCallback(async () => {
+    const db = await getDatabase();
+    const journeyId = parseInt(journey_id ?? "1", 10);
+
+    const journeyResult = await getJourneyById(db, journeyId);
+    setJourney(journeyResult ?? null);
+
+    const topicsResult = await getTopicsByJourneyId(db, journeyId);
+    setTopics(topicsResult ?? []);
+
+    const intros: Record<number, TopicIntro> = {};
+    for (const topic of topicsResult ?? []) {
+      const introList = await getTopicIntrosByTopicId(db, topic.topic_id);
+      if (introList && introList.length > 0) {
+        intros[topic.topic_id] = introList[0];
+      }
+    }
+    setTopicIntros(intros);
+  }, [journey_id]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadData();
+    } catch (error) {
+      console.error("Failed to load topic data", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadData]);
 
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
 
-      async function loadData() {
+      async function fetchTopicData() {
         try {
-          const db = await getDatabase();
-          const journeyId = parseInt(journey_id ?? "1", 10);
-
-          const journeyResult = await getJourneyById(db, journeyId);
-          if (isActive) setJourney(journeyResult ?? null);
-
-          const topicsResult = await getTopicsByJourneyId(db, journeyId);
-          if (isActive) setTopics(topicsResult ?? []);
-
-          const intros: Record<number, TopicIntro> = {};
-          for (const topic of topicsResult ?? []) {
-            const introList = await getTopicIntrosByTopicId(db, topic.topic_id);
-            if (introList && introList.length > 0) {
-              intros[topic.topic_id] = introList[0];
-            }
-          }
-          if (isActive) setTopicIntros(intros);
+          await loadData();
         } catch (error) {
           console.error("Failed to load topic data", error);
+          if (isActive) {
+            setJourney(null);
+            setTopics([]);
+            setTopicIntros({});
+          }
         }
       }
 
-      loadData();
+      fetchTopicData();
 
       return () => {
         isActive = false;
       };
-    }, [journey_id]),
+    }, [loadData]),
   );
 
   const bgImage = journey ? JOURNEY_BG_IMAGES[journey.journey_id] : null;
@@ -163,6 +184,14 @@ export default function TopicPage() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.primary]}
+            tintColor={theme.primary}
+          />
+        }
       >
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
