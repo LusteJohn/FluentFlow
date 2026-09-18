@@ -40,6 +40,7 @@ import {
 import { upsertLevelProgressAfterExercise } from "@/backend/UserLevelProgress";
 import { getUserProfile } from "@/backend/UserProfile";
 import { FillBlankExercise } from "@/components/exercise/FillBlankExercise";
+import { ExerciseProgressIndicator } from "@/components/exercise/ExerciseProgressIndicator";
 import { SentenceBuilderExercise } from "@/components/exercise/SentenceBuilderExercise";
 import { SpellingExercise } from "@/components/exercise/SpellingExercise";
 import { ScreenMotion } from "@/components/screen-motion";
@@ -478,13 +479,15 @@ export default function ExerciseListPage() {
             )}
             {!loading && displayExercises.length > 0 && (
               <>
-                <View style={styles.progressIndicator}>
-                  <ThemedText style={styles.progressIndicatorText}>
-                    {reviewMode
-                      ? `Reviewing ${displayExercises.length} incorrect exercise${displayExercises.length !== 1 ? "s" : ""}`
-                      : `Exercise ${currentExerciseIndex + 1} of ${displayExercises.length}`}
-                  </ThemedText>
-                </View>
+                <ExerciseProgressIndicator
+                  current={currentExerciseIndex}
+                  total={displayExercises.length}
+                  label={
+                    reviewMode
+                      ? `Reviewing ${displayExercises.length} exercise${displayExercises.length !== 1 ? "s" : ""}`
+                      : undefined
+                  }
+                />
 
                 {(() => {
                   const exercise = displayExercises[currentExerciseIndex];
@@ -976,15 +979,6 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       color: theme.onSurfaceVariant,
       textAlign: "center",
       paddingVertical: 24,
-    },
-    progressIndicator: {
-      alignSelf: "center",
-      paddingVertical: 4,
-    },
-    progressIndicatorText: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: theme.onSurfaceVariant,
     },
     exerciseItem: {
       backgroundColor: theme.surfaceContainerLowest,
