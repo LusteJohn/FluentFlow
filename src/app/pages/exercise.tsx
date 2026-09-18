@@ -1,6 +1,14 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useMemo, useState } from "react";
+import Animated, {
+  Easing,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { getTopicById } from "@/backend/Topic";
@@ -202,10 +210,18 @@ export default function ExercisePage() {
     );
   };
 
+  const topicFullyCompleted = LEVELS.every(
+    (level) => levelProgress[level]?.status === "completed",
+  );
+
   return (
     <ScreenMotion>
       <ThemedView style={styles.container}>
         <AppHeader />
+
+        {topicFullyCompleted && (
+          <AnimatedCongratulationsBanner styles={styles} />
+        )}
 
         <ScrollView
           style={styles.scrollView}
@@ -335,6 +351,57 @@ export default function ExercisePage() {
         <NavBar />
       </ThemedView>
     </ScreenMotion>
+      );
+}
+
+function AnimatedCongratulationsBanner({
+  styles,
+}: {
+  styles: ReturnType<typeof createStyles>;
+}) {
+  const theme = useTheme();
+  const sparkleScale = useSharedValue(0);
+
+  useEffect(() => {
+    sparkleScale.value = withSequence(
+      withTiming(1.2, { duration: 300, easing: Easing.out(Easing.quad) }),
+      withTiming(1, { duration: 200, easing: Easing.inOut(Easing.quad) }),
+    );
+  }, [sparkleScale]);
+
+  const sparkleStyle = useAnimatedStyle(() => ({
+    opacity: sparkleScale.value,
+    transform: [{ scale: sparkleScale.value }],
+  }));
+
+  return (
+    <Animated.View
+      entering={FadeInUp.duration(400).easing(Easing.out(Easing.quad))}
+    >
+      <View
+        style={[
+          styles.congratsBanner,
+          { backgroundColor: theme.primaryContainer },
+        ]}
+      >
+        <Animated.View style={[styles.sparkleIcon, sparkleStyle]}>
+          <SymbolView
+            name={
+              {
+                ios: "sparkles",
+                android: "star_rate",
+                web: "star_rate",
+              } as any
+            }
+            size={20}
+            tintColor={theme.primary}
+          />
+        </Animated.View>
+        <ThemedText style={[styles.congratsText, { color: theme.primary }]}>
+          {"Congratulations! You've mastered all levels in this topic."}
+        </ThemedText>
+      </View>
+    </Animated.View>
   );
 }
 
@@ -523,6 +590,35 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       fontSize: 14,
       fontWeight: "700",
       lineHeight: 20,
+    },
+    congratsBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderRadius: 16,
+      marginHorizontal: 24,
+      marginBottom: 16,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    sparkleIcon: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.surface,
+    },
+    congratsText: {
+      fontSize: 14,
+      fontWeight: "600",
+      lineHeight: 20,
+      flex: 1,
     },
   });
 }

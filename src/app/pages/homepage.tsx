@@ -1,11 +1,12 @@
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   BackHandler,
   Modal,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -177,8 +178,9 @@ export default function HomePage() {
   const [weekOptions] = useState(getWeekOptions);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
   const [showWeekPicker, setShowWeekPicker] = useState(false);
-  const [userId, setUserId] = useState<number | null>(null);
+   const [userId, setUserId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showDayDetail, setShowDayDetail] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
   const [dayDetails, setDayDetails] = useState<DayDetailItem[]>([]);
@@ -223,7 +225,7 @@ export default function HomePage() {
     let cancelled = false;
     (async () => {
       try {
-        const [seen, imported] = await Promise.all([
+        const [seen] = await Promise.all([
           hasSeenTutorial(),
           isDataImported(),
         ]);
@@ -268,67 +270,141 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, []);
 
+  const loadAllData = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const db = await getDatabase();
+      const total = await getTotalEarnedXP(db, userId);
+      if (mountedRef.current) setTotalXP(total);
+    } catch (error) {
+      console.error("Failed to load total XP", error);
+    }
+    if (!mountedRef.current) return;
+    setLoading(true);
+    try {
+      const db = await getDatabase();
+      const week = weekOptions[selectedWeekIndex];
+      const rows = await getWeeklyProgress(db, userId, week.start, week.end);
+
+      const dayMap: Record<
+        number,
+        { completed_count: number; total_xp: number }
+      > = {};
+      for (let i = 0; i < 7; i++) {
+        dayMap[i] = { completed_count: 0, total_xp: 0 };
+      }
+
+      let maxXp = 1;
+      rows.forEach((row: any) => {
+        const dayNum = parseInt(row.day_of_week, 10);
+        dayMap[dayNum] = {
+          completed_count: row.completed_count ?? 0,
+          total_xp: row.total_xp ?? 0,
+        };
+        if ((row.total_xp ?? 0) > maxXp) maxXp = row.total_xp ?? 1;
+      });
+
+      const bars: WeeklyBar[] = DAY_LABELS.map((day, idx) => {
+        const xp = dayMap[idx]?.total_xp ?? 0;
+        const height = Math.max(4, Math.round((xp / maxXp) * 92));
+        return { day, height, dayIndex: idx };
+      });
+
+      if (mountedRef.current) setWeeklyBars(bars);
+    } catch (error) {
+      console.error("Failed to load weekly progress", error);
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  }, [userId, selectedWeekIndex, weekOptions]);
+
+  const typeIcons: Record<string, { icon: any; bg: string; color: string }> =
+    useMemo(
+      () => ({
+        sentence_builder: {
+          icon: {
+            ios: "puzzlepiece.fill",
+            android: "construction",
+            web: "construction",
+          },
+          bg: theme.tertiaryContainer,
+          color: theme.onTertiary,
+        },
+        spelling: {
+          icon: {
+            ios: "textformat",
+            android: "text_fields",
+            web: "text_fields",
+          },
+          bg: theme.primaryContainer,
+          color: theme.onPrimaryContainer,
+        },
+        fill_blank_spelling: {
+          icon: { ios: "textbox", android: "edit", web: "edit" },
+          bg: theme.surfaceContainer,
+          color: theme.onSurfaceVariant,
+        },
+      }),
+      [theme],
+    );
+
+  const mapRows = useCallback(
+    (rows: any[]): RecentExercise[] =>
+      rows.map((row: any) => {
+        const meta = typeIcons[row.type] ?? typeIcons.fill_blank_spelling;
+        return {
+          id: String(row.id),
+          type: row.type,
+          typeIcon: meta.icon,
+          typeIconBg: meta.bg,
+          typeIconColor: meta.color,
+          title: row.title,
+          status: "Completed" as const,
+          statusIcon: {
+            ios: "checkmark.circle.fill",
+            android: "check_circle",
+            web: "check_circle",
+          },
+          statusColor: theme.primary,
+          xp: `+${row.xp ?? 5} XP`,
+          xpColor: XP_COLOR,
+        };
+      }),
+    [typeIcons, theme],
+  );
+
   useEffect(() => {
     if (!userId) return;
 
-    async function loadTotalXP() {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAllData();
+  }, [loadAllData, userId]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadAllData();
+      setLoadingRecentPage(true);
       try {
         const db = await getDatabase();
-        const total = await getTotalEarnedXP(db, userId);
+        const [rows, total] = await Promise.all([
+          getRecentCompletedExercises(db, userId!, RECENT_PAGE_SIZE, 0),
+          getRecentCompletedExercisesCount(db, userId!),
+        ]);
         if (mountedRef.current) {
-          setTotalXP(total);
+          setRecentExercises(mapRows(rows));
+          setRecentTotalCount(total);
+          setRecentPage(1);
         }
       } catch (error) {
-        console.error("Failed to load total XP", error);
-      }
-    }
-
-    loadTotalXP();
-
-    async function loadWeeklyData() {
-      if (!mountedRef.current) return;
-      setLoading(true);
-      try {
-        const db = await getDatabase();
-        const week = weekOptions[selectedWeekIndex];
-        const rows = await getWeeklyProgress(db, userId, week.start, week.end);
-
-        const dayMap: Record<
-          number,
-          { completed_count: number; total_xp: number }
-        > = {};
-        for (let i = 0; i < 7; i++) {
-          dayMap[i] = { completed_count: 0, total_xp: 0 };
-        }
-
-        let maxXp = 1;
-        rows.forEach((row: any) => {
-          const dayNum = parseInt(row.day_of_week, 10);
-          dayMap[dayNum] = {
-            completed_count: row.completed_count ?? 0,
-            total_xp: row.total_xp ?? 0,
-          };
-          if ((row.total_xp ?? 0) > maxXp) maxXp = row.total_xp ?? 1;
-        });
-
-        const bars: WeeklyBar[] = DAY_LABELS.map((day, idx) => {
-          const xp = dayMap[idx]?.total_xp ?? 0;
-          const height = Math.max(4, Math.round((xp / maxXp) * 92));
-          return { day, height, dayIndex: idx };
-        });
-
-        if (mountedRef.current) {
-          setWeeklyBars(bars);
-        }
-      } catch (error) {
-        console.error("Failed to load weekly progress", error);
+        console.error("Failed to load recent exercises", error);
       } finally {
-        if (mountedRef.current) setLoading(false);
+        if (mountedRef.current) setLoadingRecentPage(false);
       }
+    } finally {
+      setRefreshing(false);
     }
-
-    loadWeeklyData();
-  }, [userId, selectedWeekIndex, weekOptions]);
+  }, [loadAllData, userId, mapRows]);
 
   const handleDayPress = async (dayIndex: number) => {
     if (!userId) return;
@@ -357,83 +433,31 @@ export default function HomePage() {
   useEffect(() => {
     if (!userId) return;
 
-    const typeIcons: Record<string, { icon: any; bg: string; color: string }> =
-      {
-        sentence_builder: {
-          icon: {
-            ios: "puzzlepiece.fill",
-            android: "construction",
-            web: "construction",
-          },
-          bg: theme.tertiaryContainer,
-          color: theme.onTertiary,
-        },
-        spelling: {
-          icon: {
-            ios: "textformat",
-            android: "text_fields",
-            web: "text_fields",
-          },
-          bg: theme.primaryContainer,
-          color: theme.onPrimaryContainer,
-        },
-        fill_blank_spelling: {
-          icon: { ios: "textbox", android: "edit", web: "edit" },
-          bg: theme.surfaceContainer,
-          color: theme.onSurfaceVariant,
-        },
-      };
-
-    const mapRows = (rows: any[]): RecentExercise[] =>
-      rows.map((row: any) => {
-        const meta = typeIcons[row.type] ?? typeIcons.fill_blank_spelling;
-        return {
-          id: String(row.id),
-          type: row.type,
-          typeIcon: meta.icon,
-          typeIconBg: meta.bg,
-          typeIconColor: meta.color,
-          title: row.title,
-          status: "Completed" as const,
-          statusIcon: {
-            ios: "checkmark.circle.fill",
-            android: "check_circle",
-            web: "check_circle",
-          },
-          statusColor: theme.primary,
-          xp: `+${row.xp ?? 5} XP`,
-          xpColor: XP_COLOR,
-        };
-      });
-
-    async function loadRecentPage(page: number) {
-      if (!mountedRef.current) return;
+    let cancelled = false;
+    (async () => {
+      if (cancelled) return;
       setLoadingRecentPage(true);
       try {
         const db = await getDatabase();
         const [rows, total] = await Promise.all([
-          getRecentCompletedExercises(
-            db,
-            userId!,
-            RECENT_PAGE_SIZE,
-            (page - 1) * RECENT_PAGE_SIZE,
-          ),
-          getRecentCompletedExercisesCount(db, userId!),
+          getRecentCompletedExercises(db, userId, RECENT_PAGE_SIZE, 0),
+          getRecentCompletedExercisesCount(db, userId),
         ]);
-        if (mountedRef.current) {
+        if (!cancelled && mountedRef.current) {
           setRecentExercises(mapRows(rows));
           setRecentTotalCount(total);
-          setRecentPage(page);
+          setRecentPage(1);
         }
       } catch (error) {
         console.error("Failed to load recent exercises", error);
       } finally {
-        if (mountedRef.current) setLoadingRecentPage(false);
+        if (!cancelled && mountedRef.current) setLoadingRecentPage(false);
       }
-    }
-
-    loadRecentPage(1);
-  }, [userId]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, mapRows]);
 
   const handlePageChange = (newPage: number) => {
     if (loadingRecentPage) return;
@@ -454,58 +478,7 @@ export default function HomePage() {
           (newPage - 1) * RECENT_PAGE_SIZE,
         );
         if (mountedRef.current) {
-          setRecentExercises(
-            rows.map((row: any) => {
-              const meta = (
-                {
-                  sentence_builder: {
-                    icon: {
-                      ios: "puzzlepiece.fill",
-                      android: "construction",
-                      web: "construction",
-                    },
-                    bg: theme.tertiaryContainer,
-                    color: theme.onTertiary,
-                  },
-                  spelling: {
-                    icon: {
-                      ios: "textformat",
-                      android: "text_fields",
-                      web: "text_fields",
-                    },
-                    bg: theme.primaryContainer,
-                    color: theme.onPrimaryContainer,
-                  },
-                  fill_blank_spelling: {
-                    icon: { ios: "textbox", android: "edit", web: "edit" },
-                    bg: theme.surfaceContainer,
-                    color: theme.onSurfaceVariant,
-                  },
-                } as Record<string, { icon: any; bg: string; color: string }>
-              )[row.type] ?? {
-                icon: { ios: "textbox", android: "edit", web: "edit" },
-                bg: theme.surfaceContainer,
-                color: theme.onSurfaceVariant,
-              };
-              return {
-                id: String(row.id),
-                type: row.type,
-                typeIcon: meta.icon,
-                typeIconBg: meta.bg,
-                typeIconColor: meta.color,
-                title: row.title,
-                status: "Completed" as const,
-                statusIcon: {
-                  ios: "checkmark.circle.fill",
-                  android: "check_circle",
-                  web: "check_circle",
-                },
-                statusColor: theme.primary,
-                xp: `+${row.xp ?? 5} XP`,
-                xpColor: XP_COLOR,
-              };
-            }),
-          );
+          setRecentExercises(mapRows(rows));
           setRecentPage(newPage);
         }
       } catch (error) {
@@ -646,6 +619,14 @@ export default function HomePage() {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[theme.primary]}
+              tintColor={theme.primary}
+            />
+          }
         >
           <View style={styles.statsSection}>
             <ThemedText style={styles.sectionTitle}>Your Stats</ThemedText>
