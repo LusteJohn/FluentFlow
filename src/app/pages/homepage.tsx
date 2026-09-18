@@ -1,5 +1,12 @@
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import Animated, {
+  FadeInUp,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   BackHandler,
@@ -20,6 +27,7 @@ import {
   getWeeklyProgressDetails,
 } from "@/backend/UserExerciseProgress";
 import { getUserProfile } from "@/backend/UserProfile";
+import { getAllJourneys, getAllJourneyProgressForUser } from "@/backend/Journey";
 import AlertDialog from "@/components/alert-dialog";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
@@ -75,6 +83,15 @@ interface RecentExercise {
   statusColor: string;
   xp: string;
   xpColor: string;
+}
+
+interface Journey {
+  journey_id: number;
+  title: string;
+  description: string;
+  icon: string;
+  bg_image: string;
+  order_index: number;
 }
 
 function getStatCards(theme: ReturnType<typeof useTheme>): StatCard[] {
@@ -178,13 +195,17 @@ export default function HomePage() {
   const [weekOptions] = useState(getWeekOptions);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
   const [showWeekPicker, setShowWeekPicker] = useState(false);
-   const [userId, setUserId] = useState<number | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showDayDetail, setShowDayDetail] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
   const [dayDetails, setDayDetails] = useState<DayDetailItem[]>([]);
   const [loadingDayDetails, setLoadingDayDetails] = useState(false);
+  const [journeys, setJourneys] = useState<Journey[]>([]);
+  const [journeyProgress, setJourneyProgress] = useState<
+    Record<number, { percent: number }>
+  >({});
   const RECENT_PAGE_SIZE = 5;
   const [recentPage, setRecentPage] = useState(1);
   const [recentTotalCount, setRecentTotalCount] = useState(0);
@@ -270,14 +291,29 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, []);
 
-  const loadAllData = useCallback(async () => {
+   const loadAllData = useCallback(async () => {
     if (!userId) return;
     try {
       const db = await getDatabase();
       const total = await getTotalEarnedXP(db, userId);
       if (mountedRef.current) setTotalXP(total);
+
+      const journeysResult = await getAllJourneys(db);
+      if (mountedRef.current) setJourneys(journeysResult ?? []);
+
+      const progress = await getAllJourneyProgressForUser(db, userId);
+      if (mountedRef.current) {
+        setJourneyProgress(
+          Object.fromEntries(
+            Object.entries(progress ?? {}).map(([key, val]) => [
+              Number(key),
+              val as { percent: number },
+            ]),
+          ),
+        );
+      }
     } catch (error) {
-      console.error("Failed to load total XP", error);
+      console.error("Failed to load total XP or journeys", error);
     }
     if (!mountedRef.current) return;
     setLoading(true);
@@ -405,6 +441,44 @@ export default function HomePage() {
       setRefreshing(false);
     }
   }, [loadAllData, userId, mapRows]);
+
+  const continueLearningJourney = useMemo(() => {
+    if (!journeys.length) return null;
+    const firstInProgress = journeys.find(
+      (j) => {
+        const p = journeyProgress[j.journey_id];
+        return !p || p.percent < 100;
+      },
+    );
+    return firstInProgress ?? null;
+  }, [journeys, journeyProgress]);
+
+  const progressAnim = useSharedValue(0);
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progressAnim.value}%`,
+  }));
+
+  const cardScale = useSharedValue(1);
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: cardScale.value }],
+  }));
+
+  useEffect(() => {
+    if (continueLearningJourney) {
+      const percent =
+        journeyProgress[continueLearningJourney.journey_id]?.percent ?? 0;
+      progressAnim.value = withTiming(percent, {
+        duration: 600,
+        easing: Easing.out(Easing.quad),
+      });
+    }
+  }, [continueLearningJourney, journeyProgress, progressAnim]);
+
+  const handleContinueLearning = () => {
+    if (continueLearningJourney) {
+      router.push(`/journey?topic_id=${continueLearningJourney.journey_id}` as any);
+    }
+  };
 
   const handleDayPress = async (dayIndex: number) => {
     if (!userId) return;
@@ -639,6 +713,81 @@ export default function HomePage() {
               </View>
             </View>
           </View>
+
+          {continueLearningJourney && (
+            <Animated.View
+              entering={FadeInUp.duration(400)
+                .easing(Easing.out(Easing.quad))
+                .delay(120)}
+              style={cardStyle}
+            >
+              <Pressable
+                style={styles.continueLearningCard}
+                onPress={handleContinueLearning}
+                onPressIn={() => {
+                  // eslint-disable-next-line react-hooks/immutability
+                  cardScale.value = withTiming(0.97, {
+                    duration: 80,
+                    easing: Easing.inOut(Easing.quad),
+                  });
+                }}
+                onPressOut={() => {
+                  // eslint-disable-next-line react-hooks/immutability
+                  cardScale.value = withTiming(1, {
+                    duration: 120,
+                    easing: Easing.inOut(Easing.quad),
+                  });
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`Continue learning ${continueLearningJourney.title}`}
+              >
+                <View style={styles.continueLearningContent}>
+                  <View style={styles.continueLearningText}>
+                    <ThemedText style={styles.continueLearningLabel}>
+                      Continue Learning
+                    </ThemedText>
+                    <ThemedText style={styles.continueLearningTitle}>
+                      {continueLearningJourney.title}
+                    </ThemedText>
+                  </View>
+                  <View style={styles.continueLearningProgress}>
+                    <View
+                      style={[
+                        styles.continueLearningProgressBarTrack,
+                        { backgroundColor: theme.surfaceContainer },
+                      ]}
+                    >
+                    <Animated.View
+                      style={[
+                        styles.continueLearningProgressBarFill,
+                        progressStyle,
+                        { backgroundColor: theme.primary },
+                      ]}
+                    />
+                    </View>
+                    <ThemedText style={styles.continueLearningProgressText}>
+                      {journeyProgress[continueLearningJourney.journey_id]
+                        ?.percent ?? 0}
+                      % Complete
+                    </ThemedText>
+                  </View>
+                </View>
+                <View style={styles.continueLearningArrow}>
+                  <SymbolView
+                    name={
+                      {
+                        ios: "chevron.right",
+                        android: "chevron_right",
+                        web: "chevron_right",
+                      } as any
+                    }
+                    size={20}
+                    tintColor={theme.primary}
+                  />
+                </View>
+              </Pressable>
+            </Animated.View>
+          )}
 
           <View style={styles.weeklySection}>
             <View style={styles.weeklyHeader}>
@@ -1418,6 +1567,62 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       justifyContent: "center",
       backgroundColor: "#dcfce7",
       marginTop: 8,
+    },
+    continueLearningSection: {
+      marginBottom: 20,
+    },
+    continueLearningCard: {
+      backgroundColor: theme.surfaceContainer,
+      borderRadius: 20,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 4,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    continueLearningContent: {
+      flex: 1,
+    },
+    continueLearningText: {
+      marginBottom: 10,
+    },
+    continueLearningLabel: {
+      fontSize: 12,
+      fontWeight: "600",
+      color: theme.onSurfaceVariant,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    continueLearningTitle: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: theme.primary,
+    },
+    continueLearningProgress: {
+      gap: 6,
+    },
+    continueLearningProgressBarTrack: {
+      height: 6,
+      borderRadius: 3,
+      overflow: "hidden",
+    },
+    continueLearningProgressBarFill: {
+      height: "100%",
+      borderRadius: 3,
+    },
+    continueLearningProgressText: {
+      fontSize: 12,
+      color: theme.onSurfaceVariant,
+      fontWeight: "500",
+    },
+    continueLearningArrow: {
+      marginLeft: 12,
     },
   });
 }
