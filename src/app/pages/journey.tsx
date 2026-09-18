@@ -1,6 +1,14 @@
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import Animated, {
+  Easing,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import {
@@ -54,7 +62,7 @@ export default function JourneyPage() {
       number,
       { totalExercises: number; completedExercises: number; percent: number }
     >
-  >({});
+    >({});
 
   useFocusEffect(
     useCallback(() => {
@@ -158,130 +166,25 @@ export default function JourneyPage() {
               const bgImage = JOURNEY_BG_IMAGES[journey.journey_id];
 
               return (
-                <Pressable
+                <JourneyPressable
                   key={journey.journey_id}
-                  style={({ pressed }) => [
-                    styles.pathNodeContainer,
-                    !isLocked && pressed && { opacity: 0.9 },
-                  ]}
+                  journeyIndex={index}
                   onPress={() =>
                     !isLocked &&
                     router.push(`/pages/topic?journey_id=${journey.journey_id}`)
                   }
-                >
-                  <View
-                    style={[
-                      styles.pathNode,
-                      isCompleted && styles.nodeCompleted,
-                      isInProgress && styles.nodeInProgress,
-                      isLocked && styles.nodeLocked,
-                      {
-                        width: nodeSize,
-                        height: nodeSize,
-                        borderRadius: nodeSize / 2,
-                      },
-                    ]}
-                  >
-                    {journey.title in JOURNEY_IMAGES && (
-                      <Image
-                        source={JOURNEY_IMAGES[journey.title]}
-                        style={[
-                          styles.nodeImage,
-                          isLocked && styles.nodeImageLocked,
-                          { width: iconSize, height: iconSize },
-                        ]}
-                        contentFit="contain"
-                      />
-                    )}
-
-                    {isCompleted && (
-                      <View style={styles.statusBadge}>
-                        <ThemedText style={styles.statusBadgeText}>
-                          ✓
-                        </ThemedText>
-                      </View>
-                    )}
-                    {isLocked && (
-                      <View style={styles.lockBadge}>
-                        <ThemedText style={styles.lockBadgeText}>🔒</ThemedText>
-                      </View>
-                    )}
-                  </View>
-
-                  <View
-                    style={[
-                      styles.nodeCard,
-                      (isCompleted || isInProgress) && styles.nodeCardActive,
-                      isLocked && styles.nodeCardLocked,
-                    ]}
-                  >
-                    {bgImage && (
-                      <View
-                        style={[
-                          styles.cardImagePlaceholder,
-                          isCompleted && styles.cardImageCompleted,
-                          isLocked && styles.cardImageLocked,
-                        ]}
-                      >
-                        <Image
-                          source={bgImage}
-                          style={[
-                            styles.cardImage,
-                            isCompleted && styles.cardImageCompletedInner,
-                            isLocked && styles.cardImageLockedInner,
-                          ]}
-                          contentFit="cover"
-                        />
-                      </View>
-                    )}
-                    <View style={styles.cardContent}>
-                      <ThemedText
-                        type={isCompleted || isInProgress ? "title" : "small"}
-                        style={[
-                          styles.cardTitle,
-                          isLocked && styles.cardTitleLocked,
-                        ]}
-                      >
-                        {journey.title}
-                      </ThemedText>
-                      {isCompleted && (
-                        <ThemedText type="small" style={styles.cardStatus}>
-                          Mastered
-                        </ThemedText>
-                      )}
-                      {(isInProgress || isCompleted) && (
-                        <View style={styles.progressContainer}>
-                          <View style={styles.progressTrack}>
-                            <View
-                              style={[
-                                styles.progressFill,
-                                { width: `${percent}%` },
-                              ]}
-                            />
-                          </View>
-                          <ThemedText type="small" style={styles.progressText}>
-                            {percent}% Complete (
-                            {progress?.completedExercises ?? 0}/
-                            {progress?.totalExercises ?? 0})
-                          </ThemedText>
-                        </View>
-                      )}
-                      {isNotStarted && !isLocked && (
-                        <ThemedText type="small" style={styles.cardStatus}>
-                          Not started yet
-                        </ThemedText>
-                      )}
-                      {isLocked && (
-                        <ThemedText
-                          type="small"
-                          style={styles.cardStatusLocked}
-                        >
-                          Complete previous to unlock
-                        </ThemedText>
-                      )}
-                    </View>
-                  </View>
-                </Pressable>
+                  isLockedState={isLocked}
+                  styles={styles}
+                  journey={journey}
+                  progress={progress}
+                  percent={percent}
+                  isCompleted={isCompleted}
+                  isInProgress={isInProgress}
+                  isNotStarted={isNotStarted}
+                  nodeSize={nodeSize}
+                  iconSize={iconSize}
+                  bgImage={bgImage}
+                />
               );
             })}
           </View>
@@ -290,6 +193,190 @@ export default function JourneyPage() {
         <NavBar />
       </ThemedView>
     </ScreenMotion>
+  );
+}
+
+interface JourneyPressableProps {
+  journeyIndex: number;
+  onPress: () => void;
+  isLockedState: boolean;
+  styles: ReturnType<typeof createStyles>;
+  journey: Journey;
+  progress: { totalExercises: number; completedExercises: number; percent: number } | undefined;
+  percent: number;
+  isCompleted: boolean;
+  isInProgress: boolean;
+  isNotStarted: boolean;
+  nodeSize: number;
+  iconSize: number;
+  bgImage: any;
+}
+
+function JourneyPressable({
+  journeyIndex,
+  onPress,
+  isLockedState,
+  styles,
+  journey,
+  progress,
+  percent,
+  isCompleted,
+  isInProgress,
+  isNotStarted,
+  nodeSize,
+  iconSize,
+  bgImage,
+}: JourneyPressableProps) {
+  const progressAnim = useSharedValue(0);
+  const isCompletedRef = useRef(isCompleted);
+  const completedScale = useSharedValue(0);
+
+  useEffect(() => {
+    progressAnim.value = withTiming(
+      isCompleted || isInProgress ? percent / 100 : 0,
+      { duration: 300, easing: Easing.out(Easing.cubic) },
+    );
+
+    if (isCompleted && !isCompletedRef.current) {
+      completedScale.value = withSequence(
+        withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) }),
+      );
+    }
+    isCompletedRef.current = isCompleted;
+  }, [percent, isCompleted, isInProgress, progressAnim, completedScale]);
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progressAnim.value * 100}%`,
+  }));
+
+  const checkmarkStyle = useAnimatedStyle(() => {
+    const s = completedScale.value;
+    return {
+      opacity: s,
+      transform: [{ scale: s }],
+    };
+  });
+
+  return (
+    <Animated.View
+      entering={FadeInUp.duration(450)
+        .easing(Easing.out(Easing.quad))
+        .delay(80 + journeyIndex * 60)}
+    >
+      <Pressable
+        style={({ pressed }) => [
+          styles.pathNodeContainer,
+          !isLockedState && pressed && { opacity: 0.9 },
+        ]}
+        onPress={onPress}
+        disabled={isLockedState}
+      >
+        <View
+          style={[
+            styles.pathNode,
+            isCompleted && styles.nodeCompleted,
+            isInProgress && styles.nodeInProgress,
+            isLockedState && styles.nodeLocked,
+            {
+              width: nodeSize,
+              height: nodeSize,
+              borderRadius: nodeSize / 2,
+            },
+          ]}
+        >
+          {journey.title in JOURNEY_IMAGES && (
+            <Image
+              source={JOURNEY_IMAGES[journey.title]}
+              style={[
+                styles.nodeImage,
+                isLockedState && styles.nodeImageLocked,
+                { width: iconSize, height: iconSize },
+              ]}
+              contentFit="contain"
+            />
+          )}
+
+          {isCompleted && (
+            <Animated.View style={[styles.statusBadge, checkmarkStyle]}>
+              <ThemedText style={styles.statusBadgeText}>✓</ThemedText>
+            </Animated.View>
+          )}
+          {isLockedState && (
+            <View style={styles.lockBadge}>
+              <ThemedText style={styles.lockBadgeText}>🔒</ThemedText>
+            </View>
+          )}
+        </View>
+
+        <View
+          style={[
+            styles.nodeCard,
+            (isCompleted || isInProgress) && styles.nodeCardActive,
+            isLockedState && styles.nodeCardLocked,
+          ]}
+        >
+          {bgImage && (
+            <View
+              style={[
+                styles.cardImagePlaceholder,
+                isCompleted && styles.cardImageCompleted,
+                isLockedState && styles.cardImageLocked,
+              ]}
+            >
+              <Image
+                source={bgImage}
+                style={[
+                  styles.cardImage,
+                  isCompleted && styles.cardImageCompletedInner,
+                  isLockedState && styles.cardImageLockedInner,
+                ]}
+                contentFit="cover"
+              />
+            </View>
+          )}
+          <View style={styles.cardContent}>
+            <ThemedText
+              type={isCompleted || isInProgress ? "title" : "small"}
+              style={[
+                styles.cardTitle,
+                isLockedState && styles.cardTitleLocked,
+              ]}
+            >
+              {journey.title}
+            </ThemedText>
+            {isCompleted && (
+              <ThemedText type="small" style={styles.cardStatus}>
+                Mastered
+              </ThemedText>
+            )}
+            {(isInProgress || isCompleted) && (
+              <View style={styles.progressContainer}>
+                <View style={styles.progressTrack}>
+                  <Animated.View
+                    style={[styles.progressFill, progressStyle]}
+                  />
+                </View>
+                <ThemedText type="small" style={styles.progressText}>
+                  {percent}% Complete (
+                  {progress?.completedExercises ?? 0}/
+                  {progress?.totalExercises ?? 0})
+                </ThemedText>
+              </View>
+            )}
+            {isNotStarted && !isLockedState && (
+              <ThemedText type="small" style={styles.cardStatus}>
+                Not started yet
+              </ThemedText>
+            )}
+            {isLockedState && (
+              <ThemedText type="small" style={styles.cardStatusLocked}>
+                Complete previous to unlock
+              </ThemedText>
+            )}
+          </View>
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 }
 

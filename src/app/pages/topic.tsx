@@ -230,7 +230,13 @@ export default function TopicPage() {
               const iconName = TOPIC_ICONS[index % TOPIC_ICONS.length];
 
               return (
-                <View key={topic.topic_id} style={styles.exampleCard}>
+                <Animated.View
+                  key={topic.topic_id}
+                  entering={FadeInUp.duration(350)
+                    .easing(Easing.out(Easing.quad))
+                    .delay(60 + index * 50)}
+                  style={styles.exampleCard}
+                >
                   <View style={styles.exampleCardHeader}>
                     <View
                       style={[
@@ -360,7 +366,7 @@ export default function TopicPage() {
                         )}
                     </>
                   )}
-                </View>
+                </Animated.View>
               );
             })}
           </View>
