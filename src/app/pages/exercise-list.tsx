@@ -109,6 +109,8 @@ export default function ExerciseListPage() {
   );
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [showMistakesCorrectedModal, setShowMistakesCorrectedModal] =
+    useState(false);
   const [reviewMode, setReviewMode] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
 
@@ -356,7 +358,7 @@ export default function ExerciseListPage() {
         if (remaining.length <= 1) {
           setTimeout(() => {
             setReviewMode(false);
-            Alert.alert("Great job!", "You've corrected all your mistakes!");
+            setShowMistakesCorrectedModal(true);
           }, 300);
         }
       }
@@ -901,6 +903,66 @@ export default function ExerciseListPage() {
             </Animated.View>
           </Modal>
         )}
+
+        {showMistakesCorrectedModal && (
+          <Modal
+            visible={showMistakesCorrectedModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowMistakesCorrectedModal(false)}
+          >
+            <Animated.View
+              entering={FadeInUp.duration(300)
+                .easing(Easing.out(Easing.quad))
+                .delay(60)}
+              style={styles.mistakesCorrectedOverlay}
+            >
+              <Animated.View
+                entering={FadeInUp.duration(300)
+                  .easing(Easing.out(Easing.quad))
+                  .delay(130)}
+                style={styles.mistakesCorrectedContent}
+              >
+                <Animated.View
+                  entering={FadeInUp.duration(280)
+                    .easing(Easing.out(Easing.quad))
+                    .delay(100)}
+                  style={styles.mistakesCorrectedIconContainer}
+                >
+                  <View style={styles.mistakesCorrectedIconInner}>
+                    <SymbolView
+                      name={
+                        {
+                          ios: "checkmark.circle.fill",
+                          android: "check_circle",
+                          web: "check_circle",
+                        } as any
+                      }
+                      size={48}
+                      tintColor={theme.primary}
+                    />
+                  </View>
+                </Animated.View>
+
+                <ThemedText style={styles.mistakesCorrectedTitle}>
+                  All Mistakes Corrected!
+                </ThemedText>
+                <ThemedText style={styles.mistakesCorrectedSubtitle}>
+                  Great job! You{`'`}ve reviewed and corrected all your mistakes.
+                </ThemedText>
+
+                <Pressable
+                  style={styles.mistakesCorrectedButton}
+                  onPress={() => setShowMistakesCorrectedModal(false)}
+                >
+                  <ThemedText style={styles.mistakesCorrectedButtonText}>
+                    Continue
+                  </ThemedText>
+                </Pressable>
+              </Animated.View>
+            </Animated.View>
+          </Modal>
+        )}
       </ThemedView>
     </ScreenMotion>
   );
@@ -1279,6 +1341,62 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     completionReviewButtonText: {
       color: theme.primary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    mistakesCorrectedOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24,
+    },
+    mistakesCorrectedContent: {
+      backgroundColor: theme.surface,
+      borderRadius: 24,
+      padding: 32,
+      alignItems: "center",
+      justifyContent: "center",
+      maxWidth: 320,
+      width: "100%",
+    },
+    mistakesCorrectedIconContainer: {
+      marginBottom: 16,
+    },
+    mistakesCorrectedIconInner: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.primaryContainer,
+    },
+    mistakesCorrectedTitle: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: theme.primary,
+      textAlign: "center",
+      marginBottom: 8,
+    },
+    mistakesCorrectedSubtitle: {
+      fontSize: 15,
+      color: theme.onSurfaceVariant,
+      textAlign: "center",
+      marginBottom: 24,
+      lineHeight: 20,
+    },
+    mistakesCorrectedButton: {
+      backgroundColor: theme.primary,
+      paddingVertical: 14,
+      paddingHorizontal: 32,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      borderBottomWidth: 3,
+      borderBottomColor: theme.primaryContainer,
+    },
+    mistakesCorrectedButtonText: {
+      color: theme.onPrimary,
       fontSize: 16,
       fontWeight: "600",
     },
