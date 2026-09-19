@@ -150,6 +150,20 @@ export async function getTotalEarnedXP(db, userId) {
   return result?.total_xp ?? 0;
 }
 
+export async function getCompletedExerciseDates(db, userId) {
+  const result = await db.getAllAsync(
+    `SELECT COALESCE(p.completed_at, p.recorded_at) as completed_at
+     FROM user_exercise_progress p
+     WHERE p.user_id = ? AND p.is_completed = 1
+     ORDER BY COALESCE(p.completed_at, p.recorded_at) ASC`,
+    userId,
+  );
+
+  return (result ?? [])
+    .map((row) => getProgressDateKey(row))
+    .filter((dateKey) => dateKey !== null);
+}
+
 export async function createUserExerciseProgress(db, progress) {
   const result = await db.runAsync(
     "INSERT OR REPLACE INTO user_exercise_progress (user_id, exercise_id, is_completed, attempts_count, completed_at, recorded_at) VALUES (?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))",
