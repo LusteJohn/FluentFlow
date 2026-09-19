@@ -11,6 +11,8 @@ import {
 
 import { getExerciseTokensByExerciseId } from "@/backend/ExerciseTokens";
 import { getExerciseById } from "@/backend/TopicExercise";
+import { getUserProfile } from "@/backend/UserProfile";
+import { recordActivityToday } from "@/backend/UserStreak";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useTheme } from "@/contexts/theme-context";
@@ -156,6 +158,7 @@ export default function ExerciseSessionPage() {
         );
 
       if (isCorrect) {
+        recordActivityOnCorrect();
         router.back();
       } else {
         setSelectedTokens([]);
@@ -172,6 +175,7 @@ export default function ExerciseSessionPage() {
         spellingAnswer.trim().toLowerCase() === answer.toLowerCase();
 
       if (isCorrect) {
+        recordActivityOnCorrect();
         router.back();
       }
     } else if (exercise.type === "spelling") {
@@ -181,8 +185,21 @@ export default function ExerciseSessionPage() {
         spellingAnswer.trim().toLowerCase() === answer.toLowerCase();
 
       if (isCorrect) {
+        recordActivityOnCorrect();
         router.back();
       }
+    }
+  };
+
+  const recordActivityOnCorrect = async () => {
+    try {
+      const db = await getDatabase();
+      const profile = await getUserProfile(db);
+      if (profile) {
+        await recordActivityToday(db, profile.user_id);
+      }
+    } catch (error) {
+      console.error("Failed to record activity for streak", error);
     }
   };
 
