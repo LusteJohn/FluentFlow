@@ -1,6 +1,13 @@
 import { useFocusEffect } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useMemo, useState } from "react";
+import Animated, {
+  Easing,
+  FadeIn as AnimatedFadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -12,6 +19,14 @@ import {
   View,
 } from "react-native";
 
+import { getAllJourneyProgressForUser } from "@/backend/Journey";
+import { getAllTopics } from "@/backend/Topic";
+import {
+  getCompletedExerciseDates,
+  getRecentCompletedExercisesCount,
+  getTotalEarnedXP,
+} from "@/backend/UserExerciseProgress";
+import { getAllLevelProgressForTopic } from "@/backend/UserLevelProgress";
 import {
   createUserProfile,
   getUserProfile,
@@ -60,11 +75,127 @@ const MONTHS = [
 ];
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const LEVELS = ["beginner", "intermediate", "advanced"] as const;
+const STAT_ANIMATION_DURATION = 650;
+
+interface ProfileStats {
+  completedLessons: number;
+  badges: number;
+  learningProgress: number;
+  streak: number;
+  totalXP: number;
+}
+
+interface AnimatedStatValueProps {
+  value: number;
+  suffix?: string;
+  delay: number;
+  styles: ReturnType<typeof createStyles>;
+}
+
+interface AnimatedProgressBarProps {
+  value: number;
+  delay: number;
+  theme: ReturnType<typeof useTheme>;
+  styles: ReturnType<typeof createStyles>;
+}
+
+function getDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function calculateStreak(completionDateKeys: string[]): number {
+  const completionDates = new Set(completionDateKeys);
+  const today = new Date();
+  const todayKey = getDateKey(today);
+  const start = completionDates.has(todayKey)
+    ? today
+    : new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+  let streak = 0;
+  const current = new Date(start);
+
+  while (completionDates.has(getDateKey(current))) {
+    streak += 1;
+    current.setDate(current.getDate() - 1);
+  }
+
+  return streak;
+}
+
+function AnimatedStatValue({
+  value,
+  suffix = "",
+  delay,
+  styles,
+}: AnimatedStatValueProps) {
+  const animatedValue = useSharedValue(0);
+
+  useEffect(() => {
+    animatedValue.value = withTiming(value, {
+      duration: STAT_ANIMATION_DURATION,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [animatedValue, value]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    minWidth: 52,
+  }));
+
+  const valueStyle = useAnimatedStyle(() => {
+    const valueWidth = String(Math.round(animatedValue.value)).length + suffix.length;
+    return { width: Math.max(2, valueWidth) * 12 };
+  });
+
+  return (
+    <Animated.View style={[styles.statValueContainer, animatedStyle]}>
+      <Animated.Text
+        style={[styles.statValue, valueStyle]}
+        entering={AnimatedFadeIn.delay(delay).duration(240)}
+      >
+        {Math.round(animatedValue.value)}
+        {suffix}
+      </Animated.Text>
+    </Animated.View>
+  );
+}
+
+function AnimatedProgressBar({
+  value,
+  delay,
+  theme,
+  styles,
+}: AnimatedProgressBarProps) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withTiming(value / 100, {
+      duration: STAT_ANIMATION_DURATION,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [progress, value]);
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+  }));
+
+  return (
+    <View style={styles.progressTrack}>
+      <Animated.View
+        style={[styles.progressFill, { backgroundColor: theme.primary }, progressStyle]}
+        entering={AnimatedFadeIn.delay(delay).duration(240)}
+      />
+    </View>
+  );
+}
 
 export default function ProfilePage() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -88,9 +219,73 @@ export default function ProfilePage() {
       async function loadProfile() {
         try {
           const db = await getDatabase();
-          const existing = await getUserProfile(db);
+          const [existing, topics] = await Promise.all([
+            getUserProfile(db),
+            getAllTopics(db),
+          ]);
+
+          let stats: ProfileStats | null = null;
+          if (existing) {
+            const [
+              completedLessons,
+              completionDates,
+              totalXP,
+              journeyProgress,
+            ] = await Promise.all([
+              getRecentCompletedExercisesCount(db, existing.user_id),
+              getCompletedExerciseDates(db, existing.user_id),
+              getTotalEarnedXP(db, existing.user_id),
+              getAllJourneyProgressForUser(db, existing.user_id),
+            ]);
+            let completedLevels = 0;
+            let totalLevels = 0;
+
+            for (const topic of topics ?? []) {
+              const progress = await getAllLevelProgressForTopic(
+                db,
+                existing.user_id,
+                topic.topic_id,
+              );
+              for (const level of LEVELS) {
+                totalLevels += 1;
+                if (progress[level]?.status === "completed") {
+                  completedLevels += 1;
+                }
+              }
+            }
+
+            const totalJourneyExercises = Object.values(
+              journeyProgress ?? {},
+            ).reduce(
+              (sum, progress) => sum + (progress?.totalExercises ?? 0),
+              0,
+            );
+            const completedJourneyExercises = Object.values(
+              journeyProgress ?? {},
+            ).reduce(
+              (sum, progress) => sum + (progress?.completedExercises ?? 0),
+              0,
+            );
+            const learningProgress = totalJourneyExercises > 0
+              ? Math.round(
+                  (completedJourneyExercises / totalJourneyExercises) * 100,
+                )
+              : totalLevels > 0
+                ? Math.round((completedLevels / totalLevels) * 100)
+                : 0;
+
+            stats = {
+              completedLessons,
+              badges: completedLevels,
+              learningProgress,
+              streak: calculateStreak(completionDates),
+              totalXP,
+            };
+          }
+
           if (isActive) {
             setProfile(existing);
+            setProfileStats(stats);
             if (existing) {
               setFirstname(existing.firstname ?? "");
               setMiddlename(existing.middlename ?? "");
@@ -223,6 +418,13 @@ export default function ProfilePage() {
   const fullName = [firstname, middlename, lastname, nameExt]
     .filter(Boolean)
     .join(" ");
+  const stats = profileStats ?? {
+    completedLessons: 0,
+    badges: 0,
+    learningProgress: 0,
+    streak: 0,
+    totalXP: 0,
+  };
 
   if (loading) {
     return (
@@ -277,6 +479,64 @@ export default function ProfilePage() {
                 </ThemedText>
               )}
             </View>
+
+            {profileStats && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <ThemedText
+                    type="title"
+                    style={styles.sectionTitle}
+                  >
+                    Learning Summary
+                  </ThemedText>
+                </View>
+
+                <View style={styles.statGrid}>
+                  <AnimatedStatValue
+                    value={stats.completedLessons}
+                    delay={80}
+                    styles={styles}
+                  />
+                  <AnimatedStatValue
+                    value={stats.totalXP}
+                    suffix=" XP"
+                    delay={160}
+                    styles={styles}
+                  />
+                  <AnimatedStatValue
+                    value={stats.badges}
+                    delay={240}
+                    styles={styles}
+                  />
+                  <AnimatedStatValue
+                    value={stats.streak}
+                    suffix=" day"
+                    delay={320}
+                    styles={styles}
+                  />
+                </View>
+
+                <View style={styles.statLabels}>
+                  <ThemedText style={styles.statLabel}>Completed lessons</ThemedText>
+                  <ThemedText style={styles.statLabel}>Total XP</ThemedText>
+                  <ThemedText style={styles.statLabel}>Badges</ThemedText>
+                  <ThemedText style={styles.statLabel}>Day streak</ThemedText>
+                </View>
+
+                <View style={styles.progressHeader}>
+                  <ThemedText style={styles.progressTitle}>Learning progress</ThemedText>
+                  <ThemedText style={styles.progressValue}>
+                    {stats.learningProgress}%
+                  </ThemedText>
+                </View>
+                <AnimatedProgressBar
+                  value={stats.learningProgress}
+                  delay={400}
+                  theme={theme}
+                  styles={styles}
+                />
+              </View>
+            )}
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
@@ -631,6 +891,64 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     sectionTitle: {
       color: theme.onSurface,
+    },
+    statGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 12,
+    },
+    statValueContainer: {
+      flexBasis: "45%",
+      minHeight: 52,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.surfaceContainerLow,
+      borderRadius: 12,
+    },
+    statValue: {
+      color: theme.onSurface,
+      fontSize: 22,
+      fontWeight: "700",
+      textAlign: "center",
+    },
+    statLabels: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 12,
+      marginTop: -2,
+    },
+    statLabel: {
+      width: "45%",
+      color: theme.onSurfaceVariant,
+      fontSize: 12,
+      textAlign: "center",
+    },
+    progressHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: 8,
+    },
+    progressTitle: {
+      color: theme.onSurface,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    progressValue: {
+      color: theme.primary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    progressTrack: {
+      height: 8,
+      marginTop: 8,
+      overflow: "hidden",
+      borderRadius: 999,
+      backgroundColor: theme.surfaceContainerHigh,
+    },
+    progressFill: {
+      height: "100%",
+      borderRadius: 999,
     },
     form: {
       gap: 16,
