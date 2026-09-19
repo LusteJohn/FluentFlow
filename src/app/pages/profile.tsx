@@ -22,11 +22,11 @@ import {
 import { getAllJourneyProgressForUser } from "@/backend/Journey";
 import { getAllTopics } from "@/backend/Topic";
 import {
-  getCompletedExerciseDates,
   getRecentCompletedExercisesCount,
   getTotalEarnedXP,
 } from "@/backend/UserExerciseProgress";
 import { getAllLevelProgressForTopic } from "@/backend/UserLevelProgress";
+import { getStreakByUserId } from "@/backend/UserStreak";
 import {
   createUserProfile,
   getUserProfile,
@@ -98,31 +98,6 @@ interface AnimatedProgressBarProps {
   delay: number;
   theme: ReturnType<typeof useTheme>;
   styles: ReturnType<typeof createStyles>;
-}
-
-function getDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function calculateStreak(completionDateKeys: string[]): number {
-  const completionDates = new Set(completionDateKeys);
-  const today = new Date();
-  const todayKey = getDateKey(today);
-  const start = completionDates.has(todayKey)
-    ? today
-    : new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
-  let streak = 0;
-  const current = new Date(start);
-
-  while (completionDates.has(getDateKey(current))) {
-    streak += 1;
-    current.setDate(current.getDate() - 1);
-  }
-
-  return streak;
 }
 
 function AnimatedStatValue({
@@ -228,14 +203,14 @@ export default function ProfilePage() {
           if (existing) {
             const [
               completedLessons,
-              completionDates,
               totalXP,
               journeyProgress,
+              streakData,
             ] = await Promise.all([
               getRecentCompletedExercisesCount(db, existing.user_id),
-              getCompletedExerciseDates(db, existing.user_id),
               getTotalEarnedXP(db, existing.user_id),
               getAllJourneyProgressForUser(db, existing.user_id),
+              getStreakByUserId(db, existing.user_id),
             ]);
             let completedLevels = 0;
             let totalLevels = 0;
@@ -278,7 +253,7 @@ export default function ProfilePage() {
               completedLessons,
               badges: completedLevels,
               learningProgress,
-              streak: calculateStreak(completionDates),
+              streak: streakData?.current_streak ?? 0,
               totalXP,
             };
           }

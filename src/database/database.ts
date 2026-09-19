@@ -7,6 +7,7 @@ import { seedTopicBookmarks } from "@/backend/TopicBookmarks";
 import { seedTopicVocabulary } from "@/backend/TopicVocabulary";
 import { seedUserExerciseProgress } from "@/backend/UserExerciseProgress";
 import { seedUserProfiles } from "@/backend/UserProfile";
+import { seedUserStreaks } from "@/backend/UserStreak";
 import { Platform } from "react-native";
 
 let SQLite: any = null;
@@ -100,6 +101,24 @@ export async function getDatabase() {
           "CREATE TABLE IF NOT EXISTS user_level_progress (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, topic_id INTEGER NOT NULL, level TEXT NOT NULL CHECK (level IN ('beginner', 'intermediate', 'advanced')), completed_count INTEGER NOT NULL DEFAULT 0, is_completed INTEGER NOT NULL DEFAULT 0 CHECK (is_completed IN (0, 1)), completed_at TEXT, UNIQUE(user_id, topic_id, level), FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), FOREIGN KEY (topic_id) REFERENCES topics(topic_id))",
         );
 
+        /* ================================================================
+           user_streaks
+           One row per user. Tracks consecutive-day activity, not exercise
+           count. last_activity_date is stored as 'YYYY-MM-DD' (no time
+           component) so same-day comparisons are a simple string equality
+           check regardless of what time of day the user practices.
+           ================================================================ */
+        await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS user_streaks (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "user_id INTEGER NOT NULL UNIQUE, " +
+            "current_streak INTEGER NOT NULL DEFAULT 0, " +
+            "longest_streak INTEGER NOT NULL DEFAULT 0, " +
+            "last_activity_date TEXT, " +
+            "FOREIGN KEY (user_id) REFERENCES user_profiles(user_id)" +
+            ")"
+        );
+
         try {
           await db.runAsync(
             "ALTER TABLE topic_bookmarks RENAME TO topic_bookmarks_legacy",
@@ -188,6 +207,11 @@ export async function importUserProfileData() {
 export async function importUserExerciseProgressData() {
   const db = await getDatabase();
   await seedUserExerciseProgress(db);
+}
+
+export async function importUserStreaksData() {
+  const db = await getDatabase();
+  await seedUserStreaks(db);
 }
 
 export async function isDataImported(): Promise<boolean> {
