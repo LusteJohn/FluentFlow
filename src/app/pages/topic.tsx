@@ -6,12 +6,21 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-n
 import Animated, {
   Easing,
   FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from "react-native-reanimated";
+import React from "react";
 
 import { getJourneyById } from "@/backend/Journey";
+import {
+  getBookmarksByUserId,
+  toggleBookmark,
+} from "@/backend/TopicBookmarks";
 import { getTopicsByJourneyId } from "@/backend/Topic";
 import { getTopicIntrosByTopicId } from "@/backend/TopicIntro";
 import { getTopicVocabularyByTopicId } from "@/backend/TopicVocabulary";
+import { getUserProfile } from "@/backend/UserProfile";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useTheme } from "@/contexts/theme-context";
@@ -93,17 +102,48 @@ export default function TopicPage() {
   const [topicVocabulary, setTopicVocabulary] = useState<
     Record<number, TopicVocabulary[]>
   >({});
+  const [bookmarkedTopics, setBookmarkedTopics] = useState<Set<number>>(
+    () => new Set(),
+  );
+  const [bookmarkingTopics, setBookmarkingTopics] = useState<Set<number>>(
+    () => new Set(),
+  );
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
+    let isActive = true;
     const db = await getDatabase();
     const journeyId = parseInt(journey_id ?? "1", 10);
 
     const journeyResult = await getJourneyById(db, journeyId);
+    if (!isActive) return;
     setJourney(journeyResult ?? null);
 
     const topicsResult = await getTopicsByJourneyId(db, journeyId);
+    if (!isActive) return;
     setTopics(topicsResult ?? []);
+
+    const profile = await getUserProfile(db);
+    if (profile) {
+      const bookmarks = await getBookmarksByUserId(db, profile.user_id);
+      if (isActive) {
+        setBookmarkedTopics(
+          new Set(
+            (bookmarks ?? [])
+              .map((bookmark: any) => bookmark.topic_id)
+              .filter(
+                (topicId: number) =>
+                  typeof topicId === "number" &&
+                  (topicsResult ?? []).some(
+                    (topic: Topic) => topic.topic_id === topicId,
+                  ),
+              ),
+          ),
+        );
+      }
+    } else if (isActive) {
+      setBookmarkedTopics(new Set());
+    }
 
     const intros: Record<number, TopicIntro> = {};
     for (const topic of topicsResult ?? []) {
@@ -112,7 +152,9 @@ export default function TopicPage() {
         intros[topic.topic_id] = introList[0];
       }
     }
-    setTopicIntros(intros);
+    if (isActive) {
+      setTopicIntros(intros);
+    }
   }, [journey_id]);
 
   const handleRefresh = useCallback(async () => {
@@ -139,6 +181,8 @@ export default function TopicPage() {
             setJourney(null);
             setTopics([]);
             setTopicIntros({});
+            setBookmarkedTopics(new Set());
+            setBookmarkingTopics(new Set());
           }
         }
       }
@@ -152,6 +196,36 @@ export default function TopicPage() {
   );
 
   const bgImage = journey ? JOURNEY_BG_IMAGES[journey.journey_id] : null;
+
+  const handleToggleBookmark = async (topicId: number) => {
+    if (bookmarkingTopics.has(topicId)) return;
+
+    setBookmarkingTopics((prev) => new Set(prev).add(topicId));
+    try {
+      const db = await getDatabase();
+      const profile = await getUserProfile(db);
+      if (!profile) return;
+
+      const isBookmarked = await toggleBookmark(db, profile.user_id, topicId);
+      setBookmarkedTopics((prev) => {
+        const next = new Set(prev);
+        if (isBookmarked) {
+          next.add(topicId);
+        } else {
+          next.delete(topicId);
+        }
+        return next;
+      });
+    } catch (error) {
+      console.error("Failed to toggle topic bookmark", error);
+    } finally {
+      setBookmarkingTopics((prev) => {
+        const next = new Set(prev);
+        next.delete(topicId);
+        return next;
+      });
+    }
+};
 
   const handleViewDetails = async (topicId: number) => {
     if (expandedTopic === topicId) {
@@ -177,6 +251,27 @@ export default function TopicPage() {
     }
   };
 
+  function BookmarkIndicator({ theme }: { theme: ReturnType<typeof useTheme> }) {
+    const pulse = useSharedValue(1);
+
+    React.useEffect(() => {
+      pulse.value = withTiming(1.3, {
+        duration: 600,
+        easing: Easing.out(Easing.quad),
+      });
+    }, [pulse]);
+
+    const pulseStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: pulse.value }],
+    }));
+
+    return (
+      <Animated.View style={[styles.bookmarkIndicator, pulseStyle]}>
+        <ThemedText style={styles.bookmarkIndicatorText}>✓</ThemedText>
+      </Animated.View>
+    );
+  }
+
   return (
     <ThemedView style={styles.container}>
       <AppHeader />
@@ -200,13 +295,11 @@ export default function TopicPage() {
               onPress={() => router.push("/pages/journey")}
             >
               <SymbolView
-                name={
-                  {
-                    ios: "chevron.left",
-                    android: "arrow_back_ios",
-                    web: "arrow_back_ios",
-                  } as any
-                }
+                name={{
+                  ios: "chevron.left",
+                  android: "arrow_back_ios",
+                  web: "arrow_back_ios",
+                } as any}
                 size={24}
                 tintColor={theme.onSurface}
               />
@@ -215,13 +308,11 @@ export default function TopicPage() {
               {journey?.title ?? "Grammar Guide"}
             </ThemedText>
             <SymbolView
-              name={
-                {
-                  ios: "menu.book",
-                  android: "menu_book",
-                  web: "menu_book",
-                } as any
-              }
+              name={{
+                ios: "menu.book",
+                android: "menu_book",
+                web: "menu_book",
+              } as any}
               size={24}
               tintColor={theme.outline}
             />
@@ -282,6 +373,49 @@ export default function TopicPage() {
                     <ThemedText style={styles.exampleTitle}>
                       {topic.title}
                     </ThemedText>
+                    <Pressable
+                      accessibilityLabel={
+                        bookmarkedTopics.has(topic.topic_id)
+                          ? `Remove bookmark from ${topic.title}`
+                          : `Bookmark ${topic.title}`
+                      }
+                      accessibilityState={{
+                        checked: bookmarkedTopics.has(topic.topic_id),
+                      }}
+                      disabled={bookmarkingTopics.has(topic.topic_id)}
+                      onPress={() =>
+                        handleToggleBookmark(topic.topic_id)
+                      }
+                      style={({ pressed }) => [
+                        styles.bookmarkButton,
+                        bookmarkedTopics.has(topic.topic_id) &&
+                          styles.bookmarkButtonActive,
+                        pressed && styles.bookmarkButtonPressed,
+                      ]}
+                    >
+                      <SymbolView
+                        name={{
+                          ios: bookmarkedTopics.has(topic.topic_id)
+                            ? "bookmark.fill"
+                            : "bookmark",
+                          android: bookmarkedTopics.has(topic.topic_id)
+                            ? "bookmark"
+                            : "bookmark_border",
+                          web: bookmarkedTopics.has(topic.topic_id)
+                            ? "bookmark"
+                            : "bookmark_border",
+                        } as any}
+                        size={20}
+                        tintColor={
+                          bookmarkedTopics.has(topic.topic_id)
+                            ? theme.onSecondaryContainer
+                            : theme.outline
+                        }
+                      />
+                      {bookmarkedTopics.has(topic.topic_id) && (
+                        <BookmarkIndicator theme={theme} />
+                      )}
+                    </Pressable>
                   </View>
                   <ThemedText style={styles.exampleGrammarFocus}>
                     {topic.grammar_focus}
@@ -310,22 +444,20 @@ export default function TopicPage() {
                               : "View Details"}
                           </ThemedText>
                           <SymbolView
-                            name={
-                              {
-                                ios:
-                                  expandedTopic === topic.topic_id
-                                    ? "chevron.down"
-                                    : "chevron.right",
-                                android:
-                                  expandedTopic === topic.topic_id
-                                    ? "arrow_drop_down"
-                                    : "arrow_forward_ios",
-                                web:
-                                  expandedTopic === topic.topic_id
-                                    ? "arrow_drop_down"
-                                    : "arrow_forward_ios",
-                              } as any
-                            }
+                            name={{
+                              ios:
+                                expandedTopic === topic.topic_id
+                                  ? "chevron.down"
+                                  : "chevron.right",
+                              android:
+                                expandedTopic === topic.topic_id
+                                  ? "arrow_drop_down"
+                                  : "arrow_forward_ios",
+                              web:
+                                expandedTopic === topic.topic_id
+                                  ? "arrow_drop_down"
+                                  : "arrow_forward_ios",
+                            } as any}
                             size={16}
                             tintColor={theme.onPrimaryContainer}
                           />
@@ -342,13 +474,11 @@ export default function TopicPage() {
                             Start Practice
                           </ThemedText>
                           <SymbolView
-                            name={
-                              {
-                                ios: "arrow.forward",
-                                android: "arrow_forward",
-                                web: "arrow_forward",
-                              } as any
-                            }
+                            name={{
+                              ios: "arrow.forward",
+                              android: "arrow_forward",
+                              web: "arrow_forward",
+                            } as any}
                             size={16}
                             tintColor={theme.onPrimaryContainer}
                           />
@@ -518,6 +648,38 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
+    },
+    bookmarkButton: {
+      marginLeft: "auto",
+      width: 40,
+      height: 40,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: 20,
+      backgroundColor: theme.secondaryContainer,
+    },
+    bookmarkButtonActive: {
+      backgroundColor: theme.secondaryFixedDim,
+    },
+    bookmarkButtonPressed: {
+      opacity: 0.7,
+      transform: [{ scale: 0.94 }],
+    },
+    bookmarkIndicator: {
+      position: "absolute",
+      top: -4,
+      right: -4,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: theme.secondary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    bookmarkIndicatorText: {
+      color: theme.onSecondary,
+      fontSize: 8,
+      fontWeight: "700",
     },
     exampleIcon: {
       width: 40,

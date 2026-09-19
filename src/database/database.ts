@@ -3,6 +3,7 @@ import { seedJourneys } from "@/backend/Journey";
 import { seedTopics } from "@/backend/Topic";
 import { seedExercises } from "@/backend/TopicExercise";
 import { seedTopicIntros } from "@/backend/TopicIntro";
+import { seedTopicBookmarks } from "@/backend/TopicBookmarks";
 import { seedTopicVocabulary } from "@/backend/TopicVocabulary";
 import { seedUserExerciseProgress } from "@/backend/UserExerciseProgress";
 import { seedUserProfiles } from "@/backend/UserProfile";
@@ -99,6 +100,40 @@ export async function getDatabase() {
           "CREATE TABLE IF NOT EXISTS user_level_progress (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, topic_id INTEGER NOT NULL, level TEXT NOT NULL CHECK (level IN ('beginner', 'intermediate', 'advanced')), completed_count INTEGER NOT NULL DEFAULT 0, is_completed INTEGER NOT NULL DEFAULT 0 CHECK (is_completed IN (0, 1)), completed_at TEXT, UNIQUE(user_id, topic_id, level), FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), FOREIGN KEY (topic_id) REFERENCES topics(topic_id))",
         );
 
+        try {
+          await db.runAsync(
+            "ALTER TABLE topic_bookmarks RENAME TO topic_bookmarks_legacy",
+          );
+          await db.runAsync(
+            "CREATE TABLE IF NOT EXISTS topic_bookmarks (" +
+              "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+              "user_id INTEGER NOT NULL, " +
+              "topic_id INTEGER NOT NULL, " +
+              "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+              "UNIQUE(user_id, topic_id), " +
+              "FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), " +
+              "FOREIGN KEY (topic_id) REFERENCES topics(topic_id)" +
+              ")",
+          );
+          await db.runAsync(
+            "INSERT OR IGNORE INTO topic_bookmarks " +
+              "(user_id, topic_id, created_at) " +
+              "SELECT user_id, topic_id, created_at " +
+              "FROM topic_bookmarks_legacy",
+          );
+          await db.runAsync("DROP TABLE topic_bookmarks_legacy");
+        } catch (error) {
+          try {
+            await db.runAsync(
+              "INSERT OR IGNORE INTO topic_bookmarks " +
+                "(user_id, topic_id, created_at) " +
+                "SELECT user_id, topic_id, created_at " +
+                "FROM topic_bookmarks_legacy",
+            );
+            await db.runAsync("DROP TABLE topic_bookmarks_legacy");
+          } catch {}
+        }
+
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS app_kv (key TEXT PRIMARY KEY, value TEXT)",
         );
@@ -122,6 +157,7 @@ export async function importJourneyData() {
 export async function importTopicData() {
   const db = await getDatabase();
   await seedTopics(db);
+  await seedTopicBookmarks(db);
 }
 
 export async function importTopicIntroData() {
