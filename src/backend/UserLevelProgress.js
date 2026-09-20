@@ -125,7 +125,26 @@ export async function seedUserLevelProgress(db) {
     "SELECT COUNT(*) as total FROM user_level_progress",
   );
   if ((existing?.total ?? 0) > 0) return;
-  await db.runAsync(
-    "INSERT INTO user_level_progress (user_id, topic_id, level, completed_count, is_completed) SELECT up.user_id, e.topic_id, e.level, 0, 0 FROM user_profiles up CROSS JOIN exercises e",
-  );
+  try {
+    await db.runAsync(
+      "INSERT INTO user_level_progress (user_id, topic_id, level, completed_count, is_completed) SELECT up.user_id, e.topic_id, e.level, 0, 0 FROM user_profiles up CROSS JOIN exercises e",
+    );
+  } catch {
+    // UNIQUE(user_id, topic_id, level) may already have rows from a
+    // previous partial import. Fall back to a row-by-row upsert so the
+    // seed is idempotent and does not abort the whole import.
+    const rows = await db.getAllAsync(
+      "SELECT up.user_id, e.topic_id, e.level FROM user_profiles up CROSS JOIN exercises e",
+    );
+    for (const row of rows) {
+      await db.runAsync(
+        `INSERT INTO user_level_progress (user_id, topic_id, level, completed_count, is_completed)
+         VALUES (?, ?, ?, 0, 0)
+         ON CONFLICT(user_id, topic_id, level) DO NOTHING`,
+        row.user_id,
+        row.topic_id,
+        row.level,
+      );
+    }
+  }
 }
