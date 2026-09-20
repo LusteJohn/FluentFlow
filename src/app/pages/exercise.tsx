@@ -351,7 +351,7 @@ export default function ExercisePage() {
         <NavBar />
       </ThemedView>
     </ScreenMotion>
-      );
+  );
 }
 
 function AnimatedCongratulationsBanner({

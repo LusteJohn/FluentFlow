@@ -105,6 +105,10 @@ export default function SettingsPage() {
           fontSize: 16,
           fontWeight: "600",
         },
+        version: {
+          color: theme.onSurfaceVariant,
+          marginTop: 4,
+        },
         hint: {
           color: theme.onSurfaceVariant,
           marginTop: 4,
@@ -246,11 +250,19 @@ export default function SettingsPage() {
                     >
                       {option.label}
                     </ThemedText>
-                  </Pressable>
+</Pressable>
                 );
               })}
             </View>
+          <View style={styles.section}>
+            <ThemedText type="smallBold" style={styles.sectionTitle}>
+              About App
+            </ThemedText>
+            <ThemedText type="small" style={styles.version}>
+              FluentFlow · Version 1.1.2
+            </ThemedText>
           </View>
+        </View>
 
           <View style={styles.section}>
             <ThemedText type="smallBold" style={styles.sectionTitle}>

@@ -1,7 +1,7 @@
 {
   "name": "fluentflow",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "1.1.2",
   "dependencies": {
     "@expo-google-fonts/quicksand": "^0.4.1",
     "@expo/ui": "~57.0.11",

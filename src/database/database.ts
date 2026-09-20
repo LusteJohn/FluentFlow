@@ -10,27 +10,12 @@ import { seedUserExerciseProgress } from "@/backend/UserExerciseProgress";
 import { seedUserLevelProgress } from "@/backend/UserLevelProgress";
 import { seedUserProfiles } from "@/backend/UserProfile";
 import { seedUserStreaks } from "@/backend/UserStreak";
-import { Platform } from "react-native";
 
-let SQLite: any = null;
-if (Platform.OS !== "web") {
-  try {
-    SQLite = require("expo-sqlite");
-  } catch (e) {
-    console.warn(
-      "expo-sqlite native module not available. Build a custom dev client to use SQLite.",
-    );
-  }
-}
+import * as SQLite from "expo-sqlite";
 
 let dbPromise: Promise<any> | null = null;
 
 export async function getDatabase() {
-  if (!SQLite) {
-    throw new Error(
-      "expo-sqlite is not available. Please build and run a custom dev client (npx expo prebuild && npx expo run:android) instead of Expo Go.",
-    );
-  }
 
   if (!dbPromise) {
     dbPromise = (async () => {

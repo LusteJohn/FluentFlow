@@ -110,13 +110,13 @@ export default function ExerciseListPage() {
   );
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
-   const [showMistakesCorrectedModal, setShowMistakesCorrectedModal] =
-     useState(false);
-   const [showAchievementModal, setShowAchievementModal] = useState(false);
-   const [showJourneyAchievementModal, setShowJourneyAchievementModal] =
-     useState(false);
-   const [reviewMode, setReviewMode] = useState(false);
-   const [userId, setUserId] = useState<number | null>(null);
+  const [showMistakesCorrectedModal, setShowMistakesCorrectedModal] =
+    useState(false);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [showJourneyAchievementModal, setShowJourneyAchievementModal] =
+    useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
 
   const getCorrectAnswer = (
     tokens: ExerciseToken[],
