@@ -1,13 +1,6 @@
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import Animated, {
-  FadeInUp,
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BackHandler,
   Modal,
@@ -18,7 +11,22 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import Animated, {
+  Easing,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
+import {
+  getRandomGrammarTrivia,
+  getRandomGrammarTriviaExcluding,
+} from "@/backend/GrammarTrivia";
+import {
+  getAllJourneyProgressForUser,
+  getAllJourneys,
+} from "@/backend/Journey";
 import {
   getRecentCompletedExercises,
   getRecentCompletedExercisesCount,
@@ -27,11 +35,6 @@ import {
   getWeeklyProgressDetails,
 } from "@/backend/UserExerciseProgress";
 import { getUserProfile } from "@/backend/UserProfile";
-import { getAllJourneys, getAllJourneyProgressForUser } from "@/backend/Journey";
-import {
-  getRandomGrammarTrivia,
-  getRandomGrammarTriviaExcluding,
-} from "@/backend/GrammarTrivia";
 import AlertDialog from "@/components/alert-dialog";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
@@ -40,8 +43,8 @@ import TutorialModal, { getWelcomingPhrase } from "@/components/tutorial-modal";
 import { useTheme } from "@/contexts/theme-context";
 import {
   getDatabase,
-  hasSeenTutorial,
   hasSeenDailyTrivia,
+  hasSeenTutorial,
   importExerciseData,
   importExerciseTokenData,
   importGrammarTriviaData,
@@ -50,8 +53,8 @@ import {
   importTopicIntroData,
   importTopicVocabularyData,
   importUserExerciseProgressData,
-  importUserStreaksData,
   importUserProfileData,
+  importUserStreaksData,
   isDataImported,
   markDailyTriviaSeen,
   markTutorialSeen,
@@ -66,12 +69,15 @@ interface StatCard {
   icon: any;
   iconBg: string;
   iconColor: string;
+  dynamic?: boolean;
 }
 
 interface WeeklyBar {
   day: string;
   height: number;
   dayIndex: number;
+  exerciseCount: number;
+  xp: number;
 }
 
 interface DayDetailItem {
@@ -110,7 +116,11 @@ interface Journey {
   order_index: number;
 }
 
-function getStatCards(theme: ReturnType<typeof useTheme>): StatCard[] {
+function getStatCards(
+  theme: ReturnType<typeof useTheme>,
+  totalTopics: number,
+  totalExercises: number,
+): StatCard[] {
   return [
     {
       id: "1",
@@ -126,11 +136,16 @@ function getStatCards(theme: ReturnType<typeof useTheme>): StatCard[] {
     },
     {
       id: "2",
-      value: "245",
-      label: "Words",
-      icon: { ios: "book.fill", android: "menu_book", web: "menu_book" },
+      value: String(totalTopics),
+      label: "Total Topics",
+      icon: {
+        ios: "list.bullet.rectangle",
+        android: "menu_book",
+        web: "menu_book",
+      },
       iconBg: theme.surface,
       iconColor: theme.primary,
+      dynamic: true,
     },
     {
       id: "3",
@@ -140,10 +155,22 @@ function getStatCards(theme: ReturnType<typeof useTheme>): StatCard[] {
       iconBg: theme.surface,
       iconColor: theme.secondary,
     },
+    {
+      id: "4",
+      value: String(totalExercises),
+      label: "Exercises",
+      icon: { ios: "doc.text", android: "description", web: "description" },
+      iconBg: theme.surface,
+      iconColor: theme.tertiary,
+      dynamic: true,
+    },
   ];
 }
 
 const DAY_LABELS = ["Su", "M", "T", "W", "Th", "F", "Sa"];
+// The selected week runs Monday -> Sunday, so plot the days in that order.
+// Values are SQLite %w day indexes (0 = Sunday).
+const WEEK_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 const XP_COLOR = "#16a34a";
 const XP_CHIP_BG = "#dcfce7";
@@ -197,7 +224,6 @@ function formatXP(value: number): string {
 export default function HomePage() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const statCards = getStatCards(theme);
   const router = useRouter();
   const [showExitDialog, setShowExitDialog] = useState(false);
   const mountedRef = useRef(false);
@@ -253,6 +279,8 @@ export default function HomePage() {
   const [weeklyBars, setWeeklyBars] = useState<WeeklyBar[]>([]);
   const [recentExercises, setRecentExercises] = useState<RecentExercise[]>([]);
   const [totalXP, setTotalXP] = useState(0);
+  const [totalTopics, setTotalTopics] = useState(0);
+  const [totalExercises, setTotalExercises] = useState(0);
   const [weekOptions] = useState(getWeekOptions);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
   const [showWeekPicker, setShowWeekPicker] = useState(false);
@@ -261,6 +289,7 @@ export default function HomePage() {
   const [refreshing, setRefreshing] = useState(false);
   const [showDayDetail, setShowDayDetail] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
+  const [chartWidth, setChartWidth] = useState(0);
   const [dayDetails, setDayDetails] = useState<DayDetailItem[]>([]);
   const [loadingDayDetails, setLoadingDayDetails] = useState(false);
   const [journeys, setJourneys] = useState<Journey[]>([]);
@@ -271,6 +300,11 @@ export default function HomePage() {
   const [recentPage, setRecentPage] = useState(1);
   const [recentTotalCount, setRecentTotalCount] = useState(0);
   const [loadingRecentPage, setLoadingRecentPage] = useState(false);
+
+  const statCards = useMemo(
+    () => getStatCards(theme, totalTopics, totalExercises),
+    [theme, totalTopics, totalExercises],
+  );
 
   const handleExit = () => {
     if (mountedRef.current) {
@@ -329,9 +363,7 @@ export default function HomePage() {
           await importUserExerciseProgressData();
           await importUserStreaksData();
           await importGrammarTriviaData();
-          const today = new Date()
-            .toISOString()
-            .slice(0, 10);
+          const today = new Date().toISOString().slice(0, 10);
           const triviaSeenToday = await hasSeenDailyTrivia(today);
           if (!triviaSeenToday) {
             await loadRandomTrivia();
@@ -374,12 +406,22 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, []);
 
-   const loadAllData = useCallback(async () => {
+  const loadAllData = useCallback(async () => {
     if (!userId) return;
     try {
       const db = await getDatabase();
       const total = await getTotalEarnedXP(db, userId);
       if (mountedRef.current) setTotalXP(total);
+
+      const topicsResult = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM topics",
+      );
+      if (mountedRef.current) setTotalTopics(topicsResult?.count ?? 0);
+
+      const exercisesResult = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM exercises",
+      );
+      if (mountedRef.current) setTotalExercises(exercisesResult?.count ?? 0);
 
       const journeysResult = await getAllJourneys(db);
       if (mountedRef.current) setJourneys(journeysResult ?? []);
@@ -414,6 +456,7 @@ export default function HomePage() {
       }
 
       let maxXp = 1;
+      let maxExercises = 1;
       rows.forEach((row: any) => {
         const dayNum = parseInt(row.day_of_week, 10);
         dayMap[dayNum] = {
@@ -421,12 +464,16 @@ export default function HomePage() {
           total_xp: row.total_xp ?? 0,
         };
         if ((row.total_xp ?? 0) > maxXp) maxXp = row.total_xp ?? 1;
+        if ((row.completed_count ?? 0) > maxExercises)
+          maxExercises = row.completed_count ?? 1;
       });
 
-      const bars: WeeklyBar[] = DAY_LABELS.map((day, idx) => {
+      const bars: WeeklyBar[] = WEEK_DISPLAY_ORDER.map((idx) => {
+        const day = DAY_LABELS[idx];
+        const count = dayMap[idx]?.completed_count ?? 0;
         const xp = dayMap[idx]?.total_xp ?? 0;
         const height = Math.max(4, Math.round((xp / maxXp) * 92));
-        return { day, height, dayIndex: idx };
+        return { day, height, dayIndex: idx, exerciseCount: count, xp };
       });
 
       if (mountedRef.current) setWeeklyBars(bars);
@@ -527,12 +574,10 @@ export default function HomePage() {
 
   const continueLearningJourney = useMemo(() => {
     if (!journeys.length) return null;
-    const firstInProgress = journeys.find(
-      (j) => {
-        const p = journeyProgress[j.journey_id];
-        return !p || p.percent < 100;
-      },
-    );
+    const firstInProgress = journeys.find((j) => {
+      const p = journeyProgress[j.journey_id];
+      return !p || p.percent < 100;
+    });
     return firstInProgress ?? null;
   }, [journeys, journeyProgress]);
 
@@ -557,11 +602,13 @@ export default function HomePage() {
     }
   }, [continueLearningJourney, journeyProgress, progressAnim]);
 
-  const handleContinueLearning = () => {
-    if (continueLearningJourney) {
-      router.push(`/journey?topic_id=${continueLearningJourney.journey_id}` as any);
-    }
-  };
+   const handleContinueLearning = () => {
+     if (continueLearningJourney) {
+       router.push(
+         `/pages/topic?journey_id=${continueLearningJourney.journey_id}` as any,
+       );
+     }
+   };
 
   const handleDayPress = async (dayIndex: number) => {
     if (!userId) return;
@@ -669,34 +716,183 @@ export default function HomePage() {
     );
   };
 
-  const renderWeeklyBar = (item: WeeklyBar, index: number) => (
-    <Pressable
-      key={item.day}
-      style={styles.weekBarContainer}
-      onPress={() => handleDayPress(item.dayIndex)}
-    >
-      <View style={styles.weekBarTrack}>
-        <View
-          style={[
-            styles.weekBarFill,
-            {
-              height: Math.max(item.height, 4),
-              backgroundColor:
-                index === new Date().getDay() ? "#15803d" : "#86efac",
-            },
-          ]}
-        />
+  const renderLineGraph = () => {
+    const dotSize = 16;
+    const yAxisWidth = 24;
+    const plotHeight = 110;
+    const padX = dotSize / 2 + 6;
+    const padY = dotSize / 2 + 2;
+    const segmentThickness = 3;
+    const labelRowHeight = 34;
+
+    const maxExercises = Math.max(0, ...weeklyBars.map((b) => b.exerciseCount));
+    // Round the top of the axis up to a multiple of 4 so every tick is a whole number.
+    const yMax = Math.max(4, Math.ceil(maxExercises / 4) * 4);
+    const yFor = (value: number) =>
+      padY + (1 - value / yMax) * (plotHeight - padY * 2);
+
+    const plotWidth = Math.max(0, chartWidth - yAxisWidth);
+    const count = weeklyBars.length;
+    const xStep = count > 1 ? (plotWidth - padX * 2) / (count - 1) : 0;
+    const todayIndex = new Date().getDay();
+    const isCurrentWeek = selectedWeekIndex === 0;
+
+    const dots = weeklyBars.map((item, i) => ({
+      ...item,
+      x: yAxisWidth + padX + xStep * i,
+      y: yFor(item.exerciseCount),
+      isToday: isCurrentWeek && item.dayIndex === todayIndex,
+    }));
+
+    const ticks = [0, 1, 2, 3, 4].map((i) => (yMax / 4) * i);
+
+    return (
+      <View style={styles.weeklyChart}>
+        <View style={styles.weeklyChartInner}>
+          <ThemedText style={styles.weeklyChartTitle}>
+            Weekly Progress
+          </ThemedText>
+
+          <View
+            style={{ width: "100%" }}
+            onLayout={(e) => {
+              const w = Math.round(e.nativeEvent.layout.width);
+              if (w !== chartWidth) setChartWidth(w);
+            }}
+          >
+            {chartWidth > 0 && (
+              <>
+                <View style={{ height: plotHeight }}>
+                  {ticks.map((tick) => (
+                    <View key={`tick-${tick}`}>
+                      <View
+                        style={[
+                          styles.lineChartGridLine,
+                          { top: yFor(tick), left: yAxisWidth },
+                        ]}
+                      />
+                      <ThemedText
+                        style={[
+                          styles.weekBarLabel,
+                          {
+                            position: "absolute",
+                            left: 0,
+                            width: yAxisWidth - 8,
+                            textAlign: "right",
+                            top: yFor(tick) - 7,
+                            fontSize: 10,
+                            lineHeight: 14,
+                            color: "#9ca3af",
+                          },
+                        ]}
+                      >
+                        {tick}
+                      </ThemedText>
+                    </View>
+                  ))}
+
+                  {/* Segments first so every dot is drawn on top of them. */}
+                  {dots.map((dot, i) => {
+                    const prev = dots[i - 1];
+                    if (!prev) return null;
+                    const dx = dot.x - prev.x;
+                    const dy = dot.y - prev.y;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+                    // Views rotate around their centre, so position the segment
+                    // by its midpoint rather than by its left edge.
+                    const midX = (prev.x + dot.x) / 2;
+                    const midY = (prev.y + dot.y) / 2;
+                    return (
+                      <View
+                        key={`segment-${dot.dayIndex}`}
+                        pointerEvents="none"
+                        style={[
+                          styles.lineChartSegment,
+                          {
+                            left: midX - length / 2,
+                            top: midY - segmentThickness / 2,
+                            width: length,
+                            height: segmentThickness,
+                            transform: [{ rotate: `${Math.atan2(dy, dx)}rad` }],
+                            backgroundColor: dot.isToday
+                              ? "#15803d"
+                              : "#86efac",
+                          },
+                        ]}
+                      />
+                    );
+                  })}
+
+                  {dots.map((dot) => (
+                    <Pressable
+                      key={`dot-${dot.dayIndex}`}
+                      hitSlop={8}
+                      style={{
+                        position: "absolute",
+                        left: dot.x - dotSize / 2,
+                        top: dot.y - dotSize / 2,
+                      }}
+                      onPress={() => handleDayPress(dot.dayIndex)}
+                    >
+                      <View
+                        style={[
+                          styles.lineChartDot,
+                          {
+                            width: dotSize,
+                            height: dotSize,
+                            backgroundColor: dot.isToday
+                              ? "#15803d"
+                              : "#86efac",
+                            borderColor: dot.isToday
+                              ? theme.onPrimaryContainer
+                              : theme.surfaceContainerHigh,
+                          },
+                        ]}
+                      />
+                    </Pressable>
+                  ))}
+                </View>
+
+                <View style={{ height: labelRowHeight, marginTop: 6 }}>
+                  {dots.map((dot) => (
+                    <View
+                      key={`label-${dot.dayIndex}`}
+                      style={{
+                        position: "absolute",
+                        left: dot.x - 14,
+                        top: 0,
+                        width: 28,
+                        alignItems: "center",
+                      }}
+                    >
+                      <ThemedText
+                        style={[
+                          styles.weekBarLabel,
+                          {
+                            fontSize: 11,
+                            color: dot.isToday
+                              ? "#15803d"
+                              : theme.onSurfaceVariant,
+                          },
+                        ]}
+                      >
+                        {dot.day}
+                      </ThemedText>
+                      <ThemedText
+                        style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}
+                      >
+                        {dot.exerciseCount}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+          </View>
+        </View>
       </View>
-      <ThemedText
-        style={[
-          styles.weekBarLabel,
-          index === new Date().getDay() && styles.weekBarLabelActive,
-        ]}
-      >
-        {item.day}
-      </ThemedText>
-    </Pressable>
-  );
+    );
+  };
 
   const renderRecentExercise = (item: RecentExercise) => (
     <View key={item.id} style={styles.exerciseItem}>
@@ -792,7 +988,7 @@ export default function HomePage() {
                 {statCards.slice(0, 2).map(renderStatCard)}
               </View>
               <View style={styles.statGridRow}>
-                {renderStatCard(statCards[2])}
+                {statCards.slice(2, 4).map(renderStatCard)}
               </View>
             </View>
           </View>
@@ -840,13 +1036,13 @@ export default function HomePage() {
                         { backgroundColor: theme.surfaceContainer },
                       ]}
                     >
-                    <Animated.View
-                      style={[
-                        styles.continueLearningProgressBarFill,
-                        progressStyle,
-                        { backgroundColor: theme.primary },
-                      ]}
-                    />
+                      <Animated.View
+                        style={[
+                          styles.continueLearningProgressBarFill,
+                          progressStyle,
+                          { backgroundColor: theme.primary },
+                        ]}
+                      />
                     </View>
                     <ThemedText style={styles.continueLearningProgressText}>
                       {journeyProgress[continueLearningJourney.journey_id]
@@ -956,11 +1152,7 @@ export default function HomePage() {
             {loading ? (
               <ThemedText style={styles.loadingText}>Loading...</ThemedText>
             ) : (
-              <View style={styles.weeklyChart}>
-                <View style={styles.weeklyChartInner}>
-                  {weeklyBars.map(renderWeeklyBar)}
-                </View>
-              </View>
+              renderLineGraph()
             )}
           </View>
 
@@ -1190,10 +1382,7 @@ export default function HomePage() {
             animationType="fade"
             onRequestClose={handleCloseTrivia}
           >
-            <Pressable
-              style={styles.triviaOverlay}
-              onPress={handleCloseTrivia}
-            >
+            <Pressable style={styles.triviaOverlay} onPress={handleCloseTrivia}>
               <Pressable
                 style={styles.triviaCard}
                 onPress={(e) => e.stopPropagation()}
@@ -1206,11 +1395,13 @@ export default function HomePage() {
                     ]}
                   >
                     <SymbolView
-                      name={{
-                        ios: "lightbulb.fill",
-                        android: "lightbulb",
-                        web: "lightbulb",
-                      } as any}
+                      name={
+                        {
+                          ios: "lightbulb.fill",
+                          android: "lightbulb",
+                          web: "lightbulb",
+                        } as any
+                      }
                       size={24}
                       tintColor={theme.primary}
                     />
@@ -1401,7 +1592,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       lineHeight: 20,
     },
     weeklyChart: {
-      padding: 24,
+      padding: 16,
       backgroundColor: theme.surfaceContainerLowest,
       borderRadius: 16,
       borderWidth: 1,
@@ -1413,29 +1604,47 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       elevation: 4,
     },
     weeklyChartInner: {
-      flexDirection: "row",
-      alignItems: "flex-end",
+      width: "100%",
+    },
+    weeklyChartTitle: {
+      color: theme.onSurface,
+      fontSize: 14,
+      fontWeight: "600",
+      marginBottom: 12,
+    },
+    lineChartGrid: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       justifyContent: "space-between",
-      gap: 8,
-      height: 128,
     },
-    weekBarContainer: {
-      flex: 1,
+    lineChartLine: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.outlineVariant,
+    },
+    lineChartGridLine: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      height: 1,
+      backgroundColor: theme.outlineVariant,
+      opacity: 0.6,
+    },
+    lineChartSegment: {
+      position: "absolute",
+      height: 3,
+      borderRadius: 2,
+    },
+    lineChartDot: {
+      borderRadius: 999,
+      borderWidth: 2,
+      justifyContent: "center",
       alignItems: "center",
-      gap: 8,
-    },
-    weekBarTrack: {
-      width: "100%",
-      height: 96,
-      borderRadius: 9999,
-      backgroundColor: theme.surfaceContainerHigh,
-      overflow: "hidden",
-      justifyContent: "flex-end",
-    },
-    weekBarFill: {
-      width: "100%",
-      minHeight: 4,
-      borderRadius: 9999,
     },
     weekBarLabel: {
       color: theme.onSurfaceVariant,
@@ -1957,20 +2166,20 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       fontSize: 16,
       fontWeight: "600",
     },
-     triviaPrimaryButton: {
-       flex: 1,
-       paddingVertical: 12,
-       borderRadius: 16,
-       backgroundColor: theme.primary,
-       alignItems: "center",
-       justifyContent: "center",
-       borderBottomWidth: 3,
-       borderBottomColor: theme.primaryContainer,
-     },
-     triviaPrimaryButtonDisabled: {
-       opacity: 0.6,
-     },
-     triviaPrimaryButtonText: {
+    triviaPrimaryButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 16,
+      backgroundColor: theme.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      borderBottomWidth: 3,
+      borderBottomColor: theme.primaryContainer,
+    },
+    triviaPrimaryButtonDisabled: {
+      opacity: 0.6,
+    },
+    triviaPrimaryButtonText: {
       color: theme.onPrimary,
       fontSize: 16,
       fontWeight: "600",
