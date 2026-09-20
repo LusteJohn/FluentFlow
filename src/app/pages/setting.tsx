@@ -11,10 +11,12 @@ import {
     getDatabase,
     importExerciseData,
     importExerciseTokenData,
+    importGrammarTriviaData,
     importJourneyData,
     importTopicData,
     importTopicIntroData,
     importTopicVocabularyData,
+    importUserStreaksData,
 } from "@/database/database";
 import AppHeader from "../(tabs)/header";
 import NavBar from "../(tabs)/navBar";
@@ -147,6 +149,16 @@ export default function SettingsPage() {
         "SELECT COUNT(*) as count FROM exercise_tokens",
       );
 
+      await importGrammarTriviaData();
+      const triviaCount = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM grammar_trivia",
+      );
+
+      await importUserStreaksData();
+      const streakCount = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM user_streaks",
+      );
+
       await seedUserLevelProgress(db);
 
       setDialog({
@@ -159,7 +171,9 @@ export default function SettingsPage() {
           `Topic Introductions: ${topicIntroCount?.count ?? 0}\n` +
           `Topic Vocabulary: ${topicVocabCount?.count ?? 0}\n` +
           `Exercises: ${exerciseCount?.count ?? 0}\n` +
-          `Exercise Tokens: ${tokenCount?.count ?? 0}`,
+          `Exercise Tokens: ${tokenCount?.count ?? 0}\n` +
+          `Grammar Trivia: ${triviaCount?.count ?? 0}\n` +
+          `User Streaks: ${streakCount?.count ?? 0}`,
       });
     } catch (error: any) {
       setDialog({

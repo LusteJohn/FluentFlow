@@ -28,6 +28,10 @@ import {
 } from "@/backend/UserExerciseProgress";
 import { getUserProfile } from "@/backend/UserProfile";
 import { getAllJourneys, getAllJourneyProgressForUser } from "@/backend/Journey";
+import {
+  getRandomGrammarTrivia,
+  getRandomGrammarTriviaExcluding,
+} from "@/backend/GrammarTrivia";
 import AlertDialog from "@/components/alert-dialog";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
@@ -37,6 +41,7 @@ import { useTheme } from "@/contexts/theme-context";
 import {
   getDatabase,
   hasSeenTutorial,
+  importGrammarTriviaData,
   isDataImported,
   markTutorialSeen,
 } from "@/database/database";
@@ -189,6 +194,49 @@ export default function HomePage() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [welcomingPhrase] = useState(() => getWelcomingPhrase());
 
+  const [showTrivia, setShowTrivia] = useState(false);
+  const [currentTrivia, setCurrentTrivia] = useState<any>(null);
+  const [loadingTrivia, setLoadingTrivia] = useState(false);
+
+  const loadRandomTrivia = useCallback(async () => {
+    setLoadingTrivia(true);
+    try {
+      const db = await getDatabase();
+      const trivia = await getRandomGrammarTrivia(db);
+      if (trivia) {
+        setCurrentTrivia(trivia);
+        setShowTrivia(true);
+      }
+    } catch (error) {
+      console.error("Failed to load grammar trivia", error);
+    } finally {
+      setLoadingTrivia(false);
+    }
+  }, []);
+
+  const handleNextTrivia = useCallback(async () => {
+    if (!currentTrivia || loadingTrivia) return;
+    try {
+      setLoadingTrivia(true);
+      const db = await getDatabase();
+      const trivia = await getRandomGrammarTriviaExcluding(
+        db,
+        currentTrivia.id,
+      );
+      if (trivia) {
+        setCurrentTrivia(trivia);
+      }
+    } catch (error) {
+      console.error("Failed to load next trivia", error);
+    } finally {
+      setLoadingTrivia(false);
+    }
+  }, [currentTrivia, loadingTrivia]);
+
+  const handleCloseTrivia = () => {
+    setShowTrivia(false);
+  };
+
   const [weeklyBars, setWeeklyBars] = useState<WeeklyBar[]>([]);
   const [recentExercises, setRecentExercises] = useState<RecentExercise[]>([]);
   const [totalXP, setTotalXP] = useState(0);
@@ -246,13 +294,19 @@ export default function HomePage() {
     let cancelled = false;
     (async () => {
       try {
-        const [seen] = await Promise.all([
+        const [seen, dataImported] = await Promise.all([
           hasSeenTutorial(),
           isDataImported(),
         ]);
         if (!cancelled && !seen) {
           setShowTutorial(true);
           await markTutorialSeen();
+        }
+        if (!cancelled && dataImported) {
+          await importGrammarTriviaData();
+        }
+        if (!cancelled && dataImported) {
+          await loadRandomTrivia();
         }
       } catch (error) {
         console.error("Failed to check tutorial state", error);
@@ -261,7 +315,7 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadRandomTrivia]);
 
   useEffect(() => {
     if (Platform.OS === "android") {
@@ -1099,6 +1153,107 @@ export default function HomePage() {
           welcomingPhrase={welcomingPhrase}
           onClose={() => setShowTutorial(false)}
         />
+
+        {currentTrivia && (
+          <Modal
+            visible={showTrivia}
+            transparent
+            animationType="fade"
+            onRequestClose={handleCloseTrivia}
+          >
+            <Pressable
+              style={styles.triviaOverlay}
+              onPress={handleCloseTrivia}
+            >
+              <Pressable
+                style={styles.triviaCard}
+                onPress={(e) => e.stopPropagation()}
+              >
+                <View style={styles.triviaHeader}>
+                  <View
+                    style={[
+                      styles.triviaIconContainer,
+                      { backgroundColor: theme.primaryContainer },
+                    ]}
+                  >
+                    <SymbolView
+                      name={{
+                        ios: "lightbulb.fill",
+                        android: "lightbulb",
+                        web: "lightbulb",
+                      } as any}
+                      size={24}
+                      tintColor={theme.primary}
+                    />
+                  </View>
+                  <ThemedText style={styles.triviaTitle}>
+                    Grammar Tip
+                  </ThemedText>
+                  <ThemedText style={styles.triviaCategory}>
+                    {currentTrivia.category}
+                  </ThemedText>
+                </View>
+
+                <ScrollView
+                  style={styles.triviaBody}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <ThemedText style={styles.triviaTopic}>
+                    {currentTrivia.topic}
+                  </ThemedText>
+                  <ThemedText style={styles.triviaScenario}>
+                    {currentTrivia.scenario}
+                  </ThemedText>
+                  <ThemedText style={styles.triviaExample}>
+                    {`"${currentTrivia.example_sentence}"`}
+                  </ThemedText>
+                  <ThemedText style={styles.triviaUsage}>
+                    {currentTrivia.usage_note}
+                  </ThemedText>
+                  <View style={styles.triviaPros}>
+                    <ThemedText style={styles.triviaProsLabel}>
+                      Pro tip:
+                    </ThemedText>
+                    <ThemedText style={styles.triviaProsText}>
+                      {currentTrivia.pros}
+                    </ThemedText>
+                  </View>
+                  <View style={styles.triviaCons}>
+                    <ThemedText style={styles.triviaConsLabel}>
+                      Watch out:
+                    </ThemedText>
+                    <ThemedText style={styles.triviaConsText}>
+                      {currentTrivia.cons}
+                    </ThemedText>
+                  </View>
+                </ScrollView>
+
+                <View style={styles.triviaFooter}>
+                  <Pressable
+                    style={[styles.triviaSecondaryButton, { opacity: 1 }]}
+                    onPress={handleCloseTrivia}
+                  >
+                    <ThemedText style={styles.triviaSecondaryButtonText}>
+                      Got it
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable
+                    style={[
+                      styles.triviaPrimaryButton,
+                      loadingTrivia && styles.triviaPrimaryButtonDisabled,
+                    ]}
+                    onPress={handleNextTrivia}
+                    disabled={loadingTrivia}
+                  >
+                    <ThemedText style={styles.triviaPrimaryButtonText}>
+                      {loadingTrivia ? "Loading..." : "Next Tip"}
+                    </ThemedText>
+                  </Pressable>
+                </View>
+              </Pressable>
+            </Pressable>
+          </Modal>
+        )}
       </ThemedView>
     </ScreenMotion>
   );
@@ -1623,6 +1778,173 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     continueLearningArrow: {
       marginLeft: 12,
+    },
+    triviaOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 24,
+      zIndex: 1000,
+    },
+    triviaCard: {
+      width: "100%",
+      maxWidth: 400,
+      maxHeight: "80%",
+      backgroundColor: theme.surface,
+      borderRadius: 20,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 24,
+      elevation: 12,
+    },
+    triviaHeader: {
+      padding: 20,
+      paddingBottom: 12,
+      alignItems: "center",
+      gap: 6,
+    },
+    triviaIconContainer: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    triviaTitle: {
+      color: theme.onSurface,
+      fontSize: 18,
+      fontWeight: "700",
+      lineHeight: 24,
+    },
+    triviaCategory: {
+      color: theme.primary,
+      fontSize: 12,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    triviaBody: {
+      paddingHorizontal: 20,
+      paddingBottom: 8,
+    },
+    triviaTopic: {
+      color: theme.onSurface,
+      fontSize: 16,
+      fontWeight: "600",
+      lineHeight: 22,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    triviaScenario: {
+      color: theme.onSurfaceVariant,
+      fontSize: 14,
+      fontWeight: "500",
+      lineHeight: 20,
+      textAlign: "center",
+      marginBottom: 12,
+      fontStyle: "italic",
+    },
+    triviaExample: {
+      color: theme.onSurface,
+      fontSize: 14,
+      fontWeight: "500",
+      lineHeight: 20,
+      textAlign: "center",
+      marginBottom: 12,
+    },
+    triviaUsage: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "500",
+      lineHeight: 18,
+      textAlign: "center",
+      marginBottom: 12,
+    },
+    triviaPros: {
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    triviaProsLabel: {
+      color: theme.primary,
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: 2,
+    },
+    triviaProsText: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "500",
+      lineHeight: 18,
+    },
+    triviaCons: {
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    triviaConsLabel: {
+      color: theme.tertiary,
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: 2,
+    },
+    triviaConsText: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: "500",
+      lineHeight: 18,
+    },
+    triviaFooter: {
+      flexDirection: "row",
+      gap: 12,
+      padding: 16,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: theme.outlineVariant,
+    },
+    triviaSecondaryButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 16,
+      backgroundColor: theme.surfaceContainer,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+    },
+    triviaSecondaryButtonText: {
+      color: theme.onSurfaceVariant,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+     triviaPrimaryButton: {
+       flex: 1,
+       paddingVertical: 12,
+       borderRadius: 16,
+       backgroundColor: theme.primary,
+       alignItems: "center",
+       justifyContent: "center",
+       borderBottomWidth: 3,
+       borderBottomColor: theme.primaryContainer,
+     },
+     triviaPrimaryButtonDisabled: {
+       opacity: 0.6,
+     },
+     triviaPrimaryButtonText: {
+      color: theme.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
     },
   });
 }

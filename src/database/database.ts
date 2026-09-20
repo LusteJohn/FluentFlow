@@ -1,9 +1,10 @@
 import { seedExerciseTokens } from "@/backend/ExerciseTokens";
+import { seedGrammarTrivia } from "@/backend/GrammarTrivia";
 import { seedJourneys } from "@/backend/Journey";
 import { seedTopics } from "@/backend/Topic";
+import { seedTopicBookmarks } from "@/backend/TopicBookmarks";
 import { seedExercises } from "@/backend/TopicExercise";
 import { seedTopicIntros } from "@/backend/TopicIntro";
-import { seedTopicBookmarks } from "@/backend/TopicBookmarks";
 import { seedTopicVocabulary } from "@/backend/TopicVocabulary";
 import { seedUserExerciseProgress } from "@/backend/UserExerciseProgress";
 import { seedUserProfiles } from "@/backend/UserProfile";
@@ -116,7 +117,20 @@ export async function getDatabase() {
             "longest_streak INTEGER NOT NULL DEFAULT 0, " +
             "last_activity_date TEXT, " +
             "FOREIGN KEY (user_id) REFERENCES user_profiles(user_id)" +
-            ")"
+            ")",
+        );
+
+        await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS grammar_trivia (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "category TEXT NOT NULL, " +
+            "topic TEXT NOT NULL, " +
+            "scenario TEXT NOT NULL, " +
+            "example_sentence TEXT NOT NULL, " +
+            "usage_note TEXT NOT NULL, " +
+            "pros TEXT NOT NULL, " +
+            "cons TEXT NOT NULL" +
+            ")",
         );
 
         try {
@@ -192,6 +206,11 @@ export async function importTopicVocabularyData() {
 export async function importExerciseData() {
   const db = await getDatabase();
   await seedExercises(db);
+}
+
+export async function importGrammarTriviaData() {
+  const db = await getDatabase();
+  await seedGrammarTrivia(db);
 }
 
 export async function importExerciseTokenData() {
