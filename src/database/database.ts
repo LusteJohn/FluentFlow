@@ -35,7 +35,7 @@ export async function getDatabase() {
   if (!dbPromise) {
     dbPromise = (async () => {
       try {
-         const db = await SQLite.openDatabaseAsync("fluentflow_data_v3.db");
+        const db = await SQLite.openDatabaseAsync("fluentflow_data_v3.db");
 
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS tbl_users (user_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
@@ -140,6 +140,18 @@ export async function getDatabase() {
             "user_id INTEGER NOT NULL, " +
             "topic_id INTEGER NOT NULL, " +
             "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+            "UNIQUE(user_id, topic_id), " +
+            "FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), " +
+            "FOREIGN KEY (topic_id) REFERENCES topics(topic_id)" +
+            ")",
+        );
+
+        await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS topic_achievements (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "user_id INTEGER NOT NULL, " +
+            "topic_id INTEGER NOT NULL, " +
+            "achieved_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
             "UNIQUE(user_id, topic_id), " +
             "FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), " +
             "FOREIGN KEY (topic_id) REFERENCES topics(topic_id)" +

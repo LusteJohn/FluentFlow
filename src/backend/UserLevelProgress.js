@@ -1,3 +1,5 @@
+import { checkAndAwardTopicAchievement } from "@/backend/TopicAchievement";
+
 export const EXERCISES_PER_LEVEL = 5;
 
 /**
@@ -110,7 +112,12 @@ export async function upsertLevelProgressAfterExercise(userId, topicId, level) {
   );
 
   const row = await getLevelProgress(db, userId, topicId, level);
-  return row;
+  const achievement = await checkAndAwardTopicAchievement(
+    db,
+    userId,
+    topicId,
+  );
+  return { ...row, justAwarded: achievement.justAwarded };
 }
 
 export async function seedUserLevelProgress(db) {
