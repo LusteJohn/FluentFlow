@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 
-import { seedUserLevelProgress } from "@/backend/UserLevelProgress";
 import AlertDialog from "@/components/alert-dialog";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
@@ -16,6 +15,8 @@ import {
     importTopicData,
     importTopicIntroData,
     importTopicVocabularyData,
+    importUserExerciseProgressData,
+    importUserProfileData,
     importUserStreaksData,
 } from "@/database/database";
 import AppHeader from "../(tabs)/header";
@@ -149,17 +150,25 @@ export default function SettingsPage() {
         "SELECT COUNT(*) as count FROM exercise_tokens",
       );
 
-      await importGrammarTriviaData();
+       await importGrammarTriviaData();
       const triviaCount = await db.getFirstAsync(
         "SELECT COUNT(*) as count FROM grammar_trivia",
+      );
+
+      await importUserProfileData();
+      const profileCount = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM user_profiles",
+      );
+
+      await importUserExerciseProgressData();
+      const exerciseProgressCount = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM user_exercise_progress",
       );
 
       await importUserStreaksData();
       const streakCount = await db.getFirstAsync(
         "SELECT COUNT(*) as count FROM user_streaks",
       );
-
-      await seedUserLevelProgress(db);
 
       setDialog({
         type: "success",
@@ -173,6 +182,8 @@ export default function SettingsPage() {
           `Exercises: ${exerciseCount?.count ?? 0}\n` +
           `Exercise Tokens: ${tokenCount?.count ?? 0}\n` +
           `Grammar Trivia: ${triviaCount?.count ?? 0}\n` +
+          `User Profiles: ${profileCount?.count ?? 0}\n` +
+          `User Exercise Progress: ${exerciseProgressCount?.count ?? 0}\n` +
           `User Streaks: ${streakCount?.count ?? 0}`,
       });
     } catch (error: any) {

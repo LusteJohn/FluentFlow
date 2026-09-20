@@ -159,6 +159,18 @@ export async function getDatabase() {
         );
 
         await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS journey_achievements (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "user_id INTEGER NOT NULL, " +
+            "journey_id INTEGER NOT NULL, " +
+            "achieved_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+            "UNIQUE(user_id, journey_id), " +
+            "FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), " +
+            "FOREIGN KEY (journey_id) REFERENCES journeys(journey_id)" +
+            ")",
+        );
+
+        await db.runAsync(
           "CREATE TABLE IF NOT EXISTS app_kv (key TEXT PRIMARY KEY, value TEXT)",
         );
 
