@@ -24,6 +24,7 @@ import { getAllTopics } from "@/backend/Topic";
 import { getTotalEarnedXP } from "@/backend/UserExerciseProgress";
 import { getAllLevelProgressForTopic } from "@/backend/UserLevelProgress";
 import { getStreakByUserId } from "@/backend/UserStreak";
+import { getTopicAchievementsByUserId } from "@/backend/TopicAchievement";
 import {
   createUserProfile,
   getUserProfile,
@@ -168,6 +169,9 @@ export default function ProfilePage() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
+  const [achievements, setAchievements] = useState<
+    { topic_title: string; achieved_at: string }[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -188,49 +192,47 @@ export default function ProfilePage() {
     useCallback(() => {
       let isActive = true;
 
-       async function loadProfile() {
-         try {
-           await importUserProfileData();
-           const db = await getDatabase();
-           const [existing, topics] = await Promise.all([
-             getUserProfile(db),
-             getAllTopics(db),
-           ]);
+      async function loadProfile() {
+        try {
+          await importUserProfileData();
+          const db = await getDatabase();
+          const [existing, topics] = await Promise.all([
+            getUserProfile(db),
+            getAllTopics(db),
+          ]);
 
           let stats: ProfileStats | null = null;
           if (existing) {
-            const [
-              totalXP,
-              journeyProgress,
-              streakData,
-            ] = await Promise.all([
-              getTotalEarnedXP(db, existing.user_id),
-              getAllJourneyProgressForUser(db, existing.user_id),
-              getStreakByUserId(db, existing.user_id),
-            ]);
+            const [totalXP, journeyProgress, streakData] =
+              await Promise.all([
+                getTotalEarnedXP(db, existing.user_id),
+                getAllJourneyProgressForUser(db, existing.user_id),
+                getStreakByUserId(db, existing.user_id),
+              ]);
+
             let completedLevels = 0;
             let totalLevels = 0;
             let completedTopics = 0;
 
-             for (const topic of topics ?? []) {
-               const progress = await getAllLevelProgressForTopic(
-                 db,
-                 existing.user_id,
-                 topic.topic_id,
-               );
-               let allLevelsCompleted = true;
-               for (const level of LEVELS) {
-                 totalLevels += 1;
-                 if (progress[level]?.status === "completed") {
-                   completedLevels += 1;
-                 } else {
-                   allLevelsCompleted = false;
-               }
-               }
-               if (allLevelsCompleted && LEVELS.length > 0) {
-                 completedTopics += 1;
+            for (const topic of topics ?? []) {
+              const progress = await getAllLevelProgressForTopic(
+                db,
+                existing.user_id,
+                topic.topic_id,
+              );
+              let allLevelsCompleted = true;
+              for (const level of LEVELS) {
+                totalLevels += 1;
+                if (progress[level]?.status === "completed") {
+                  completedLevels += 1;
+                } else {
+                  allLevelsCompleted = false;
                 }
-             }
+              }
+              if (allLevelsCompleted && LEVELS.length > 0) {
+                completedTopics += 1;
+              }
+            }
 
             const totalJourneyExercises = Object.values(
               journeyProgress ?? {},
@@ -244,13 +246,14 @@ export default function ProfilePage() {
               (sum, progress) => sum + (progress?.completedExercises ?? 0),
               0,
             );
-            const learningProgress = totalJourneyExercises > 0
-              ? Math.round(
-                  (completedJourneyExercises / totalJourneyExercises) * 100,
-                )
-              : totalLevels > 0
-                ? Math.round((completedLevels / totalLevels) * 100)
-                : 0;
+            const learningProgress =
+              totalJourneyExercises > 0
+                ? Math.round(
+                    (completedJourneyExercises / totalJourneyExercises) * 100,
+                  )
+                : totalLevels > 0
+                  ? Math.round((completedLevels / totalLevels) * 100)
+                  : 0;
 
             stats = {
               completedTopics,
@@ -261,9 +264,36 @@ export default function ProfilePage() {
             };
           }
 
+          let userAchievements: {
+            topic_title: string;
+            achieved_at: string;
+          }[] = [];
+          if (existing) {
+            const rawAchievements = await getTopicAchievementsByUserId(
+              db,
+              existing.user_id,
+            );
+            userAchievements = rawAchievements
+              .map((a: any) => {
+                const topic = topics?.find(
+                  (t: any) => t.topic_id === a.topic_id,
+                );
+                return {
+                  topic_title: topic?.title ?? "Unknown Topic",
+                  achieved_at: a.achieved_at ?? "",
+                };
+              })
+              .sort(
+                (a, b) =>
+                  new Date(b.achieved_at).getTime() -
+                  new Date(a.achieved_at).getTime(),
+              );
+          }
+
           if (isActive) {
             setProfile(existing);
             setProfileStats(stats);
+            setAchievements(userAchievements);
             if (existing) {
               setFirstname(existing.firstname ?? "");
               setMiddlename(existing.middlename ?? "");
@@ -458,7 +488,7 @@ export default function ProfilePage() {
               )}
             </View>
 
-            {profileStats && (
+            {stats && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <ThemedText
@@ -573,6 +603,46 @@ export default function ProfilePage() {
                   theme={theme}
                   styles={styles}
                 />
+              </View>
+            )}
+
+            {achievements.length > 0 && (
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <ThemedText type="title" style={styles.sectionTitle}>
+                    Topic Achievements
+                  </ThemedText>
+                </View>
+
+                <View style={styles.achievementsList}>
+                  {achievements.map((achievement, index) => (
+                    <View
+                      key={`achievement-${index}`}
+                      style={styles.achievementItem}
+                    >
+                      <View style={styles.achievementIcon}>
+                        <SymbolView
+                          name={{
+                            ios: "rosette.fill",
+                            android: "star_circle",
+                            web: "star",
+                          } as any}
+                          size={24}
+                          tintColor={theme.tertiary}
+                        />
+                      </View>
+                      <View style={styles.achievementInfo}>
+                        <ThemedText style={styles.achievementTitle}>
+                          {achievement.topic_title}
+                        </ThemedText>
+                        <ThemedText style={styles.achievementDate}>
+                          Completed:{" "}
+                          {new Date(achievement.achieved_at).toLocaleDateString()}
+                        </ThemedText>
+                      </View>
+                    </View>
+                  ))}
+                </View>
               </View>
             )}
 
@@ -914,14 +984,15 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       fontSize: 14,
       textAlign: "center",
     },
-    section: {
-      backgroundColor: theme.surfaceContainerLowest,
-      borderRadius: 16,
-      padding: 20,
-      borderWidth: 1,
-      borderColor: theme.outlineVariant,
-      gap: 16,
-    },
+     section: {
+       backgroundColor: theme.surfaceContainerLowest,
+       borderRadius: 16,
+       padding: 20,
+       borderWidth: 1,
+       borderColor: theme.outlineVariant,
+       gap: 16,
+       marginBottom: 16,
+     },
     sectionHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -929,6 +1000,39 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     sectionTitle: {
       color: theme.onSurface,
+    },
+    achievementsList: {
+      gap: 12,
+      marginTop: 4,
+    },
+    achievementItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: theme.surfaceContainerLow,
+      borderRadius: 12,
+      padding: 12,
+    },
+    achievementIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.tertiaryContainer,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    achievementInfo: {
+      flex: 1,
+    },
+    achievementTitle: {
+      color: theme.onSurface,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    achievementDate: {
+      color: theme.onSurfaceVariant,
+      fontSize: 12,
+      marginTop: 2,
     },
      statGrid: {
       flexDirection: "row",
