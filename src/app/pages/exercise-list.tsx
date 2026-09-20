@@ -331,11 +331,18 @@ export default function ExerciseListPage() {
           });
         }
 
-        await upsertLevelProgressAfterExercise(
-          userId,
-          exercise.topic_id,
-          exercise.level,
-        );
+         const levelProgress = await upsertLevelProgressAfterExercise(
+           userId,
+           exercise.topic_id,
+           exercise.level,
+         );
+
+         if (levelProgress?.justAwarded) {
+           Alert.alert(
+             "Achievement Unlocked!",
+             "You've completed all exercises in this topic. Keep it up!",
+           );
+         }
       }
 
       const newResults = {
