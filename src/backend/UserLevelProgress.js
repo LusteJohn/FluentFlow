@@ -1,5 +1,3 @@
-import { getDatabase } from "@/database/database";
-
 export const EXERCISES_PER_LEVEL = 5;
 
 /**
@@ -74,6 +72,7 @@ export async function getAllLevelProgressForTopic(db, userId, topicId) {
 }
 
 export async function upsertLevelProgressAfterExercise(userId, topicId, level) {
+  const { getDatabase } = await import("@/database/database");
   const db = await getDatabase();
   const expectedTotal = await getExpectedCountForLevel(db, topicId, level);
   const target = expectedTotal > 0 ? expectedTotal : EXERCISES_PER_LEVEL;

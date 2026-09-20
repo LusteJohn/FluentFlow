@@ -21,10 +21,7 @@ import {
 
 import { getAllJourneyProgressForUser } from "@/backend/Journey";
 import { getAllTopics } from "@/backend/Topic";
-import {
-  getRecentCompletedExercisesCount,
-  getTotalEarnedXP,
-} from "@/backend/UserExerciseProgress";
+import { getTotalEarnedXP } from "@/backend/UserExerciseProgress";
 import { getAllLevelProgressForTopic } from "@/backend/UserLevelProgress";
 import { getStreakByUserId } from "@/backend/UserStreak";
 import {
@@ -36,7 +33,7 @@ import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useTheme } from "@/contexts/theme-context";
-import { getDatabase } from "@/database/database";
+import { getDatabase, importUserProfileData } from "@/database/database";
 import AppHeader from "../(tabs)/header";
 import NavBar from "../(tabs)/navBar";
 
@@ -79,7 +76,7 @@ const LEVELS = ["beginner", "intermediate", "advanced"] as const;
 const STAT_ANIMATION_DURATION = 650;
 
 interface ProfileStats {
-  completedLessons: number;
+  completedTopics: number;
   badges: number;
   learningProgress: number;
   streak: number;
@@ -191,43 +188,49 @@ export default function ProfilePage() {
     useCallback(() => {
       let isActive = true;
 
-      async function loadProfile() {
-        try {
-          const db = await getDatabase();
-          const [existing, topics] = await Promise.all([
-            getUserProfile(db),
-            getAllTopics(db),
-          ]);
+       async function loadProfile() {
+         try {
+           await importUserProfileData();
+           const db = await getDatabase();
+           const [existing, topics] = await Promise.all([
+             getUserProfile(db),
+             getAllTopics(db),
+           ]);
 
           let stats: ProfileStats | null = null;
           if (existing) {
             const [
-              completedLessons,
               totalXP,
               journeyProgress,
               streakData,
             ] = await Promise.all([
-              getRecentCompletedExercisesCount(db, existing.user_id),
               getTotalEarnedXP(db, existing.user_id),
               getAllJourneyProgressForUser(db, existing.user_id),
               getStreakByUserId(db, existing.user_id),
             ]);
             let completedLevels = 0;
             let totalLevels = 0;
+            let completedTopics = 0;
 
-            for (const topic of topics ?? []) {
-              const progress = await getAllLevelProgressForTopic(
-                db,
-                existing.user_id,
-                topic.topic_id,
-              );
-              for (const level of LEVELS) {
-                totalLevels += 1;
-                if (progress[level]?.status === "completed") {
-                  completedLevels += 1;
+             for (const topic of topics ?? []) {
+               const progress = await getAllLevelProgressForTopic(
+                 db,
+                 existing.user_id,
+                 topic.topic_id,
+               );
+               let allLevelsCompleted = true;
+               for (const level of LEVELS) {
+                 totalLevels += 1;
+                 if (progress[level]?.status === "completed") {
+                   completedLevels += 1;
+                 } else {
+                   allLevelsCompleted = false;
+               }
+               }
+               if (allLevelsCompleted && LEVELS.length > 0) {
+                 completedTopics += 1;
                 }
-              }
-            }
+             }
 
             const totalJourneyExercises = Object.values(
               journeyProgress ?? {},
@@ -250,8 +253,8 @@ export default function ProfilePage() {
                 : 0;
 
             stats = {
-              completedLessons,
-              badges: completedLevels,
+              completedTopics,
+              badges: completedTopics,
               learningProgress,
               streak: streakData?.current_streak ?? 0,
               totalXP,
@@ -394,7 +397,7 @@ export default function ProfilePage() {
     .filter(Boolean)
     .join(" ");
   const stats = profileStats ?? {
-    completedLessons: 0,
+    completedTopics: 0,
     badges: 0,
     learningProgress: 0,
     streak: 0,
@@ -467,35 +470,95 @@ export default function ProfilePage() {
                 </View>
 
                 <View style={styles.statGrid}>
-                  <AnimatedStatValue
-                    value={stats.completedLessons}
-                    delay={80}
-                    styles={styles}
-                  />
-                  <AnimatedStatValue
-                    value={stats.totalXP}
-                    suffix=" XP"
-                    delay={160}
-                    styles={styles}
-                  />
-                  <AnimatedStatValue
-                    value={stats.badges}
-                    delay={240}
-                    styles={styles}
-                  />
-                  <AnimatedStatValue
-                    value={stats.streak}
-                    suffix=" day"
-                    delay={320}
-                    styles={styles}
-                  />
-                </View>
+                  <View style={styles.statCard}>
+                    <View style={styles.statCardHeader}>
+                      <SymbolView
+                        name={{
+                          ios: "checkmark.circle.fill",
+                          android: "check_circle",
+                          web: "check_circle",
+                        } as any}
+                        size={16}
+                        tintColor={theme.primary}
+                      />
+                      <ThemedText style={styles.statCardLabel}>
+                        Completed topics
+                      </ThemedText>
+                    </View>
+                    <AnimatedStatValue
+                      value={stats.completedTopics}
+                      delay={80}
+                      styles={styles}
+                    />
+                  </View>
 
-                <View style={styles.statLabels}>
-                  <ThemedText style={styles.statLabel}>Completed lessons</ThemedText>
-                  <ThemedText style={styles.statLabel}>Total XP</ThemedText>
-                  <ThemedText style={styles.statLabel}>Badges</ThemedText>
-                  <ThemedText style={styles.statLabel}>Day streak</ThemedText>
+                  <View style={styles.statCard}>
+                    <View style={styles.statCardHeader}>
+                      <SymbolView
+                        name={{
+                          ios: "star.fill",
+                          android: "stars",
+                          web: "stars",
+                        } as any}
+                        size={16}
+                        tintColor={theme.secondary}
+                      />
+                      <ThemedText style={styles.statCardLabel}>
+                        Total XP
+                      </ThemedText>
+                    </View>
+                    <AnimatedStatValue
+                      value={stats.totalXP}
+                      suffix=" XP"
+                      delay={160}
+                      styles={styles}
+                    />
+                  </View>
+
+                  <View style={styles.statCard}>
+                    <View style={styles.statCardHeader}>
+                      <SymbolView
+                        name={{
+                          ios: "rosette.fill",
+                          android: "star_circle",
+                          web: "star",
+                        } as any}
+                        size={16}
+                        tintColor={theme.tertiary}
+                      />
+                      <ThemedText style={styles.statCardLabel}>
+                        Badges
+                      </ThemedText>
+                    </View>
+                    <AnimatedStatValue
+                      value={stats.badges}
+                      delay={240}
+                      styles={styles}
+                    />
+                  </View>
+
+                  <View style={styles.statCard}>
+                    <View style={styles.statCardHeader}>
+                      <SymbolView
+                        name={{
+                          ios: "flame.fill",
+                          android: "local_fire_department",
+                          web: "local_fire_department",
+                        } as any}
+                        size={16}
+                        tintColor={theme.error}
+                      />
+                      <ThemedText style={styles.statCardLabel}>
+                        Day streak
+                      </ThemedText>
+                    </View>
+                    <AnimatedStatValue
+                      value={stats.streak}
+                      suffix=" day"
+                      delay={320}
+                      styles={styles}
+                    />
+                  </View>
                 </View>
 
                 <View style={styles.progressHeader}>
@@ -867,35 +930,42 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     sectionTitle: {
       color: theme.onSurface,
     },
-    statGrid: {
+     statGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 12,
     },
-    statValueContainer: {
+    statCard: {
       flexBasis: "45%",
-      minHeight: 52,
-      alignItems: "center",
-      justifyContent: "center",
       backgroundColor: theme.surfaceContainerLow,
       borderRadius: 12,
+      padding: 10,
+      paddingBottom: 6,
+      gap: 4,
+    },
+    statCardHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
+    },
+    statCardLabel: {
+      color: theme.onSurfaceVariant,
+      fontSize: 11,
+      fontWeight: "600",
+      textAlign: "center",
+    },
+    statValueContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 10,
+      paddingVertical: 6,
     },
     statValue: {
       color: theme.onSurface,
       fontSize: 22,
       fontWeight: "700",
-      textAlign: "center",
-    },
-    statLabels: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 12,
-      marginTop: -2,
-    },
-    statLabel: {
-      width: "45%",
-      color: theme.onSurfaceVariant,
-      fontSize: 12,
       textAlign: "center",
     },
     progressHeader: {

@@ -7,6 +7,7 @@ import { seedExercises } from "@/backend/TopicExercise";
 import { seedTopicIntros } from "@/backend/TopicIntro";
 import { seedTopicVocabulary } from "@/backend/TopicVocabulary";
 import { seedUserExerciseProgress } from "@/backend/UserExerciseProgress";
+import { seedUserLevelProgress } from "@/backend/UserLevelProgress";
 import { seedUserProfiles } from "@/backend/UserProfile";
 import { seedUserStreaks } from "@/backend/UserStreak";
 import { Platform } from "react-native";
@@ -34,7 +35,7 @@ export async function getDatabase() {
   if (!dbPromise) {
     dbPromise = (async () => {
       try {
-        const db = await SQLite.openDatabaseAsync("fluentflow_data_v2.db");
+         const db = await SQLite.openDatabaseAsync("fluentflow_data_v3.db");
 
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS tbl_users (user_id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, last_active_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
@@ -133,39 +134,17 @@ export async function getDatabase() {
             ")",
         );
 
-        try {
-          await db.runAsync(
-            "ALTER TABLE topic_bookmarks RENAME TO topic_bookmarks_legacy",
-          );
-          await db.runAsync(
-            "CREATE TABLE IF NOT EXISTS topic_bookmarks (" +
-              "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-              "user_id INTEGER NOT NULL, " +
-              "topic_id INTEGER NOT NULL, " +
-              "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
-              "UNIQUE(user_id, topic_id), " +
-              "FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), " +
-              "FOREIGN KEY (topic_id) REFERENCES topics(topic_id)" +
-              ")",
-          );
-          await db.runAsync(
-            "INSERT OR IGNORE INTO topic_bookmarks " +
-              "(user_id, topic_id, created_at) " +
-              "SELECT user_id, topic_id, created_at " +
-              "FROM topic_bookmarks_legacy",
-          );
-          await db.runAsync("DROP TABLE topic_bookmarks_legacy");
-        } catch (error) {
-          try {
-            await db.runAsync(
-              "INSERT OR IGNORE INTO topic_bookmarks " +
-                "(user_id, topic_id, created_at) " +
-                "SELECT user_id, topic_id, created_at " +
-                "FROM topic_bookmarks_legacy",
-            );
-            await db.runAsync("DROP TABLE topic_bookmarks_legacy");
-          } catch {}
-        }
+        await db.runAsync(
+          "CREATE TABLE IF NOT EXISTS topic_bookmarks (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "user_id INTEGER NOT NULL, " +
+            "topic_id INTEGER NOT NULL, " +
+            "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+            "UNIQUE(user_id, topic_id), " +
+            "FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), " +
+            "FOREIGN KEY (topic_id) REFERENCES topics(topic_id)" +
+            ")",
+        );
 
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS app_kv (key TEXT PRIMARY KEY, value TEXT)",
@@ -221,6 +200,7 @@ export async function importExerciseTokenData() {
 export async function importUserProfileData() {
   const db = await getDatabase();
   await seedUserProfiles(db);
+  await seedUserLevelProgress(db);
 }
 
 export async function importUserExerciseProgressData() {
@@ -278,5 +258,31 @@ export async function resetTutorialSeen(): Promise<void> {
     await db.runAsync("DELETE FROM app_kv WHERE key = ?", "tutorial_seen");
   } catch (error) {
     console.error("Failed to reset tutorial flag", error);
+  }
+}
+
+export async function hasSeenDailyTrivia(today: string): Promise<boolean> {
+  try {
+    const db = await getDatabase();
+    const row = await db.getFirstAsync(
+      "SELECT value FROM app_kv WHERE key = ?",
+      "trivia_seen_date",
+    );
+    return row?.value === today;
+  } catch {
+    return true;
+  }
+}
+
+export async function markDailyTriviaSeen(today: string): Promise<void> {
+  try {
+    const db = await getDatabase();
+    await db.runAsync(
+      "INSERT INTO app_kv (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      "trivia_seen_date",
+      today,
+    );
+  } catch (error) {
+    console.error("Failed to mark trivia seen", error);
   }
 }

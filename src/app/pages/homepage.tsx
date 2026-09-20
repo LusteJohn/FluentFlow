@@ -41,8 +41,19 @@ import { useTheme } from "@/contexts/theme-context";
 import {
   getDatabase,
   hasSeenTutorial,
+  hasSeenDailyTrivia,
+  importExerciseData,
+  importExerciseTokenData,
   importGrammarTriviaData,
+  importJourneyData,
+  importTopicData,
+  importTopicIntroData,
+  importTopicVocabularyData,
+  importUserExerciseProgressData,
+  importUserStreaksData,
+  importUserProfileData,
   isDataImported,
+  markDailyTriviaSeen,
   markTutorialSeen,
 } from "@/database/database";
 import AppHeader from "../(tabs)/header";
@@ -233,8 +244,10 @@ export default function HomePage() {
     }
   }, [currentTrivia, loadingTrivia]);
 
-  const handleCloseTrivia = () => {
+  const handleCloseTrivia = async () => {
     setShowTrivia(false);
+    const today = new Date().toISOString().slice(0, 10);
+    await markDailyTriviaSeen(today);
   };
 
   const [weeklyBars, setWeeklyBars] = useState<WeeklyBar[]>([]);
@@ -302,11 +315,27 @@ export default function HomePage() {
           setShowTutorial(true);
           await markTutorialSeen();
         }
-        if (!cancelled && dataImported) {
+        if (!cancelled && !dataImported) {
+          await importJourneyData();
+          await importTopicData();
+          await importTopicIntroData();
+          await importTopicVocabularyData();
+          await importExerciseData();
+          await importExerciseTokenData();
           await importGrammarTriviaData();
         }
-        if (!cancelled && dataImported) {
-          await loadRandomTrivia();
+        if (!cancelled) {
+          await importUserProfileData();
+          await importUserExerciseProgressData();
+          await importUserStreaksData();
+          await importGrammarTriviaData();
+          const today = new Date()
+            .toISOString()
+            .slice(0, 10);
+          const triviaSeenToday = await hasSeenDailyTrivia(today);
+          if (!triviaSeenToday) {
+            await loadRandomTrivia();
+          }
         }
       } catch (error) {
         console.error("Failed to check tutorial state", error);

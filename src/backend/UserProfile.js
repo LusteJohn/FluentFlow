@@ -86,4 +86,15 @@ export async function deleteUserProfile(db, userId) {
 export async function seedUserProfiles(db) {
   const existing = await db.getFirstAsync("SELECT COUNT(*) as count FROM user_profiles");
   if ((existing?.count ?? 0) > 0) return;
+
+  await db.runAsync(
+    "INSERT INTO user_profiles (firstname, middlename, lastname, name_ext, birthdate, gender, address) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    "User",
+    null,
+    "Name",
+    null,
+    null,
+    null,
+    null,
+  );
 }
