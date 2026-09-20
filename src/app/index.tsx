@@ -46,8 +46,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
   },
   title: {
     color: Colors.light.primary,
