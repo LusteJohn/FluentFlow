@@ -38,6 +38,7 @@ import {
   updateUserExerciseProgress,
 } from "@/backend/UserExerciseProgress";
 import { upsertLevelProgressAfterExercise } from "@/backend/UserLevelProgress";
+import { checkAndAwardJourneyAchievement } from "@/backend/JournryAchievement";
 import { getUserProfile } from "@/backend/UserProfile";
 import { FillBlankExercise } from "@/components/exercise/FillBlankExercise";
 import { ExerciseProgressIndicator } from "@/components/exercise/ExerciseProgressIndicator";
@@ -112,6 +113,8 @@ export default function ExerciseListPage() {
    const [showMistakesCorrectedModal, setShowMistakesCorrectedModal] =
      useState(false);
    const [showAchievementModal, setShowAchievementModal] = useState(false);
+   const [showJourneyAchievementModal, setShowJourneyAchievementModal] =
+     useState(false);
    const [reviewMode, setReviewMode] = useState(false);
    const [userId, setUserId] = useState<number | null>(null);
 
@@ -340,6 +343,18 @@ export default function ExerciseListPage() {
 
          if (levelProgress?.justAwarded) {
            setShowAchievementModal(true);
+
+           const topicRow = await getTopicById(db, exercise.topic_id);
+           if (topicRow?.journey_id) {
+             const journeyResult = await checkAndAwardJourneyAchievement(
+               db,
+               userId,
+               topicRow.journey_id,
+             );
+             if (journeyResult.justAwarded) {
+               setShowJourneyAchievementModal(true);
+             }
+           }
          }
       }
 
@@ -1026,6 +1041,64 @@ export default function ExerciseListPage() {
                 </Pressable>
               </Animated.View>
             </Animated.View>
+           </Modal>
+         )}
+
+        {showJourneyAchievementModal && (
+          <Modal
+            visible={showJourneyAchievementModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowJourneyAchievementModal(false)}
+          >
+            <Animated.View
+              entering={FadeInUp.duration(300)
+                .easing(Easing.out(Easing.quad))
+                .delay(60)}
+              style={styles.journeyAchievementOverlay}
+            >
+              <Animated.View
+                entering={FadeInUp.duration(300)
+                  .easing(Easing.out(Easing.quad))
+                  .delay(130)}
+                style={styles.journeyAchievementContent}
+              >
+                <Animated.View
+                  entering={FadeInUp.duration(280)
+                    .easing(Easing.out(Easing.quad))
+                    .delay(100)}
+                  style={styles.journeyAchievementIconContainer}
+                >
+                  <View style={styles.journeyAchievementIconInner}>
+                    <SymbolView
+                      name={{
+                        ios: "rosette.fill",
+                        android: "star_circle",
+                        web: "star",
+                      } as any}
+                      size={48}
+                      tintColor={theme.tertiary}
+                    />
+                  </View>
+                </Animated.View>
+
+                <ThemedText style={styles.journeyAchievementTitle}>
+                  Journey Complete!
+                </ThemedText>
+                <ThemedText style={styles.journeyAchievementSubtitle}>
+                  {"You've completed every topic in this journey. Amazing work!"}
+                </ThemedText>
+
+                <Pressable
+                  style={styles.journeyAchievementButton}
+                  onPress={() => setShowJourneyAchievementModal(false)}
+                >
+                  <ThemedText style={styles.journeyAchievementButtonText}>
+                    Continue
+                  </ThemedText>
+                </Pressable>
+              </Animated.View>
+            </Animated.View>
           </Modal>
         )}
       </ThemedView>
@@ -1518,6 +1591,62 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     achievementButtonText: {
       color: theme.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    journeyAchievementOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24,
+    },
+    journeyAchievementContent: {
+      backgroundColor: theme.surface,
+      borderRadius: 24,
+      padding: 32,
+      alignItems: "center",
+      justifyContent: "center",
+      maxWidth: 320,
+      width: "100%",
+    },
+    journeyAchievementIconContainer: {
+      marginBottom: 16,
+    },
+    journeyAchievementIconInner: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.secondaryContainer,
+    },
+    journeyAchievementTitle: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: theme.secondary,
+      textAlign: "center",
+      marginBottom: 8,
+    },
+    journeyAchievementSubtitle: {
+      fontSize: 15,
+      color: theme.onSurfaceVariant,
+      textAlign: "center",
+      marginBottom: 24,
+      lineHeight: 20,
+    },
+    journeyAchievementButton: {
+      backgroundColor: theme.secondary,
+      paddingVertical: 14,
+      paddingHorizontal: 32,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      borderBottomWidth: 3,
+      borderBottomColor: theme.secondaryContainer,
+    },
+    journeyAchievementButtonText: {
+      color: theme.onSecondary,
       fontSize: 16,
       fontWeight: "600",
     },

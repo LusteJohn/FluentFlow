@@ -3,6 +3,7 @@ import { SymbolView } from "expo-symbols";
 import Animated, {
   Easing,
   FadeIn as AnimatedFadeIn,
+  FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -18,6 +19,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getAllJourneyProgressForUser } from "@/backend/Journey";
 import { getAllTopics } from "@/backend/Topic";
@@ -167,6 +169,7 @@ function AnimatedProgressBar({
 export default function ProfilePage() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
   const [achievements, setAchievements] = useState<
@@ -437,64 +440,67 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <ScreenMotion>
-        <ThemedView style={styles.container}>
-          <AppHeader />
-          <ThemedText style={styles.loadingText}>Loading profile...</ThemedText>
+      <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+        <AppHeader />
+        <ThemedText style={styles.loadingText}>Loading profile...</ThemedText>
         </ThemedView>
       </ScreenMotion>
     );
   }
 
-  return (
-    <ScreenMotion>
-      <ThemedView style={styles.container}>
-        <AppHeader />
+   return (
+     <ScreenMotion>
+       <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+         <AppHeader />
 
-        <KeyboardAvoidingView
-          style={styles.keyboardAvoidingView}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-        >
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.profileHeader}>
-              <View style={styles.avatarContainer}>
-                <View style={styles.avatar}>
-                  <SymbolView
-                    name={{
-                      ios: "person.fill",
-                      android: "person",
-                      web: "person",
-                    }}
-                    size={48}
-                    tintColor={theme.onPrimaryContainer}
-                  />
-                </View>
-              </View>
-              <ThemedText type="title" style={styles.profileName}>
-                {fullName || "Your Profile"}
-              </ThemedText>
-              {profile && (
-                <ThemedText style={styles.profileSubtitle}>
-                  Member since{" "}
-                  {profile.created_at
-                    ? new Date(profile.created_at).toLocaleDateString()
-                    : "-"}
-                </ThemedText>
-              )}
-            </View>
+         <KeyboardAvoidingView
+           style={[
+             styles.keyboardAvoidingView,
+             { paddingBottom: Platform.OS === "android" ? insets.bottom : 0 },
+           ]}
+           behavior={Platform.OS === "ios" ? "padding" : "height"}
+           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+         >
+           <ScrollView
+             style={styles.scrollView}
+             contentContainerStyle={[
+               styles.scrollContent,
+               { paddingBottom: Math.max(insets.bottom, 16) + 64 },
+             ]}
+             showsVerticalScrollIndicator={false}
+             keyboardShouldPersistTaps="handled"
+           >
+             <View style={styles.profileHeader}>
+               <View style={styles.avatarContainer}>
+                 <View style={styles.avatar}>
+                   <SymbolView
+                     name={{
+                       ios: "person.fill",
+                       android: "person",
+                       web: "person",
+                     }}
+                     size={48}
+                     tintColor={theme.onPrimaryContainer}
+                   />
+                 </View>
+               </View>
+               <ThemedText style={styles.profileName}>
+                 {fullName || "Your Profile"}
+               </ThemedText>
+               {profile && (
+                 <ThemedText style={styles.profileSubtitle}>
+                   Member since{" "}
+                   {profile.created_at
+                     ? new Date(profile.created_at).toLocaleDateString()
+                     : "-"}
+                 </ThemedText>
+               )}
+             </View>
 
             {stats && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <ThemedText
-                    type="title"
-                    style={styles.sectionTitle}
-                  >
+                  <ThemedText style={styles.sectionTitle}>
                     Learning Summary
                   </ThemedText>
                 </View>
@@ -609,18 +615,19 @@ export default function ProfilePage() {
             {achievements.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <ThemedText type="title" style={styles.sectionTitle}>
+                  <ThemedText style={styles.sectionTitle}>
                     Topic Achievements
                   </ThemedText>
                 </View>
 
                 <View style={styles.achievementsList}>
                   {achievements.map((achievement, index) => (
-                    <View
+                    <Animated.View
                       key={`achievement-${index}`}
+                      entering={FadeInUp.duration(240).delay(index * 50)}
                       style={styles.achievementItem}
                     >
-                      <View style={styles.achievementIcon}>
+                      <View style={styles.achievementCheckmark}>
                         <SymbolView
                           name={{
                             ios: "rosette.fill",
@@ -640,7 +647,7 @@ export default function ProfilePage() {
                           {new Date(achievement.achieved_at).toLocaleDateString()}
                         </ThemedText>
                       </View>
-                    </View>
+                    </Animated.View>
                   ))}
                 </View>
               </View>
@@ -648,11 +655,14 @@ export default function ProfilePage() {
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <ThemedText type="title" style={styles.sectionTitle}>
+                <ThemedText style={styles.sectionTitle}>
                   Personal Information
                 </ThemedText>
                 {!isEditing && (
-                  <Pressable onPress={() => setIsEditing(true)}>
+                  <Pressable
+                    onPress={() => setIsEditing(true)}
+                    hitSlop={8}
+                  >
                     <SymbolView
                       name={{
                         ios: "pencil",
@@ -948,9 +958,8 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       flex: 1,
     },
     scrollContent: {
-      paddingHorizontal: 24,
-      paddingBottom: 32,
-      gap: 24,
+      paddingHorizontal: 20,
+      gap: 20,
     },
     loadingText: {
       textAlign: "center",
@@ -959,16 +968,16 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     profileHeader: {
       alignItems: "center",
-      gap: 12,
-      paddingVertical: 24,
+      gap: 6,
+      paddingVertical: 20,
     },
     avatarContainer: {
-      marginBottom: 8,
+      marginBottom: 2,
     },
     avatar: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
       backgroundColor: theme.primaryContainer,
       alignItems: "center",
       justifyContent: "center",
@@ -977,22 +986,23 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     profileName: {
       color: theme.onSurface,
+      fontSize: 26,
+      fontWeight: "700",
       textAlign: "center",
     },
     profileSubtitle: {
       color: theme.onSurfaceVariant,
-      fontSize: 14,
+      fontSize: 13,
       textAlign: "center",
     },
-     section: {
-       backgroundColor: theme.surfaceContainerLowest,
-       borderRadius: 16,
-       padding: 20,
-       borderWidth: 1,
-       borderColor: theme.outlineVariant,
-       gap: 16,
-       marginBottom: 16,
-     },
+    section: {
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 16,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: theme.outlineVariant,
+      gap: 16,
+    },
     sectionHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -1000,9 +1010,11 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     sectionTitle: {
       color: theme.onSurface,
+      fontSize: 18,
+      fontWeight: "700",
     },
     achievementsList: {
-      gap: 12,
+      gap: 10,
       marginTop: 4,
     },
     achievementItem: {
@@ -1013,11 +1025,11 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       borderRadius: 12,
       padding: 12,
     },
-    achievementIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: theme.tertiaryContainer,
+    achievementCheckmark: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.primaryContainer,
       alignItems: "center",
       justifyContent: "center",
     },
@@ -1034,18 +1046,18 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       fontSize: 12,
       marginTop: 2,
     },
-     statGrid: {
+    statGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 12,
+      gap: 10,
     },
     statCard: {
-      flexBasis: "45%",
+      flexBasis: "48%",
       backgroundColor: theme.surfaceContainerLow,
       borderRadius: 12,
-      padding: 10,
-      paddingBottom: 6,
-      gap: 4,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      gap: 6,
     },
     statCardHeader: {
       flexDirection: "row",
@@ -1063,12 +1075,12 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: theme.surfaceContainerLowest,
-      borderRadius: 10,
+      borderRadius: 8,
       paddingVertical: 6,
     },
     statValue: {
       color: theme.onSurface,
-      fontSize: 22,
+      fontSize: 20,
       fontWeight: "700",
       textAlign: "center",
     },
@@ -1108,22 +1120,25 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     formField: {
       flex: 1,
-      gap: 6,
+      gap: 4,
     },
     label: {
       color: theme.onSurfaceVariant,
-      fontSize: 14,
+      fontSize: 12,
       fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
     },
     input: {
       backgroundColor: theme.surface,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      fontSize: 16,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      fontSize: 15,
       color: theme.onSurface,
       borderWidth: 1,
       borderColor: theme.outlineVariant,
+      height: 50,
     },
     inputDisabled: {
       backgroundColor: theme.surfaceContainer,
@@ -1140,7 +1155,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     dateText: {
       color: theme.onSurface,
-      fontSize: 16,
+      fontSize: 15,
     },
     datePlaceholder: {
       color: theme.onSurfaceVariant,
@@ -1164,7 +1179,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     genderOptionText: {
       color: theme.onSurface,
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: "600",
     },
     genderOptionTextSelected: {
@@ -1176,35 +1191,37 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     cancelButton: {
       flex: 1,
-      paddingVertical: 14,
-      borderRadius: 16,
+      paddingVertical: 12,
+      borderRadius: 12,
       backgroundColor: theme.surfaceContainer,
       borderWidth: 1,
       borderColor: theme.outlineVariant,
       alignItems: "center",
       justifyContent: "center",
+      height: 48,
     },
     cancelButtonText: {
       color: theme.onSurface,
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: "600",
     },
     saveButton: {
       flex: 1,
-      paddingVertical: 14,
-      borderRadius: 16,
+      paddingVertical: 12,
+      borderRadius: 12,
       backgroundColor: theme.primary,
       borderBottomWidth: 3,
       borderBottomColor: theme.primaryContainer,
       alignItems: "center",
       justifyContent: "center",
+      height: 48,
     },
     saveButtonDisabled: {
       opacity: 0.6,
     },
     saveButtonText: {
       color: theme.onPrimary,
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: "600",
     },
     datePickerOverlay: {
