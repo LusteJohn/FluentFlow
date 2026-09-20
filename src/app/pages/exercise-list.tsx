@@ -109,10 +109,11 @@ export default function ExerciseListPage() {
   );
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
-  const [showMistakesCorrectedModal, setShowMistakesCorrectedModal] =
-    useState(false);
-  const [reviewMode, setReviewMode] = useState(false);
-  const [userId, setUserId] = useState<number | null>(null);
+   const [showMistakesCorrectedModal, setShowMistakesCorrectedModal] =
+     useState(false);
+   const [showAchievementModal, setShowAchievementModal] = useState(false);
+   const [reviewMode, setReviewMode] = useState(false);
+   const [userId, setUserId] = useState<number | null>(null);
 
   const getCorrectAnswer = (
     tokens: ExerciseToken[],
@@ -338,10 +339,7 @@ export default function ExerciseListPage() {
          );
 
          if (levelProgress?.justAwarded) {
-           Alert.alert(
-             "Achievement Unlocked!",
-             "You've completed all exercises in this topic. Keep it up!",
-           );
+           setShowAchievementModal(true);
          }
       }
 
@@ -970,6 +968,66 @@ export default function ExerciseListPage() {
             </Animated.View>
           </Modal>
         )}
+
+        {showAchievementModal && (
+          <Modal
+            visible={showAchievementModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowAchievementModal(false)}
+          >
+            <Animated.View
+              entering={FadeInUp.duration(300)
+                .easing(Easing.out(Easing.quad))
+                .delay(60)}
+              style={styles.achievementOverlay}
+            >
+              <Animated.View
+                entering={FadeInUp.duration(300)
+                  .easing(Easing.out(Easing.quad))
+                  .delay(130)}
+                style={styles.achievementContent}
+              >
+                <Animated.View
+                  entering={FadeInUp.duration(280)
+                    .easing(Easing.out(Easing.quad))
+                    .delay(100)}
+                  style={styles.achievementIconContainer}
+                >
+                  <View style={styles.achievementIconInner}>
+                    <SymbolView
+                      name={
+                        {
+                          ios: "rosette.fill",
+                          android: "star_circle",
+                          web: "star",
+                        } as any
+                      }
+                      size={48}
+                      tintColor={theme.tertiary}
+                    />
+                  </View>
+                </Animated.View>
+
+                <ThemedText style={styles.achievementTitle}>
+                  Achievement Unlocked!
+                </ThemedText>
+                <ThemedText style={styles.achievementSubtitle}>
+                  {"You've completed all exercises in this topic. Keep it up!"}
+                </ThemedText>
+
+                <Pressable
+                  style={styles.achievementButton}
+                  onPress={() => setShowAchievementModal(false)}
+                >
+                  <ThemedText style={styles.achievementButtonText}>
+                    Continue
+                  </ThemedText>
+                </Pressable>
+              </Animated.View>
+            </Animated.View>
+          </Modal>
+        )}
       </ThemedView>
     </ScreenMotion>
   );
@@ -1403,6 +1461,62 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       borderBottomColor: theme.primaryContainer,
     },
     mistakesCorrectedButtonText: {
+      color: theme.onPrimary,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    achievementOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 24,
+    },
+    achievementContent: {
+      backgroundColor: theme.surface,
+      borderRadius: 24,
+      padding: 32,
+      alignItems: "center",
+      justifyContent: "center",
+      maxWidth: 320,
+      width: "100%",
+    },
+    achievementIconContainer: {
+      marginBottom: 16,
+    },
+    achievementIconInner: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.tertiaryContainer,
+    },
+    achievementTitle: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: theme.tertiary,
+      textAlign: "center",
+      marginBottom: 8,
+    },
+    achievementSubtitle: {
+      fontSize: 15,
+      color: theme.onSurfaceVariant,
+      textAlign: "center",
+      marginBottom: 24,
+      lineHeight: 20,
+    },
+    achievementButton: {
+      backgroundColor: theme.tertiary,
+      paddingVertical: 14,
+      paddingHorizontal: 32,
+      borderRadius: 16,
+      alignItems: "center",
+      justifyContent: "center",
+      borderBottomWidth: 3,
+      borderBottomColor: theme.tertiaryContainer,
+    },
+    achievementButtonText: {
       color: theme.onPrimary,
       fontSize: 16,
       fontWeight: "600",
