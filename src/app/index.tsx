@@ -12,7 +12,7 @@ export default function IndexPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace("/pages/login");
+      router.replace("/pages/homepage");
     }, 2000);
     return () => clearTimeout(timer);
   }, [router]);

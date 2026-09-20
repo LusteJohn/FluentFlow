@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
@@ -10,7 +10,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import React from "react";
 
 import { getJourneyById } from "@/backend/Journey";
 import {
@@ -252,17 +251,17 @@ export default function TopicPage() {
   };
 
   function BookmarkIndicator({ theme }: { theme: ReturnType<typeof useTheme> }) {
-    const pulse = useSharedValue(1);
+    const pulse = useRef(useSharedValue(1));
 
-    React.useEffect(() => {
-      pulse.value = withTiming(1.3, {
+    useEffect(() => {
+      pulse.current.value = withTiming(1.3, {
         duration: 600,
         easing: Easing.out(Easing.quad),
       });
-    }, [pulse]);
+    }, []);
 
     const pulseStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: pulse.value }],
+      transform: [{ scale: pulse.current.value }],
     }));
 
     return (
