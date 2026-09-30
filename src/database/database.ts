@@ -222,6 +222,18 @@ export async function importUserStreaksData() {
   await seedUserStreaks(db);
 }
 
+export async function getCompletedTopicLevels(userId: number) {
+  const db = await getDatabase();
+  const { getCompletedTopicLevels: getRows } = await import("@/backend/TopicReset");
+  return getRows(db, userId);
+}
+
+export async function resetTopicLevel(userId: number, topicId: number, level: string) {
+  const db = await getDatabase();
+  const { resetTopicLevel: reset } = await import("@/backend/TopicReset");
+  return reset(db, userId, topicId, level);
+}
+
 export async function isDataImported(): Promise<boolean> {
   const db = await getDatabase();
   const result = await db.getFirstAsync(
