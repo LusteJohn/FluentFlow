@@ -7,6 +7,8 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
 import Animated, {
   FadeIn,
   FadeInUp,
@@ -20,6 +22,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useTheme, useThemeMode } from "@/contexts/theme-context";
 import {
+  buildReportData,
   getCompletedTopicLevels,
   getDatabase,
   importExerciseData,
@@ -64,6 +67,55 @@ export default function SettingsPage() {
   const [confirmTopicTitle, setConfirmTopicTitle] = useState<string>("");
 
   const closeDialog = () => setDialog(null);
+  const [exportingReport, setExportingReport] = useState(false);
+
+  const handleExportReport = async () => {
+    setExportingReport(true);
+    try {
+      const db = await getDatabase();
+      const profile = await getUserProfile(db);
+      if (!profile) {
+        setDialog({
+          type: "error",
+          title: "Export Failed",
+          message: "No student profile found. Please create a profile first.",
+        });
+        return;
+      }
+      const reportData = await buildReportData(profile.user_id);
+
+      // Build HTML for PDF
+      const html = buildReportHtml(reportData, theme);
+
+      const printResult: any = await Print.printAsync({
+        html,
+        width: 595,
+        height: 842,
+      });
+
+      if (printResult?.uri && await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(printResult.uri, {
+          UTI: "com.adobe.pdf",
+          mimeType: "application/pdf",
+          dialogTitle: "Share FluentFlow Report",
+        });
+      } else {
+        setDialog({
+          type: "success",
+          title: "Report Generated",
+          message: "PDF report has been generated successfully.",
+        });
+      }
+    } catch (error: any) {
+      setDialog({
+        type: "error",
+        title: "Export Failed",
+        message: error?.message ?? "Failed to generate PDF report. Please try again.",
+      });
+    } finally {
+      setExportingReport(false);
+    }
+  };
 
   const styles = useMemo(
     () =>
@@ -131,6 +183,28 @@ export default function SettingsPage() {
         },
         buttonText: {
           color: theme.onPrimary,
+          fontSize: 16,
+          fontWeight: "600",
+        },
+        exportButton: {
+          backgroundColor: theme.secondary,
+          paddingVertical: 14,
+          borderRadius: 16,
+          alignItems: "center",
+          justifyContent: "center",
+          borderBottomWidth: 3,
+          borderBottomColor: theme.secondaryContainer,
+          marginTop: 12,
+        },
+        exportButtonPressed: {
+          borderBottomWidth: 0,
+          transform: [{ translateY: 3 }],
+        },
+        exportButtonDisabled: {
+          opacity: 0.6,
+        },
+        exportButtonText: {
+          color: theme.onSecondary,
           fontSize: 16,
           fontWeight: "600",
         },
@@ -329,6 +403,211 @@ export default function SettingsPage() {
     }
   };
 
+  const buildReportHtml = (reportData: any, theme: any): string => {
+    const primaryColor = theme.primary;
+    const secondaryColor = theme.secondary;
+    const surfaceColor = theme.surfaceContainerLow;
+    const onSurface = theme.onSurface;
+    const onSurfaceVariant = theme.onSurfaceVariant;
+
+    // Journey pie chart SVG
+    const PIE_COLORS = [primaryColor, secondaryColor, "#168A4A", "#E6A32A", "#8B5CF6", "#EC4899", "#06B6D4", "#F97316"];
+    const PIE_RADIUS = 70;
+    const PIE_CENTER_X = 80;
+    const PIE_CENTER_Y = 80;
+    const PIE_STROKE = 2;
+
+    let cumulativeAngle = -Math.PI / 2; // Start from top
+    let pieSlices = "";
+    const pieLegend = reportData.journeyPieData.map((j: any, i: number) => {
+      const color = PIE_COLORS[i % PIE_COLORS.length];
+      const sliceAngle = (j.percent / 100) * 2 * Math.PI;
+      const startAngle = cumulativeAngle;
+      const endAngle = cumulativeAngle + sliceAngle;
+      cumulativeAngle += sliceAngle;
+
+      const x1 = PIE_CENTER_X + PIE_RADIUS * Math.cos(startAngle);
+      const y1 = PIE_CENTER_Y + PIE_RADIUS * Math.sin(startAngle);
+      const x2 = PIE_CENTER_X + PIE_RADIUS * Math.cos(endAngle);
+      const y2 = PIE_CENTER_Y + PIE_RADIUS * Math.sin(endAngle);
+
+      const largeArc = sliceAngle > Math.PI ? 1 : 0;
+      const pathData = `M ${PIE_CENTER_X} ${PIE_CENTER_Y} L ${x1} ${y1} A ${PIE_RADIUS} ${PIE_RADIUS} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+      return {
+        path: pathData,
+        color,
+        title: j.title,
+        percent: j.percent,
+      };
+    });
+
+    pieSlices = pieLegend
+      .map(
+        (p: any) =>
+          `<path d="${p.path}" fill="${p.color}" stroke="#ffffff" stroke-width="${PIE_STROKE}"/>`,
+      )
+      .join("");
+
+    const pieLegendHtml = pieLegend
+      .map(
+        (p: any) => `
+        <div style="display: flex; align-items: center; margin: 4px 0;">
+          <span style="display: inline-block; width: 12px; height: 12px; background: ${p.color}; border-radius: 3px; margin-right: 6px;"></span>
+          <span style="font-size: 11px;">${p.title} (${p.percent}%)</span>
+        </div>
+      `,
+      )
+      .join("");
+
+    const pieChartHtml = `
+      <div style="display: flex; align-items: center; gap: 20px; margin: 12px 0;">
+        <svg width="${PIE_CENTER_X * 2}" height="${PIE_CENTER_Y * 2}" viewBox="0 0 ${PIE_CENTER_X * 2} ${PIE_CENTER_Y * 2}">
+          ${pieSlices}
+        </svg>
+        <div style="flex: 1;">
+          ${pieLegendHtml}
+        </div>
+      </div>
+    `;
+
+    // Journey pie chart rows
+    const journeyRows = reportData.journeyPieData
+      .map(
+        (j: any) => `
+        <tr style="border-bottom: 1px solid #e0e0e0;">
+          <td style="padding: 8px; font-weight: 600;">${j.title}</td>
+          <td style="padding: 8px; text-align: center;">${j.completed} / ${j.total}</td>
+          <td style="padding: 8px; text-align: center;">
+            <span style="display: inline-block; width: 60px; height: 12px; background: ${j.percent >= 100 ? secondaryColor : primaryColor}; border-radius: 6px; vertical-align: middle;"></span>
+          </td>
+          <td style="padding: 8px; text-align: center; font-weight: 600; color: ${j.percent >= 100 ? secondaryColor : primaryColor};">${j.percent}%</td>
+        </tr>
+      `,
+      )
+      .join("");
+
+    // Weekly progress rows
+    const weeklyRows = reportData.weekly
+      .map(
+        (w: any) => `
+        <tr style="border-bottom: 1px solid #e0e0e0;">
+          <td style="padding: 8px; font-weight: 600;">${w.day}</td>
+          <td style="padding: 8px; text-align: center;">${w.completedCount}</td>
+          <td style="padding: 8px; text-align: center;">${w.xp} XP</td>
+        </tr>
+      `,
+      )
+      .join("");
+
+    // Exercises section rows
+    const exerciseRows = reportData.exercisesSection
+      .map(
+        (e: any) => `
+        <tr style="border-bottom: 1px solid #e0e0e0;">
+          <td style="padding: 6px; font-size: 11px;">${e.journeyTitle}</td>
+          <td style="padding: 6px; font-size: 11px;">${e.topicTitle}</td>
+          <td style="padding: 6px; font-size: 11px; text-align: center; text-transform: capitalize;">${e.level}</td>
+          <td style="padding: 6px; font-size: 11px; font-style: italic;">${e.exercisePrompt}</td>
+          <td style="padding: 6px; font-size: 11px; text-align: center;">
+            <span style="display: inline-block; padding: 2px 8px; border-radius: 10px; font-weight: 600; background: ${e.isCorrect ? "#dcfce7" : "#fee2e2"}; color: ${e.isCorrect ? "#15803d" : "#dc2626"};">
+              ${e.isCorrect ? "Correct" : "Wrong"}
+            </span>
+          </td>
+        </tr>
+      `,
+      )
+      .join("");
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: 'Helvetica', sans-serif; color: #1a1a1a; margin: 0; padding: 0; }
+    h1 { color: ${primaryColor}; font-size: 24px; margin-bottom: 4px; }
+    h2 { color: ${primaryColor}; font-size: 18px; border-bottom: 2px solid ${primaryColor}; padding-bottom: 4px; margin-top: 24px; }
+    h3 { color: ${onSurface}; font-size: 14px; margin-top: 16px; }
+    .header { text-align: center; margin-bottom: 24px; }
+    .subtitle { color: ${onSurfaceVariant}; font-size: 12px; }
+    .info-grid { display: flex; gap: 20px; margin: 12px 0; }
+    .info-item { flex: 1; }
+    .info-label { font-size: 10px; color: ${onSurfaceVariant}; text-transform: uppercase; }
+    .info-value { font-size: 14px; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+    th { background: ${surfaceColor}; padding: 8px; text-align: left; font-size: 11px; font-weight: 600; }
+    td { font-size: 11px; }
+    .chart-bar { display: inline-block; height: 8px; border-radius: 4px; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>FluentFlow Learning Report</h1>
+    <p class="subtitle">Generated on ${reportData.generatedAt}</p>
+  </div>
+
+  <h2>Student Profile</h2>
+  <div class="info-grid">
+    <div class="info-item">
+      <div class="info-label">Student Name</div>
+      <div class="info-value">${reportData.studentName}</div>
+    </div>
+  </div>
+
+  <h2>Weekly Progress</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Exercises Completed</th>
+        <th>XP Earned</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${weeklyRows}
+    </tbody>
+  </table>
+
+<h2>Journey Progress</h2>
+    ${pieChartHtml}
+    <table>
+    <thead>
+      <tr>
+        <th>Journey</th>
+        <th>Completed</th>
+        <th>Progress</th>
+        <th>Percent</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${journeyRows}
+    </tbody>
+  </table>
+
+  <div class="page-break"></div>
+
+  <h2>Exercises</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Journey</th>
+        <th>Topic</th>
+        <th>Level</th>
+        <th>Exercise</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${exerciseRows}
+    </tbody>
+  </table>
+</body>
+</html>
+`;
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       loadTopicLevels();
@@ -509,6 +788,27 @@ return (
             <ThemedText type="small" style={styles.hint}>
               This will import journey, topic, topic intro, topic vocabulary,
               exercise, and exercise token data into the database.
+            </ThemedText>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.exportButton,
+                pressed && styles.exportButtonPressed,
+                exportingReport && styles.exportButtonDisabled,
+              ]}
+              onPress={handleExportReport}
+              disabled={exportingReport}
+            >
+              {exportingReport ? (
+                <ActivityIndicator size="small" color={theme.onPrimary} />
+              ) : null}
+              <ThemedText type="default" style={styles.exportButtonText}>
+                {exportingReport ? "Generating..." : "Export PDF Report"}
+              </ThemedText>
+            </Pressable>
+            <ThemedText type="small" style={styles.hint}>
+              Generate a PDF report with your profile, weekly progress,
+              journey progress, and exercise results.
             </ThemedText>
           </View>
 
