@@ -7,8 +7,6 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import * as Print from "expo-print";
-import * as Sharing from "expo-sharing";
 import Animated, {
   FadeIn,
   FadeInUp,
@@ -86,6 +84,10 @@ export default function SettingsPage() {
 
       // Build HTML for PDF
       const html = buildReportHtml(reportData, theme);
+
+      // Lazy import to avoid native module loading during initial bundle
+      const Print = await import("expo-print");
+      const Sharing = await import("expo-sharing");
 
       const printResult: any = await Print.printAsync({
         html,
@@ -264,6 +266,7 @@ export default function SettingsPage() {
           alignItems: "center",
           justifyContent: "center",
           paddingHorizontal: 24,
+          paddingVertical: 20,
         },
         dialogBackdrop: {
           position: "absolute",
@@ -271,7 +274,7 @@ export default function SettingsPage() {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.45)",
+          backgroundColor: "rgba(0, 0, 0, 0.65)",
         },
         dialogCenter: {
           flex: 1,
@@ -279,6 +282,8 @@ export default function SettingsPage() {
           justifyContent: "center",
           width: "100%",
           maxWidth: 400,
+          maxHeight: "100%",
+          zIndex: 1,
         },
         dialogCard: {
           width: "100%",
@@ -287,11 +292,17 @@ export default function SettingsPage() {
           shadowOpacity: 0.12,
           shadowRadius: 24,
           elevation: 8,
+          maxHeight: "90%",
+          zIndex: 2,
         },
         dialogContent: {
           alignItems: "center",
           padding: 28,
           gap: 16,
+        },
+        dialogScroll: {
+          maxHeight: 400,
+          flexShrink: 1,
         },
         dialogTitle: {
           textAlign: "center",
@@ -305,22 +316,23 @@ export default function SettingsPage() {
           lineHeight: 22,
         },
         dialogButton: {
-          marginTop: 8,
-          paddingVertical: 14,
+          marginTop: 16,
+          paddingVertical: 16,
           borderRadius: 16,
           alignItems: "center",
           justifyContent: "center",
           borderBottomWidth: 3,
-          minWidth: 120,
+          minWidth: 140,
           width: "100%",
+          flexShrink: 0,
         },
         dialogButtonPressed: {
           borderBottomWidth: 0,
           transform: [{ translateY: 3 }],
         },
         dialogButtonText: {
-          fontSize: 16,
-          fontWeight: "600",
+          fontSize: 17,
+          fontWeight: "700",
           lineHeight: 22,
         },
         confirmButtonRow: {
@@ -969,7 +981,7 @@ return (
         )}
 
         {dialog && (
-          <Modal
+<Modal
             visible={true}
             transparent
             animationType="none"
@@ -984,78 +996,80 @@ return (
                 style={styles.dialogBackdrop}
                 onPress={closeDialog}
               />
-            </Animated.View>
-            <View style={styles.dialogCenter}>
-              <Animated.View
-                entering={FadeInUp.duration(250).springify().delay(100)}
-                exiting={FadeOutDown.duration(200)}
-                style={[
-                  styles.dialogCard,
-                  {
-                    backgroundColor: theme.surfaceContainerHigh,
-                    shadowColor: theme.onSurface,
-                  },
-                ]}
-              >
-                <View style={styles.dialogContent}>
-                  <SymbolView
-                    name={
-                      dialog.type === "success"
-                        ? {
-                            ios: "checkmark.circle.fill",
-                            android: "check_circle",
-                            web: "check_circle",
-                          }
-                        : {
-                            ios: "xmark.circle.fill",
-                            android: "error",
-                            web: "error",
-                          }
-                    }
-                    size={64}
-                    tintColor={
-                      dialog.type === "success" ? "#1ca65a" : theme.error
-                    }
-                  />
-                  <ThemedText
-                    type="subtitle"
-                    style={[styles.dialogTitle, { color: theme.onSurface }]}
-                  >
-                    {dialog.title}
-                  </ThemedText>
-                  <ThemedText
-                    type="small"
-                    style={[styles.dialogMessage, { color: theme.onSurfaceVariant }]}
-                  >
-                    {dialog.message}
-                  </ThemedText>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.dialogButton,
-                      {
-                        backgroundColor:
-                          dialog.type === "success" ? "#1ca65a" : theme.error,
-                        borderBottomColor:
-                          dialog.type === "success"
-                            ? "#1ca65acc"
-                            : `${theme.error}cc`,
-                      },
-                      pressed && styles.dialogButtonPressed,
-                    ]}
-                    onPress={closeDialog}
-                  >
+              <View style={styles.dialogCenter}>
+                <Animated.View
+                  entering={FadeInUp.duration(250).springify().delay(100)}
+                  exiting={FadeOutDown.duration(200)}
+                  style={[
+                    styles.dialogCard,
+                    {
+                      backgroundColor: theme.surfaceContainerHigh,
+                      shadowColor: theme.onSurface,
+                    },
+                  ]}
+                >
+                <ScrollView style={styles.dialogScroll} showsVerticalScrollIndicator={false}>
+                  <View style={styles.dialogContent}>
+                    <SymbolView
+                      name={
+                        dialog.type === "success"
+                          ? {
+                              ios: "checkmark.circle.fill",
+                              android: "check_circle",
+                              web: "check_circle",
+                            }
+                          : {
+                              ios: "xmark.circle.fill",
+                              android: "error",
+                              web: "error",
+                            }
+                      }
+                      size={64}
+                      tintColor={
+                        dialog.type === "success" ? "#1ca65a" : theme.error
+                      }
+                    />
                     <ThemedText
-                      style={[
-                        styles.dialogButtonText,
-                        { color: theme.onPrimary },
-                      ]}
+                      type="subtitle"
+                      style={[styles.dialogTitle, { color: theme.onSurface }]}
                     >
-                      OK
+                      {dialog.title}
                     </ThemedText>
-                  </Pressable>
-                </View>
+                    <ThemedText
+                      type="small"
+                      style={[styles.dialogMessage, { color: theme.onSurfaceVariant }]}
+                    >
+                      {dialog.message}
+                    </ThemedText>
+                  </View>
+                </ScrollView>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.dialogButton,
+                    {
+                      backgroundColor:
+                        dialog.type === "success" ? "#1ca65a" : theme.error,
+                      borderBottomColor:
+                        dialog.type === "success"
+                          ? "#1ca65acc"
+                          : `${theme.error}cc`,
+                    },
+                    pressed && styles.dialogButtonPressed,
+                  ]}
+                  onPress={closeDialog}
+                >
+                  <ThemedText
+                    style={[
+                      styles.dialogButtonText,
+                      { color: theme.onPrimary },
+                    ]}
+                  >
+                    OK
+                  </ThemedText>
+                </Pressable>
               </Animated.View>
             </View>
+            </Animated.View>
           </Modal>
         )}
       </ThemedView>
