@@ -120,19 +120,21 @@ function getStatCards(
   theme: ReturnType<typeof useTheme>,
   totalTopics: number,
   totalExercises: number,
+  totalJourneys: number,
 ): StatCard[] {
   return [
     {
       id: "1",
-      value: "7",
-      label: "Day Streak",
+      value: String(totalJourneys),
+      label: "Total Journey",
       icon: {
-        ios: "flame.fill",
-        android: "local_fire_department",
-        web: "local_fire_department",
+        ios: "sailboat.fill",
+        android: "sailing",
+        web: "sailing",
       },
       iconBg: theme.surface,
-      iconColor: theme.tertiary,
+      iconColor: theme.primary,
+      dynamic: true,
     },
     {
       id: "2",
@@ -281,6 +283,7 @@ export default function HomePage() {
   const [totalXP, setTotalXP] = useState(0);
   const [totalTopics, setTotalTopics] = useState(0);
   const [totalExercises, setTotalExercises] = useState(0);
+  const [totalJourneys, setTotalJourneys] = useState(0);
   const [weekOptions] = useState(getWeekOptions);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
   const [showWeekPicker, setShowWeekPicker] = useState(false);
@@ -302,8 +305,8 @@ export default function HomePage() {
   const [loadingRecentPage, setLoadingRecentPage] = useState(false);
 
   const statCards = useMemo(
-    () => getStatCards(theme, totalTopics, totalExercises),
-    [theme, totalTopics, totalExercises],
+    () => getStatCards(theme, totalTopics, totalExercises, totalJourneys),
+    [theme, totalTopics, totalExercises, totalJourneys],
   );
 
   const handleExit = () => {
@@ -407,9 +410,16 @@ export default function HomePage() {
   }, []);
 
   const loadAllData = useCallback(async () => {
-    if (!userId) return;
     try {
       const db = await getDatabase();
+      const journeysCountResult = await db.getFirstAsync(
+        "SELECT COUNT(*) as count FROM journeys",
+      );
+      if (mountedRef.current) {
+        setTotalJourneys(journeysCountResult?.count ?? 0);
+      }
+
+      if (!userId) return;
       const total = await getTotalEarnedXP(db, userId);
       if (mountedRef.current) setTotalXP(total);
 
@@ -1577,10 +1587,10 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       justifyContent: "center",
       backgroundColor: theme.primaryFixed,
     },
-    weekArrowButtonPressed: {
-      transform: [{ scale: 0.92 }],
-      backgroundColor: theme.primaryFixedDim,
-    },
+        weekArrowButtonPressed: {
+          opacity: 0.7,
+          backgroundColor: theme.primaryFixedDim,
+        },
     weekArrowButtonDisabled: {
       backgroundColor: theme.surfaceContainer,
       opacity: 0.65,

@@ -84,6 +84,8 @@ export async function buildReportData(db, userId) {
             userId,
             exercise.exercise_id,
           );
+          // Only include exercises the user has actually answered
+          if (!progress) continue;
           const answers = await getExerciseAnswersByExerciseId(db, exercise.exercise_id);
           const primaryAnswer = answers?.find((a) => a.is_primary === 1) ?? answers?.[0];
           const userAnswer = progress?.completed_at
