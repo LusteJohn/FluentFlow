@@ -234,6 +234,12 @@ export async function resetTopicLevel(userId: number, topicId: number, level: st
   return reset(db, userId, topicId, level);
 }
 
+export async function buildReportData(userId: number) {
+  const db = await getDatabase();
+  const { buildReportData: build } = await import("@/backend/ReportData");
+  return build(db, userId);
+}
+
 export async function isDataImported(): Promise<boolean> {
   const db = await getDatabase();
   const result = await db.getFirstAsync(
