@@ -41,6 +41,22 @@ export async function getTopicsByJourneyId(db, journeyId) {
   return result;
 }
 
+/**
+ * Returns the journey row that a topic belongs to (joined lookup).
+ * Used by TopicReset to clean up journey_achievements when the last
+ * topic_achievement for a journey is removed.
+ */
+export async function getJourneyByTopicId(db, topicId) {
+  const result = await db.getFirstAsync(
+    `SELECT j.*
+     FROM journeys j
+     JOIN topics t ON t.journey_id = j.journey_id
+     WHERE t.topic_id = ?`,
+    topicId,
+  );
+  return result ?? null;
+}
+
 export async function updateTopic(db, topicId, updates) {
   const fields = [];
   const values = [];
