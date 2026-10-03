@@ -45,7 +45,12 @@ function getAvatarForGender(gender: string | null | undefined): ImageSourcePropT
   return AVATAR_MALE;
 }
 
-export default function AppHeader() {
+interface AppHeaderProps {
+  /** When provided, the header renders the tutorial help button on the right. */
+  onHelpPress?: () => void;
+}
+
+export default function AppHeader({ onHelpPress }: AppHeaderProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -130,31 +135,49 @@ export default function AppHeader() {
   const handleClose = useCallback(() => setShowAchievements(false), []);
 
   return (
-    <View style={styles.header}>
-      <View style={styles.headerLeft}>
-        <View style={styles.avatarContainer}>
-          <Image
-            source={avatarSource}
-            style={styles.avatar}
-            resizeMode="cover"
-            accessibilityLabel="Profile avatar"
-          />
+    <View style={onHelpPress ? styles.headerRow : undefined}>
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <View style={styles.avatarContainer}>
+            <Image
+              source={avatarSource}
+              style={styles.avatar}
+              resizeMode="cover"
+              accessibilityLabel="Profile avatar"
+            />
+          </View>
+          <ThemedText type="title" style={styles.headerTitle}>
+            FluentFlow
+          </ThemedText>
         </View>
-        <ThemedText type="title" style={styles.headerTitle}>
-          FluentFlow
-        </ThemedText>
+        <Pressable style={styles.notificationButton} onPress={handleOpen}>
+          <SymbolView
+            name={{
+              ios: "bell",
+              android: "notifications",
+              web: "notifications",
+            }}
+            size={22}
+            tintColor={theme.onSurfaceVariant}
+          />
+        </Pressable>
       </View>
-      <Pressable style={styles.notificationButton} onPress={handleOpen}>
-        <SymbolView
-          name={{
-            ios: "bell",
-            android: "notifications",
-            web: "notifications",
-          }}
-          size={22}
-          tintColor={theme.onSurfaceVariant}
-        />
-      </Pressable>
+
+      {onHelpPress && (
+        <Pressable
+          style={styles.helpButton}
+          onPress={onHelpPress}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Open tutorial"
+        >
+          <Image
+            source={require("@/assets/images/question.jpeg")}
+            style={styles.helpButtonIcon}
+            resizeMode="contain"
+          />
+        </Pressable>
+      )}
 
       <Modal
         visible={showAchievements}
@@ -246,6 +269,7 @@ export default function AppHeader() {
 function createStyles(theme: ReturnType<typeof useTheme>) {
   return StyleSheet.create({
     header: {
+      flex: 1,
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
@@ -255,6 +279,23 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       backgroundColor: theme.surface,
       borderBottomWidth: 1,
       borderBottomColor: theme.outlineVariant,
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingRight: 16,
+    },
+    helpButton: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
+      marginTop: 8,
+    },
+    helpButtonIcon: {
+      width: 32,
+      height: 32,
     },
     headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
     avatarContainer: { width: 40, height: 40 },

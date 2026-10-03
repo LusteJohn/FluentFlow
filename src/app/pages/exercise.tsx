@@ -28,6 +28,9 @@ import { getUserProfile } from "@/backend/UserProfile";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import TutorialModal, {
+  getWelcomingPhrase,
+} from "@/components/tutorial-modal";
 import { useTheme } from "@/contexts/theme-context";
 import { getDatabase } from "@/database/database";
 import AppHeader from "../(tabs)/header";
@@ -160,6 +163,8 @@ export default function ExercisePage() {
   const { topic_id } = useLocalSearchParams<{ topic_id: string }>();
   const router = useRouter();
   const [topicTitle, setTopicTitle] = useState<string>("Exercises");
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [welcomingPhrase] = useState(() => getWelcomingPhrase());
   const [levelProgress, setLevelProgress] = useState<
     Record<string, LevelProgressInfo>
   >({});
@@ -213,7 +218,7 @@ export default function ExercisePage() {
   return (
     <ScreenMotion>
       <ThemedView style={styles.container}>
-        <AppHeader />
+        <AppHeader onHelpPress={() => setShowTutorial(true)} />
 
         {topicFullyCompleted && (
           <AnimatedCongratulationsBanner styles={styles} />
@@ -347,6 +352,12 @@ export default function ExercisePage() {
           </View>
         </ScrollView>
         <NavBar />
+
+        <TutorialModal
+          visible={showTutorial}
+          welcomingPhrase={welcomingPhrase}
+          onClose={() => setShowTutorial(false)}
+        />
       </ThemedView>
     </ScreenMotion>
   );

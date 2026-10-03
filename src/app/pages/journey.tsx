@@ -19,6 +19,9 @@ import { getUserProfile } from "@/backend/UserProfile";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import TutorialModal, {
+  getWelcomingPhrase,
+} from "@/components/tutorial-modal";
 import { useTheme } from "@/contexts/theme-context";
 import { getDatabase } from "@/database/database";
 import AppHeader from "../(tabs)/header";
@@ -146,10 +149,13 @@ export default function JourneyPage() {
     [journeys, inProgressIndex],
   );
 
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [welcomingPhrase] = useState(() => getWelcomingPhrase());
+
   return (
     <ScreenMotion>
       <ThemedView style={styles.container}>
-        <AppHeader />
+        <AppHeader onHelpPress={() => setShowTutorial(true)} />
 
         <ScrollView
           style={styles.scrollView}
@@ -257,6 +263,12 @@ export default function JourneyPage() {
         </ScrollView>
 
         <NavBar />
+
+        <TutorialModal
+          visible={showTutorial}
+          welcomingPhrase={welcomingPhrase}
+          onClose={() => setShowTutorial(false)}
+        />
       </ThemedView>
     </ScreenMotion>
   );
