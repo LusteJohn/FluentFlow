@@ -350,15 +350,11 @@ export default function HomePage() {
           await importGrammarTriviaData();
         }
         if (!cancelled) {
-          await importUserProfileData();
-          await importUserExerciseProgressData();
-          await importUserStreaksData();
-          await importGrammarTriviaData();
-          const today = new Date().toISOString().slice(0, 10);
-          const triviaSeenToday = await hasSeenDailyTrivia(today);
-          if (!triviaSeenToday) {
-            await loadRandomTrivia();
-          }
+          await Promise.all([
+            importUserProfileData(),
+            importUserExerciseProgressData(),
+            importUserStreaksData(),
+          ]);
         }
       } catch (error) {
         console.error("Failed to check tutorial state", error);
@@ -367,7 +363,32 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [loadRandomTrivia]);
+  }, []);
+
+  // The daily trivia has its own effect: it used to be the last step of the
+  // boot import chain, so any failure upstream (or the tutorial modal being
+  // open on top of it) meant the popup never appeared.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const seenToday = await hasSeenDailyTrivia(today);
+        if (cancelled || seenToday || showTutorial) return;
+
+        // Guarantees the table is populated even if the boot chain skipped it.
+        await importGrammarTriviaData();
+        if (cancelled) return;
+
+        await loadRandomTrivia();
+      } catch (error) {
+        console.error("Failed to load daily trivia", error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadRandomTrivia, showTutorial]);
 
   useEffect(() => {
     if (Platform.OS === "android") {

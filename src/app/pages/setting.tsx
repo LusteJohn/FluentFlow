@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   View,
 } from "react-native";
 import Animated, {
@@ -25,8 +26,11 @@ import TutorialModal, {
 import { useTheme, useThemeMode } from "@/contexts/theme-context";
 import {
   buildReportData,
+  deleteAppKvKeys,
+  getAllAppKvKeys,
   getCompletedTopicLevels,
   getDatabase,
+  getAppKvValue,
   importExerciseData,
   importExerciseTokenData,
   importGrammarTriviaData,
@@ -37,6 +41,7 @@ import {
   importUserExerciseProgressData,
   importUserProfileData,
   importUserStreaksData,
+  markDailyTriviaSeen,
   resetTopicLevel,
 } from "@/database/database";
 import { getUserProfile } from "@/backend/UserProfile";
@@ -48,6 +53,10 @@ const THEME_OPTIONS: { label: string; value: "light" | "dark" | "system" }[] = [
   { label: "Dark", value: "dark" },
   { label: "System", value: "system" },
 ];
+
+const TRIVIA_SEEN_KEY = "trivia_seen_date";
+
+const getToday = () => new Date().toISOString().slice(0, 10);
 
 export default function SettingsPage() {
   const theme = useTheme();
@@ -61,6 +70,11 @@ export default function SettingsPage() {
   const [savingTheme, setSavingTheme] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [welcomingPhrase] = useState(() => getWelcomingPhrase());
+  // True when the daily trivia flag is cleared, so the homepage shows the popup.
+  const [triviaReplayEnabled, setTriviaReplayEnabled] = useState(false);
+  const [appKvKeys, setAppKvKeys] = useState<string[]>([]);
+  const [showTriviaDeleteDialog, setShowTriviaDeleteDialog] = useState(false);
+  const [clearingTriviaFlag, setClearingTriviaFlag] = useState(false);
   const [topicLevels, setTopicLevels] = useState<any[]>([]);
   const [loadingTopicLevels, setLoadingTopicLevels] = useState(false);
   const [resettingTopicId, setResettingTopicId] = useState<number | null>(null);
@@ -72,6 +86,61 @@ export default function SettingsPage() {
 
   const closeDialog = () => setDialog(null);
   const [exportingReport, setExportingReport] = useState(false);
+
+  const refreshAppKvState = useMemo(
+    () => async () => {
+      try {
+        const [seenDate, keys] = await Promise.all([
+          getAppKvValue(TRIVIA_SEEN_KEY),
+          getAllAppKvKeys(),
+        ]);
+        setTriviaReplayEnabled(!seenDate);
+        setAppKvKeys(keys);
+      } catch (error) {
+        console.error("Failed to read app_kv", error);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    refreshAppKvState();
+  }, [refreshAppKvState]);
+
+  // Flipping the switch never deletes straight away: the confirmation modal
+  // explains the delete first, and cancelling restores the previous value.
+  const handleTriviaReplayToggle = (nextValue: boolean) => {
+    if (nextValue) {
+      setShowTriviaDeleteDialog(true);
+      return;
+    }
+    setTriviaReplayEnabled(false);
+    markDailyTriviaSeen(getToday());
+  };
+
+  const confirmTriviaReplayDelete = async () => {
+    setClearingTriviaFlag(true);
+    try {
+      await deleteAppKvKeys([TRIVIA_SEEN_KEY]);
+      await refreshAppKvState();
+      setDialog({
+        type: "success",
+        title: "Flag Deleted",
+        message:
+          "trivia_seen_date was removed from app_kv. Open the homepage to see the grammar trivia popup again.",
+      });
+    } catch (error: any) {
+      setDialog({
+        type: "error",
+        title: "Delete Failed",
+        message: error?.message ?? "Could not delete the trivia flag.",
+      });
+    } finally {
+      setClearingTriviaFlag(false);
+      setShowTriviaDeleteDialog(false);
+    }
+  };
 
   const handleExportReport = async () => {
     setExportingReport(true);
@@ -146,6 +215,56 @@ export default function SettingsPage() {
         title: {
           textAlign: "center",
           color: theme.primary,
+        },
+        toggleRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+        },
+        toggleLabel: {
+          color: theme.onSurface,
+          fontWeight: "600",
+        },
+        kvDialogBody: {
+          color: theme.onSurfaceVariant,
+          lineHeight: 20,
+        },
+        dialogWarning: {
+          color: theme.onSurfaceVariant,
+          lineHeight: 18,
+          fontSize: 12,
+        },
+        codeBlock: {
+          backgroundColor: theme.surfaceContainerHighest,
+          borderRadius: 12,
+          padding: 12,
+        },
+        codeText: {
+          color: theme.onSurface,
+          lineHeight: 18,
+        },
+        dialogActions: {
+          flexDirection: "row",
+          gap: 12,
+          marginTop: 4,
+        },
+        kvDialogButton: {
+          flex: 1,
+          paddingVertical: 14,
+          borderRadius: 16,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        kvDialogButtonPressed: {
+          opacity: 0.8,
+        },
+        dialogCancelText: {
+          color: theme.onSurface,
+          fontWeight: "600",
+        },
+        dialogConfirmText: {
+          color: theme.onPrimary,
+          fontWeight: "600",
         },
         headerBlock: {
           alignItems: "center",
@@ -891,6 +1010,26 @@ return (
                 </ThemedText>
               </View>
             </View>
+
+            <View style={styles.toggleRow}>
+              <View style={styles.actionContent}>
+                <ThemedText type="default" style={styles.toggleLabel}>
+                  Show grammar trivia on homepage
+                </ThemedText>
+                <ThemedText type="small" style={styles.hint}>
+                  {triviaReplayEnabled
+                    ? "trivia_seen_date is cleared. The trivia popup will appear the next time you open the homepage."
+                    : "Dismissed for today. Turn this on to delete the trivia_seen_date flag from app_kv."}
+                </ThemedText>
+              </View>
+              <Switch
+                value={triviaReplayEnabled}
+                onValueChange={handleTriviaReplayToggle}
+                trackColor={{ false: theme.surfaceContainer, true: theme.primary }}
+                thumbColor={theme.surface}
+                accessibilityLabel="Show grammar trivia on homepage"
+              />
+            </View>
           </View>
 
           <View style={styles.section}>
@@ -957,6 +1096,100 @@ return (
           welcomingPhrase={welcomingPhrase}
           onClose={() => setShowTutorial(false)}
         />
+
+        {showTriviaDeleteDialog && (
+          <Modal
+            visible={true}
+            transparent
+            animationType="none"
+            onRequestClose={() => setShowTriviaDeleteDialog(false)}
+          >
+            <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.dialogBackdrop}>
+              <Pressable
+                style={StyleSheet.absoluteFill}
+                onPress={() => setShowTriviaDeleteDialog(false)}
+              />
+            </Animated.View>
+
+            <View style={styles.dialogCenter}>
+              <Animated.View
+                entering={FadeInUp.duration(250).springify()}
+                exiting={FadeOutDown.duration(180)}
+                style={[
+                  styles.dialogCard,
+                  { backgroundColor: theme.surfaceContainerHigh },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.dialogContent,
+                    { alignItems: "stretch" },
+                  ]}
+                >
+                <ThemedText type="subtitle" style={styles.dialogTitle}>
+                  Delete trivia flag?
+                </ThemedText>
+                <ThemedText type="small" style={styles.kvDialogBody}>
+                  The homepage only shows the grammar trivia popup once per day.
+                  It records that in the app_kv table, so turning this on runs:
+                </ThemedText>
+
+                <View style={styles.codeBlock}>
+                  <ThemedText type="code" style={styles.codeText}>
+                    {"DELETE FROM app_kv\nWHERE key = 'trivia_seen_date';"}
+                  </ThemedText>
+                </View>
+
+                <ThemedText type="small" style={styles.kvDialogBody}>
+                  This removes one row from app_kv. The next time you open the
+                  homepage the popup appears again. Turning the toggle off
+                  writes today&apos;s date back to that same key.
+                </ThemedText>
+
+                <ThemedText type="small" style={styles.dialogWarning}>
+                  Nothing else is deleted: no journeys, topics, exercises,
+                  answers, progress, or achievements. The tutorial_seen flag and
+                  any other app_kv rows stay untouched
+                  {appKvKeys.length > 0 ? ` (${appKvKeys.join(", ")})` : ""}.
+                </ThemedText>
+
+                <View style={styles.dialogActions}>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.kvDialogButton,
+                      pressed && styles.kvDialogButtonPressed,
+                      { borderWidth: 1, borderColor: theme.outlineVariant },
+                    ]}
+                    onPress={() => setShowTriviaDeleteDialog(false)}
+                    disabled={clearingTriviaFlag}
+                  >
+                    <ThemedText type="default" style={styles.dialogCancelText}>
+                      Cancel
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.kvDialogButton,
+                      pressed && styles.kvDialogButtonPressed,
+                      { backgroundColor: theme.primary },
+                    ]}
+                    onPress={confirmTriviaReplayDelete}
+                    disabled={clearingTriviaFlag}
+                  >
+                    {clearingTriviaFlag ? (
+                      <ActivityIndicator size="small" color={theme.onPrimary} />
+                    ) : (
+                      <ThemedText type="default" style={styles.dialogConfirmText}>
+                        Delete flag
+                      </ThemedText>
+                    )}
+                  </Pressable>
+                </View>
+                </View>
+              </Animated.View>
+            </View>
+          </Modal>
+        )}
 
         {showConfirmDialog && (
           <Modal
