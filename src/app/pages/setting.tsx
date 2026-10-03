@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -139,8 +140,35 @@ export default function SettingsPage() {
         },
         title: {
           textAlign: "center",
-          marginBottom: 32,
           color: theme.primary,
+        },
+        headerBlock: {
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 32,
+        },
+        headerImage: {
+          width: 160,
+          height: 160,
+        },
+        headerDescription: {
+          textAlign: "center",
+          color: theme.onSurfaceVariant,
+          lineHeight: 20,
+          paddingHorizontal: 8,
+        },
+        actionRow: {
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+        },
+        actionImage: {
+          width: 96,
+          height: 96,
+        },
+        actionContent: {
+          flex: 1,
+          gap: 8,
         },
         section: {
           gap: 12,
@@ -729,9 +757,25 @@ return (
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <ThemedText type="subtitle" style={styles.title}>
-            Settings
-          </ThemedText>
+          <View style={styles.headerBlock}>
+            <ThemedText type="subtitle" style={styles.title}>
+              Settings
+            </ThemedText>
+            <Image
+              source={require("@/assets/images/task.jpeg")}
+              style={styles.headerImage}
+              resizeMode="contain"
+              accessibilityLabel="Settings"
+            />
+            <ThemedText type="small" style={styles.headerDescription}>
+              Customize how FluentFlow looks, manage the data on this device, and
+              review your progress. Use Appearance to switch between light, dark,
+              or system theme. Data Management lets you import learning content
+              and export a PDF report of your results, while your profile,
+              achievements, and streak are updated automatically as you complete
+              exercises.
+            </ThemedText>
+          </View>
 
           <View style={styles.section}>
             <ThemedText type="smallBold" style={styles.sectionTitle}>
@@ -781,47 +825,67 @@ return (
             <ThemedText type="smallBold" style={styles.sectionTitle}>
               Data Management
             </ThemedText>
-            <Pressable
-              style={({ pressed }) => [
-                styles.button,
-                pressed && styles.buttonPressed,
-                loading && styles.buttonDisabled,
-              ]}
-              onPress={handleImportData}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color={theme.onPrimary} />
-              ) : null}
-              <ThemedText type="default" style={styles.buttonText}>
-                {loading ? "Importing..." : "Import All Data"}
-              </ThemedText>
-            </Pressable>
-            <ThemedText type="small" style={styles.hint}>
-              This will import journey, topic, topic intro, topic vocabulary,
-              exercise, and exercise token data into the database.
-            </ThemedText>
+            <View style={styles.actionRow}>
+              <Image
+                source={require("@/assets/images/import.jpeg")}
+                style={styles.actionImage}
+                resizeMode="contain"
+                accessibilityLabel="Import data"
+              />
+              <View style={styles.actionContent}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.button,
+                    pressed && styles.buttonPressed,
+                    loading && styles.buttonDisabled,
+                  ]}
+                  onPress={handleImportData}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color={theme.onPrimary} />
+                  ) : null}
+                  <ThemedText type="default" style={styles.buttonText}>
+                    {loading ? "Importing..." : "Import All Data"}
+                  </ThemedText>
+                </Pressable>
+                <ThemedText type="small" style={styles.hint}>
+                  This will import journey, topic, topic intro, topic vocabulary,
+                  exercise, and exercise token data into the database.
+                </ThemedText>
+              </View>
+            </View>
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.exportButton,
-                pressed && styles.exportButtonPressed,
-                exportingReport && styles.exportButtonDisabled,
-              ]}
-              onPress={handleExportReport}
-              disabled={exportingReport}
-            >
-              {exportingReport ? (
-                <ActivityIndicator size="small" color={theme.onPrimary} />
-              ) : null}
-              <ThemedText type="default" style={styles.exportButtonText}>
-                {exportingReport ? "Generating..." : "Export PDF Report"}
-              </ThemedText>
-            </Pressable>
-            <ThemedText type="small" style={styles.hint}>
-              Generate a PDF report with your profile, weekly progress,
-              journey progress, and exercise results.
-            </ThemedText>
+            <View style={styles.actionRow}>
+              <Image
+                source={require("@/assets/images/pdf.jpeg")}
+                style={styles.actionImage}
+                resizeMode="contain"
+                accessibilityLabel="Export PDF report"
+              />
+              <View style={styles.actionContent}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.exportButton,
+                    pressed && styles.exportButtonPressed,
+                    exportingReport && styles.exportButtonDisabled,
+                  ]}
+                  onPress={handleExportReport}
+                  disabled={exportingReport}
+                >
+                  {exportingReport ? (
+                    <ActivityIndicator size="small" color={theme.onPrimary} />
+                  ) : null}
+                  <ThemedText type="default" style={styles.exportButtonText}>
+                    {exportingReport ? "Generating..." : "Export PDF Report"}
+                  </ThemedText>
+                </Pressable>
+                <ThemedText type="small" style={styles.hint}>
+                  Generate a PDF report with your profile, weekly progress,
+                  journey progress, and exercise results.
+                </ThemedText>
+              </View>
+            </View>
           </View>
 
           <View style={styles.section}>

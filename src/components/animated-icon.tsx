@@ -1,8 +1,16 @@
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  Keyframe,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 const INITIAL_SCALE_FACTOR = Dimensions.get('screen').height / 90;
@@ -16,7 +24,6 @@ export function AnimatedSplashOverlay() {
 
   const splashKeyframe = new Keyframe({
     0: {
-      transform: [{ scale: 1 }],
       opacity: 1,
     },
     20: {
@@ -28,7 +35,6 @@ export function AnimatedSplashOverlay() {
     },
     100: {
       opacity: 0,
-      transform: [{ scale: 1 }],
       easing: Easing.elastic(0.7),
     },
   });
@@ -59,51 +65,60 @@ export function AnimatedSplashOverlay() {
   );
 }
 
-const keyframe = new Keyframe({
-  0: {
-    transform: [{ scale: INITIAL_SCALE_FACTOR }],
-  },
-  100: {
-    transform: [{ scale: 1 }],
-    easing: Easing.elastic(0.7),
-  },
-});
+const GLOW_ROTATION_DURATION = 60 * 1000 * 4;
 
-const logoKeyframe = new Keyframe({
-  0: {
-    transform: [{ scale: 1.3 }],
-    opacity: 0,
-  },
-  40: {
-    transform: [{ scale: 1.3 }],
-    opacity: 0,
-    easing: Easing.elastic(0.7),
-  },
-  100: {
-    opacity: 1,
-    transform: [{ scale: 1 }],
-    easing: Easing.elastic(0.7),
-  },
-});
-
-const glowKeyframe = new Keyframe({
-  0: {
-    transform: [{ rotateZ: '0deg' }],
-  },
-  100: {
-    transform: [{ rotateZ: '7200deg' }],
-  },
-});
-
+// The scale, fade, and rotation run as animated styles rather than `entering`
+// keyframes: layout animations own `transform`, which Reanimated warns can
+// overwrite.
 export function AnimatedIcon() {
+  const backgroundScale = useSharedValue(INITIAL_SCALE_FACTOR);
+  const logoScale = useSharedValue(1.3);
+  const logoOpacity = useSharedValue(0);
+  const glowRotation = useSharedValue(0);
+
+  useEffect(() => {
+    backgroundScale.value = withTiming(1, {
+      duration: DURATION,
+      easing: Easing.elastic(0.7),
+    });
+    logoScale.value = withTiming(1, {
+      duration: DURATION,
+      easing: Easing.elastic(0.7),
+    });
+    logoOpacity.value = withDelay(
+      DURATION * 0.4,
+      withTiming(1, { duration: DURATION * 0.6 }),
+    );
+    glowRotation.value = withRepeat(
+      withTiming(7200, {
+        duration: GLOW_ROTATION_DURATION,
+        easing: Easing.linear,
+      }),
+      -1,
+    );
+  }, [backgroundScale, logoScale, logoOpacity, glowRotation]);
+
+  const backgroundStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: backgroundScale.value }],
+  }));
+
+  const logoStyle = useAnimatedStyle(() => ({
+    opacity: logoOpacity.value,
+    transform: [{ scale: logoScale.value }],
+  }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    transform: [{ rotateZ: `${glowRotation.value}deg` }],
+  }));
+
   return (
     <View style={styles.iconContainer}>
-      <Animated.View entering={glowKeyframe.duration(60 * 1000 * 4)} style={styles.glow}>
+      <Animated.View style={[styles.glow, glowStyle]}>
         <Image style={styles.glow} source={require('@/assets/images/logo-glow.png')} />
       </Animated.View>
 
-      <Animated.View entering={keyframe.duration(DURATION)} style={styles.background} />
-      <Animated.View style={styles.imageContainer} entering={logoKeyframe.duration(DURATION)}>
+      <Animated.View style={[styles.background, backgroundStyle]} />
+      <Animated.View style={[styles.imageContainer, logoStyle]}>
         <Image style={styles.image} source={require('@/assets/images/logo.jpeg')} />
       </Animated.View>
     </View>
