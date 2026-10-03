@@ -200,6 +200,16 @@ function formatXP(value: number): string {
   return String(value);
 }
 
+// Rendered immediately so the chart has its final layout on the first paint
+// instead of flashing a "Loading..." placeholder.
+const EMPTY_WEEKLY_BARS: WeeklyBar[] = WEEK_DISPLAY_ORDER.map((idx) => ({
+  day: DAY_LABELS[idx],
+  height: 4,
+  dayIndex: idx,
+  exerciseCount: 0,
+  xp: 0,
+}));
+
 export default function HomePage() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -255,7 +265,7 @@ export default function HomePage() {
     await markDailyTriviaSeen(today);
   };
 
-  const [weeklyBars, setWeeklyBars] = useState<WeeklyBar[]>([]);
+  const [weeklyBars, setWeeklyBars] = useState<WeeklyBar[]>(EMPTY_WEEKLY_BARS);
   const [recentExercises, setRecentExercises] = useState<RecentExercise[]>([]);
   const [totalXP, setTotalXP] = useState(0);
   const [totalTopics, setTotalTopics] = useState(0);
@@ -386,49 +396,48 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, []);
 
-  const loadAllData = useCallback(async () => {
+  // Counters, journeys and journey progress never change with the selected week,
+  // so they load once per user instead of on every week switch.
+  const loadOverview = useCallback(async () => {
+    if (!userId) return;
     try {
       const db = await getDatabase();
-      const journeysCountResult = await db.getFirstAsync(
-        "SELECT COUNT(*) as count FROM journeys",
+      const [
+        journeysCountResult,
+        total,
+        topicsResult,
+        exercisesResult,
+        journeysResult,
+        progress,
+      ] = await Promise.all([
+        db.getFirstAsync("SELECT COUNT(*) as count FROM journeys"),
+        getTotalEarnedXP(db, userId),
+        db.getFirstAsync("SELECT COUNT(*) as count FROM topics"),
+        db.getFirstAsync("SELECT COUNT(*) as count FROM exercises"),
+        getAllJourneys(db),
+        getAllJourneyProgressForUser(db, userId),
+      ]);
+      if (!mountedRef.current) return;
+      setTotalJourneys(journeysCountResult?.count ?? 0);
+      setTotalXP(total ?? 0);
+      setTotalTopics(topicsResult?.count ?? 0);
+      setTotalExercises(exercisesResult?.count ?? 0);
+      setJourneys(journeysResult ?? []);
+      setJourneyProgress(
+        Object.fromEntries(
+          Object.entries(progress ?? {}).map(([key, val]) => [
+            Number(key),
+            val as { percent: number },
+          ]),
+        ),
       );
-      if (mountedRef.current) {
-        setTotalJourneys(journeysCountResult?.count ?? 0);
-      }
-
-      if (!userId) return;
-      const total = await getTotalEarnedXP(db, userId);
-      if (mountedRef.current) setTotalXP(total);
-
-      const topicsResult = await db.getFirstAsync(
-        "SELECT COUNT(*) as count FROM topics",
-      );
-      if (mountedRef.current) setTotalTopics(topicsResult?.count ?? 0);
-
-      const exercisesResult = await db.getFirstAsync(
-        "SELECT COUNT(*) as count FROM exercises",
-      );
-      if (mountedRef.current) setTotalExercises(exercisesResult?.count ?? 0);
-
-      const journeysResult = await getAllJourneys(db);
-      if (mountedRef.current) setJourneys(journeysResult ?? []);
-
-      const progress = await getAllJourneyProgressForUser(db, userId);
-      if (mountedRef.current) {
-        setJourneyProgress(
-          Object.fromEntries(
-            Object.entries(progress ?? {}).map(([key, val]) => [
-              Number(key),
-              val as { percent: number },
-            ]),
-          ),
-        );
-      }
     } catch (error) {
       console.error("Failed to load total XP or journeys", error);
     }
-    if (!mountedRef.current) return;
-    setLoading(true);
+  }, [userId]);
+
+  const loadWeek = useCallback(async () => {
+    if (!userId) return;
     try {
       const db = await getDatabase();
       const week = weekOptions[selectedWeekIndex];
@@ -526,38 +535,65 @@ export default function HomePage() {
     [typeIcons, theme],
   );
 
-  useEffect(() => {
-    if (!userId) return;
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadAllData();
-  }, [loadAllData, userId]);
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await loadAllData();
-      setLoadingRecentPage(true);
+  const loadRecent = useCallback(
+    async (page: number) => {
+      if (!userId) return;
       try {
         const db = await getDatabase();
+        setLoadingRecentPage(true);
+        const offset = (page - 1) * RECENT_PAGE_SIZE;
         const [rows, total] = await Promise.all([
-          getRecentCompletedExercises(db, userId!, RECENT_PAGE_SIZE, 0),
-          getRecentCompletedExercisesCount(db, userId!),
+          getRecentCompletedExercises(db, userId, RECENT_PAGE_SIZE, offset),
+          getRecentCompletedExercisesCount(db, userId),
         ]);
-        if (mountedRef.current) {
-          setRecentExercises(mapRows(rows));
-          setRecentTotalCount(total);
-          setRecentPage(1);
-        }
+        if (!mountedRef.current) return;
+        setRecentExercises(mapRows(rows));
+        setRecentTotalCount(total);
+        setRecentPage(page);
       } catch (error) {
         console.error("Failed to load recent exercises", error);
       } finally {
         if (mountedRef.current) setLoadingRecentPage(false);
       }
+    },
+    [userId, mapRows],
+  );
+
+  // Every source is local SQLite, so the three sections load side by side
+  // instead of one blocking request after another.
+  const loadAllData = useCallback(async () => {
+    if (!userId) return;
+    await Promise.all([loadOverview(), loadWeek(), loadRecent(1)]);
+  }, [userId, loadOverview, loadWeek, loadRecent]);
+
+  // Overview and the weekly chart load independently, so changing the week
+  // only re-queries the chart instead of refetching the whole dashboard.
+  useEffect(() => {
+    if (!userId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadOverview();
+  }, [loadOverview, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadWeek();
+  }, [loadWeek, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadRecent(1);
+  }, [loadRecent, userId]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadAllData();
     } finally {
       setRefreshing(false);
     }
-  }, [loadAllData, userId, mapRows]);
+  }, [loadAllData]);
 
   const continueLearningJourney = useMemo(() => {
     if (!journeys.length) return null;
@@ -621,35 +657,6 @@ export default function HomePage() {
     }
   };
 
-  useEffect(() => {
-    if (!userId) return;
-
-    let cancelled = false;
-    (async () => {
-      if (cancelled) return;
-      setLoadingRecentPage(true);
-      try {
-        const db = await getDatabase();
-        const [rows, total] = await Promise.all([
-          getRecentCompletedExercises(db, userId, RECENT_PAGE_SIZE, 0),
-          getRecentCompletedExercisesCount(db, userId),
-        ]);
-        if (!cancelled && mountedRef.current) {
-          setRecentExercises(mapRows(rows));
-          setRecentTotalCount(total);
-          setRecentPage(1);
-        }
-      } catch (error) {
-        console.error("Failed to load recent exercises", error);
-      } finally {
-        if (!cancelled && mountedRef.current) setLoadingRecentPage(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, mapRows]);
-
   const handlePageChange = (newPage: number) => {
     if (loadingRecentPage) return;
     const totalPages = Math.max(
@@ -658,26 +665,7 @@ export default function HomePage() {
     );
     if (newPage < 1 || newPage > totalPages) return;
     if (!userId) return;
-    setLoadingRecentPage(true);
-    (async () => {
-      try {
-        const db = await getDatabase();
-        const rows = await getRecentCompletedExercises(
-          db,
-          userId,
-          RECENT_PAGE_SIZE,
-          (newPage - 1) * RECENT_PAGE_SIZE,
-        );
-        if (mountedRef.current) {
-          setRecentExercises(mapRows(rows));
-          setRecentPage(newPage);
-        }
-      } catch (error) {
-        console.error("Failed to change recent exercises page", error);
-      } finally {
-        if (mountedRef.current) setLoadingRecentPage(false);
-      }
-    })();
+    loadRecent(newPage);
   };
 
   const renderStatCard = (card: StatCard) => {
@@ -1139,11 +1127,9 @@ export default function HomePage() {
                 </View>
               </View>
             </View>
-            {loading ? (
-              <ThemedText style={styles.loadingText}>Loading...</ThemedText>
-            ) : (
-              renderLineGraph()
-            )}
+            <View style={[loading && styles.sectionLoading]}>
+              {renderLineGraph()}
+            </View>
           </View>
 
           <View style={styles.recentSection}>
@@ -1152,7 +1138,21 @@ export default function HomePage() {
             </ThemedText>
             <View style={styles.recentList}>
               {loadingRecentPage && recentExercises.length === 0 ? (
-                <ThemedText style={styles.emptyText}>Loading...</ThemedText>
+                Array.from({ length: RECENT_PAGE_SIZE }).map((_, index) => (
+                  <View
+                    key={`skeleton-${index}`}
+                    style={[styles.exerciseItem, styles.skeletonItem]}
+                  >
+                    <View style={styles.exerciseItemLeft}>
+                      <View style={styles.skeletonIcon} />
+                      <View style={styles.skeletonTextGroup}>
+                        <View style={styles.skeletonLineWide} />
+                        <View style={styles.skeletonLineNarrow} />
+                      </View>
+                    </View>
+                    <View style={styles.skeletonChip} />
+                  </View>
+                ))
               ) : recentExercises.length > 0 ? (
                 recentExercises.map(renderRecentExercise)
               ) : (
@@ -1557,6 +1557,40 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       inset: 0,
       opacity: 0,
       borderRadius: 16,
+    },
+    sectionLoading: {
+      opacity: 0.45,
+    },
+    skeletonItem: {
+      opacity: 0.6,
+    },
+    skeletonIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.surfaceContainerHigh,
+    },
+    skeletonTextGroup: {
+      flex: 1,
+      gap: 8,
+    },
+    skeletonLineWide: {
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: theme.surfaceContainerHigh,
+      width: "80%",
+    },
+    skeletonLineNarrow: {
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: theme.surfaceContainerHigh,
+      width: "45%",
+    },
+    skeletonChip: {
+      width: 56,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: theme.surfaceContainerHigh,
     },
     weeklySection: {
       gap: 12,

@@ -17,7 +17,7 @@ import {
   toggleBookmark,
 } from "@/backend/TopicBookmarks";
 import { getTopicsByJourneyId } from "@/backend/Topic";
-import { getTopicIntrosByTopicId } from "@/backend/TopicIntro";
+import { getTopicIntrosByTopicIds } from "@/backend/TopicIntro";
 import { getTopicVocabularyByTopicId } from "@/backend/TopicVocabulary";
 import { getUserProfile } from "@/backend/UserProfile";
 import { ThemedText } from "@/components/themed-text";
@@ -114,41 +114,41 @@ export default function TopicPage() {
     const db = await getDatabase();
     const journeyId = parseInt(journey_id ?? "1", 10);
 
-    const journeyResult = await getJourneyById(db, journeyId);
+    const [journeyResult, topicsResult, profile] = await Promise.all([
+      getJourneyById(db, journeyId),
+      getTopicsByJourneyId(db, journeyId),
+      getUserProfile(db),
+    ]);
     if (!isActive) return;
     setJourney(journeyResult ?? null);
-
-    const topicsResult = await getTopicsByJourneyId(db, journeyId);
-    if (!isActive) return;
     setTopics(topicsResult ?? []);
 
-    const profile = await getUserProfile(db);
-    if (profile) {
-      const bookmarks = await getBookmarksByUserId(db, profile.user_id);
-      if (isActive) {
-        setBookmarkedTopics(
-          new Set(
-            (bookmarks ?? [])
-              .map((bookmark: any) => bookmark.topic_id)
-              .filter(
-                (topicId: number) =>
-                  typeof topicId === "number" &&
-                  (topicsResult ?? []).some(
-                    (topic: Topic) => topic.topic_id === topicId,
-                  ),
-              ),
-          ),
-        );
-      }
-    } else if (isActive) {
-      setBookmarkedTopics(new Set());
+    const bookmarks = profile
+      ? await getBookmarksByUserId(db, profile.user_id)
+      : [];
+    if (isActive) {
+      setBookmarkedTopics(
+        new Set(
+          (bookmarks ?? [])
+            .map((bookmark: any) => bookmark.topic_id)
+            .filter(
+              (topicId: number) =>
+                typeof topicId === "number" &&
+                (topicsResult ?? []).some(
+                  (topic: Topic) => topic.topic_id === topicId,
+                ),
+            ),
+        ),
+      );
     }
 
+    // One query for every intro instead of one query per topic.
+    const topicIds = (topicsResult ?? []).map((topic: Topic) => topic.topic_id);
+    const allIntros = await getTopicIntrosByTopicIds(db, topicIds);
     const intros: Record<number, TopicIntro> = {};
-    for (const topic of topicsResult ?? []) {
-      const introList = await getTopicIntrosByTopicId(db, topic.topic_id);
-      if (introList && introList.length > 0) {
-        intros[topic.topic_id] = introList[0];
+    for (const intro of allIntros as TopicIntro[]) {
+      if (intros[intro.topic_id] === undefined) {
+        intros[intro.topic_id] = intro;
       }
     }
     if (isActive) {

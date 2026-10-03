@@ -32,6 +32,17 @@ export async function getTopicIntrosByTopicId(db, topicId) {
   return result;
 }
 
+export async function getTopicIntrosByTopicIds(db, topicIds) {
+  const ids = (topicIds ?? []).filter((id) => Number.isFinite(id));
+  if (ids.length === 0) return [];
+  const placeholders = ids.map(() => "?").join(", ");
+  const result = await db.getAllAsync(
+    `SELECT * FROM topic_introduction WHERE topic_id IN (${placeholders}) ORDER BY topic_id ASC, topic_intro_id ASC`,
+    ...ids,
+  );
+  return result;
+}
+
 export async function getAllTopicIntros(db) {
   const result = await db.getAllAsync(
     "SELECT * FROM topic_introduction ORDER BY topic_intro_id ASC",
