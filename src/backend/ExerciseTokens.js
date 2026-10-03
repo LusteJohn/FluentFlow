@@ -32,6 +32,17 @@ export async function getExerciseTokensByExerciseId(db, exerciseId) {
   return result;
 }
 
+export async function getExerciseTokensByExerciseIds(db, exerciseIds) {
+  const ids = (exerciseIds ?? []).filter((id) => Number.isFinite(id));
+  if (ids.length === 0) return [];
+  const placeholders = ids.map(() => "?").join(", ");
+  const result = await db.getAllAsync(
+    `SELECT * FROM exercise_tokens WHERE exercise_id IN (${placeholders}) ORDER BY exercise_id ASC, correct_position ASC`,
+    ...ids,
+  );
+  return result;
+}
+
 export async function getAllExerciseTokens(db) {
   const result = await db.getAllAsync(
     "SELECT * FROM exercise_tokens ORDER BY exercise_id ASC, correct_position ASC",

@@ -21,10 +21,11 @@ import {
 import {
   createExerciseAnswer,
   deleteExerciseAnswersByExerciseId,
-  getExerciseAnswersByExerciseId,
+  getExerciseAnswersByExerciseIds,
 } from "@/backend/ExerciseAnswer";
 import {
   getExerciseTokensByExerciseId,
+  getExerciseTokensByExerciseIds,
   seedExerciseTokens,
 } from "@/backend/ExerciseTokens";
 import { getTopicById } from "@/backend/Topic";
@@ -134,21 +135,20 @@ export default function ExerciseListPage() {
       let isActive = true;
 
       async function loadData() {
-        setLoading(true);
         try {
           const db = await getDatabase();
           const topicId = parseInt(topic_id ?? "1", 10);
           const lvl = level ?? "beginner";
 
-          const topic = (await getTopicById(db, topicId)) as {
-            title?: string;
-          } | null;
+          const [topic, initialExercises] = await Promise.all([
+            getTopicById(db, topicId) as Promise<{ title?: string } | null>,
+            getExercisesByTopicIdAndLevel(db, topicId, lvl),
+          ]);
           if (isActive) {
             setTopicTitle(topic?.title ?? "Exercises");
           }
 
-          let exs: Exercise[] =
-            (await getExercisesByTopicIdAndLevel(db, topicId, lvl)) ?? [];
+          let exs: Exercise[] = (initialExercises as Exercise[]) ?? [];
 
           if (exs.length === 0) {
             await seedExercises(db);
@@ -168,13 +168,29 @@ export default function ExerciseListPage() {
             }
           }
 
+          // Tokens and saved answers are fetched in one query each instead of
+          // one query per exercise, then split into the per-exercise maps.
+          const exerciseIds = exs.map((exercise) => exercise.exercise_id);
+          const [allTokens, allAnswers] = await Promise.all([
+            getExerciseTokensByExerciseIds(db, exerciseIds),
+            getExerciseAnswersByExerciseIds(db, exerciseIds),
+          ]);
+
           const tokensMap: Record<number, ExerciseToken[]> = {};
-          for (const exercise of exs) {
-            const tokens = await getExerciseTokensByExerciseId(
-              db,
-              exercise.exercise_id,
-            );
-            tokensMap[exercise.exercise_id] = tokens ?? [];
+          for (const token of allTokens as ExerciseToken[]) {
+            const existing = tokensMap[token.exercise_id];
+            if (existing) {
+              existing.push(token);
+            } else {
+              tokensMap[token.exercise_id] = [token];
+            }
+          }
+
+          const answersMap: Record<number, string> = {};
+          for (const answer of allAnswers as { exercise_id: number; answer_text: string }[]) {
+            if (answersMap[answer.exercise_id] === undefined) {
+              answersMap[answer.exercise_id] = answer.answer_text ?? "";
+            }
           }
 
           const savedLetterInputs: Record<number, string[]> = {};
@@ -183,41 +199,32 @@ export default function ExerciseListPage() {
           const savedAnswerResults: Record<number, boolean> = {};
 
           for (const exercise of exs) {
-            const answers = await getExerciseAnswersByExerciseId(
-              db,
-              exercise.exercise_id,
-            );
-            if (answers.length > 0) {
-              const savedAnswer = answers[0].answer_text ?? "";
-              const exerciseTokens = tokensMap[exercise.exercise_id] ?? [];
-              const correctAnswer = getCorrectAnswer(
-                exerciseTokens,
-                exercise.type,
-              );
-              const isCorrect =
-                correctAnswer !== "" &&
-                savedAnswer.trim().toLowerCase() ===
-                  correctAnswer.toLowerCase();
+            const savedAnswer = answersMap[exercise.exercise_id];
+            if (savedAnswer === undefined) continue;
+            const exerciseTokens = tokensMap[exercise.exercise_id] ?? [];
+            const correctAnswer = getCorrectAnswer(exerciseTokens, exercise.type);
+            const isCorrect =
+              correctAnswer !== "" &&
+              savedAnswer.trim().toLowerCase() === correctAnswer.toLowerCase();
 
-              savedAnswerResults[exercise.exercise_id] = isCorrect;
+            savedAnswerResults[exercise.exercise_id] = isCorrect;
 
-              if (exercise.type === "spelling") {
-                const letters: string[] = [];
-                for (let i = 0; i < exerciseTokens.length; i++) {
-                  letters[i] = savedAnswer[i] ?? "";
-                }
-                savedLetterInputs[exercise.exercise_id] = letters;
-              } else if (exercise.type === "fill_blank_spelling") {
-                savedSubmittedAnswers[exercise.exercise_id] = savedAnswer;
-              } else if (exercise.type === "sentence_builder") {
-                const words = savedAnswer.split(" ").filter(Boolean);
-                const selectedTokens: ExerciseToken[] = [];
-                for (const word of words) {
-                  const token = exerciseTokens.find((t) => t.token === word);
-                  if (token) selectedTokens.push(token);
-                }
-                savedSelectedWords[exercise.exercise_id] = selectedTokens;
+            if (exercise.type === "spelling") {
+              const letters: string[] = [];
+              for (let i = 0; i < exerciseTokens.length; i++) {
+                letters[i] = savedAnswer[i] ?? "";
               }
+              savedLetterInputs[exercise.exercise_id] = letters;
+            } else if (exercise.type === "fill_blank_spelling") {
+              savedSubmittedAnswers[exercise.exercise_id] = savedAnswer;
+            } else if (exercise.type === "sentence_builder") {
+              const words = savedAnswer.split(" ").filter(Boolean);
+              const selectedTokens: ExerciseToken[] = [];
+              for (const word of words) {
+                const token = exerciseTokens.find((t) => t.token === word);
+                if (token) selectedTokens.push(token);
+              }
+              savedSelectedWords[exercise.exercise_id] = selectedTokens;
             }
           }
 
@@ -488,9 +495,11 @@ export default function ExerciseListPage() {
             }
           >
             {loading && (
-              <ThemedText style={styles.loadingText}>
-                Loading exercises...
-              </ThemedText>
+              <View style={styles.skeletonWrapper}>
+                <View style={styles.skeletonPromptBlock} />
+                <View style={styles.skeletonAnswerBlock} />
+                <View style={styles.skeletonButtonBlock} />
+              </View>
             )}
             {!loading && displayExercises.length === 0 && (
               <ThemedText style={styles.noExercisesText}>
@@ -1166,6 +1175,25 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     headerSpacer: {
       width: 40,
+    },
+    skeletonWrapper: {
+      gap: 16,
+      opacity: 0.6,
+    },
+    skeletonPromptBlock: {
+      height: 120,
+      borderRadius: 16,
+      backgroundColor: theme.surfaceContainerHigh,
+    },
+    skeletonAnswerBlock: {
+      height: 96,
+      borderRadius: 16,
+      backgroundColor: theme.surfaceContainerHigh,
+    },
+    skeletonButtonBlock: {
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: theme.surfaceContainerHigh,
     },
     loadingText: {
       fontSize: 14,

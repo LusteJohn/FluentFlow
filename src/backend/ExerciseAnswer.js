@@ -32,6 +32,17 @@ export async function getExerciseAnswersByExerciseId(db, exerciseId) {
   return result;
 }
 
+export async function getExerciseAnswersByExerciseIds(db, exerciseIds) {
+  const ids = (exerciseIds ?? []).filter((id) => Number.isFinite(id));
+  if (ids.length === 0) return [];
+  const placeholders = ids.map(() => "?").join(", ");
+  const result = await db.getAllAsync(
+    `SELECT * FROM exercise_answers WHERE exercise_id IN (${placeholders}) ORDER BY is_primary DESC, answer_id ASC`,
+    ...ids,
+  );
+  return result;
+}
+
 export async function getPrimaryExerciseAnswer(db, exerciseId) {
   const result = await db.getFirstAsync(
     "SELECT * FROM exercise_answers WHERE exercise_id = ? AND is_primary = 1",
