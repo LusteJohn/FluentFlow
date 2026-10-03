@@ -37,6 +37,9 @@ import {
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import TutorialModal, {
+  getWelcomingPhrase,
+} from "@/components/tutorial-modal";
 import { useTheme } from "@/contexts/theme-context";
 import { getDatabase, importUserProfileData } from "@/database/database";
 import AppHeader from "../(tabs)/header";
@@ -210,6 +213,8 @@ export default function ProfilePage() {
   const [address, setAddress] = useState("");
 
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [welcomingPhrase] = useState(() => getWelcomingPhrase());
   const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
   const [pickerMonth, setPickerMonth] = useState(new Date().getMonth());
 
@@ -469,7 +474,7 @@ export default function ProfilePage() {
     return (
       <ScreenMotion>
       <ThemedView style={styles.container}>
-        <AppHeader />
+        <AppHeader onHelpPress={() => setShowTutorial(true)} />
         <ThemedText style={styles.loadingText}>Loading profile...</ThemedText>
         </ThemedView>
       </ScreenMotion>
@@ -479,9 +484,9 @@ export default function ProfilePage() {
    return (
      <ScreenMotion>
 <ThemedView style={styles.container}>
-          <AppHeader />
+<AppHeader onHelpPress={() => setShowTutorial(true)} />
 
-         <KeyboardAvoidingView
+          <KeyboardAvoidingView
            style={[
              styles.keyboardAvoidingView,
              { paddingBottom: Platform.OS === "android" ? insets.bottom : 0 },
@@ -963,6 +968,12 @@ export default function ProfilePage() {
         )}
 
         <NavBar />
+
+        <TutorialModal
+          visible={showTutorial}
+          welcomingPhrase={welcomingPhrase}
+          onClose={() => setShowTutorial(false)}
+        />
       </ThemedView>
     </ScreenMotion>
   );

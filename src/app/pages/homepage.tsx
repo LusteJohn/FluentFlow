@@ -929,21 +929,7 @@ export default function HomePage() {
   return (
     <ScreenMotion>
       <ThemedView style={styles.container}>
-        <View style={styles.headerRow}>
-          <AppHeader />
-          <Pressable
-            style={styles.helpButton}
-            onPress={() => setShowTutorial(true)}
-            hitSlop={8}
-          >
-            <Image
-              source={require("@/assets/images/question.jpeg")}
-              style={styles.helpButtonIcon}
-              resizeMode="contain"
-              accessibilityLabel="Open tutorial"
-            />
-          </Pressable>
-        </View>
+        <AppHeader onHelpPress={() => setShowTutorial(true)} />
 
         <ScrollView
           style={styles.scrollView}
@@ -1995,23 +1981,6 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       color: theme.onSurfaceVariant,
       fontSize: 13,
       fontWeight: "600",
-    },
-    headerRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingRight: 16,
-    },
-    helpButton: {
-      width: 36,
-      height: 36,
-      alignItems: "center",
-      justifyContent: "center",
-      marginTop: 8,
-    },
-    helpButtonIcon: {
-      width: 32,
-      height: 32,
     },
     continueLearningSection: {
       marginBottom: 20,

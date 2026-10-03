@@ -19,6 +19,9 @@ import { SymbolView } from "expo-symbols";
 import { ScreenMotion } from "@/components/screen-motion";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import TutorialModal, {
+  getWelcomingPhrase,
+} from "@/components/tutorial-modal";
 import { useTheme, useThemeMode } from "@/contexts/theme-context";
 import {
   buildReportData,
@@ -56,6 +59,8 @@ export default function SettingsPage() {
   }>(null);
   const [loading, setLoading] = useState(false);
   const [savingTheme, setSavingTheme] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [welcomingPhrase] = useState(() => getWelcomingPhrase());
   const [topicLevels, setTopicLevels] = useState<any[]>([]);
   const [loadingTopicLevels, setLoadingTopicLevels] = useState(false);
   const [resettingTopicId, setResettingTopicId] = useState<number | null>(null);
@@ -751,7 +756,7 @@ export default function SettingsPage() {
 return (
     <ScreenMotion>
       <ThemedView style={styles.container}>
-        <AppHeader />
+        <AppHeader onHelpPress={() => setShowTutorial(true)} />
         <ScrollView
           style={styles.sv}
           contentContainerStyle={styles.content}
@@ -946,6 +951,12 @@ return (
           </View>
         </ScrollView>
         <NavBar />
+
+        <TutorialModal
+          visible={showTutorial}
+          welcomingPhrase={welcomingPhrase}
+          onClose={() => setShowTutorial(false)}
+        />
 
         {showConfirmDialog && (
           <Modal
