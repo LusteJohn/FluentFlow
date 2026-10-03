@@ -64,6 +64,53 @@ export async function getLevelProgressInfo(db, userId, topicId, level) {
   };
 }
 
+export async function getLevelProgressForAllTopics(db, userId) {
+  const [progressRows, expectedRows] = await Promise.all([
+    db.getAllAsync(
+      "SELECT topic_id, level, completed_count, is_completed FROM user_level_progress WHERE user_id = ?",
+      userId,
+    ),
+    db.getAllAsync(
+      "SELECT topic_id, level, COUNT(*) as total FROM exercises GROUP BY topic_id, level",
+    ),
+  ]);
+
+  const expectedByKey = new Map();
+  for (const row of expectedRows ?? []) {
+    expectedByKey.set(`${row.topic_id}:${row.level}`, row.total ?? 0);
+  }
+
+  const result = {};
+  for (const row of progressRows ?? []) {
+    const total = expectedByKey.get(`${row.topic_id}:${row.level}`) ?? 0;
+    let status = "available";
+    if ((row.completed_count ?? 0) > 0) {
+      status = row.is_completed === 1 ? "completed" : "in_progress";
+    }
+    result[row.topic_id] = result[row.topic_id] ?? {};
+    result[row.topic_id][row.level] = {
+      status,
+      completedCount: row.completed_count ?? 0,
+      totalCount: total,
+    };
+  }
+
+  // Topics the user has no row for still need an "available" entry per level.
+  for (const [key, total] of expectedByKey.entries()) {
+    const separator = key.lastIndexOf(":");
+    const topicId = Number(key.slice(0, separator));
+    const level = key.slice(separator + 1);
+    result[topicId] = result[topicId] ?? {};
+    result[topicId][level] = result[topicId][level] ?? {
+      status: "available",
+      completedCount: 0,
+      totalCount: total,
+    };
+  }
+
+  return result;
+}
+
 export async function getAllLevelProgressForTopic(db, userId, topicId) {
   const levels = ["beginner", "intermediate", "advanced"];
   const result = {};

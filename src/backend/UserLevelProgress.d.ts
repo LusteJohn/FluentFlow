@@ -38,6 +38,11 @@ export function getAllLevelProgressForTopic(
   topicId: number,
 ): Promise<Record<string, LevelProgressInfo>>;
 
+export function getLevelProgressForAllTopics(
+  db: any,
+  userId: number,
+): Promise<Record<number, Record<string, LevelProgressInfo>>>;
+
 export interface LevelProgressWithAchievement extends UserLevelProgress {
   justAwarded?: boolean;
 }

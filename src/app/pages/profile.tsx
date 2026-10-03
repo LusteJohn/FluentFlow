@@ -8,7 +8,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Image,
@@ -26,7 +26,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllJourneyProgressForUser } from "@/backend/Journey";
 import { getAllTopics } from "@/backend/Topic";
 import { getTotalEarnedXP } from "@/backend/UserExerciseProgress";
-import { getAllLevelProgressForTopic } from "@/backend/UserLevelProgress";
+import { getLevelProgressForAllTopics } from "@/backend/UserLevelProgress";
 import { getStreakByUserId } from "@/backend/UserStreak";
 import { getTopicAchievementsByUserId } from "@/backend/TopicAchievement";
 import {
@@ -201,6 +201,9 @@ export default function ProfilePage() {
     { topic_title: string; achieved_at: string }[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [profileReady, setProfileReady] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const seededRef = useRef(false);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -224,120 +227,140 @@ export default function ProfilePage() {
 
       async function loadProfile() {
         try {
-          await importUserProfileData();
+          // Seeding runs once per app session; on later visits it would
+          // otherwise re-scan every table before the profile can render.
+          if (!seededRef.current) {
+            seededRef.current = true;
+            importUserProfileData().catch((error) => {
+              seededRef.current = false;
+              console.error("Failed to import profile data", error);
+            });
+          }
+
           const db = await getDatabase();
           const [existing, topics] = await Promise.all([
             getUserProfile(db),
             getAllTopics(db),
           ]);
 
-          let stats: ProfileStats | null = null;
+          if (!isActive) return;
+          setProfile(existing);
           if (existing) {
-            const [totalXP, journeyProgress, streakData] =
-              await Promise.all([
-                getTotalEarnedXP(db, existing.user_id),
-                getAllJourneyProgressForUser(db, existing.user_id),
-                getStreakByUserId(db, existing.user_id),
-              ]);
+            setFirstname(existing.firstname ?? "");
+            setMiddlename(existing.middlename ?? "");
+            setLastname(existing.lastname ?? "");
+            setNameExt(existing.name_ext ?? "");
+            setBirthdate(existing.birthdate ?? "");
+            setGender(existing.gender ?? "");
+            setAddress(existing.address ?? "");
+          }
+          setProfileReady(true);
 
-            let completedLevels = 0;
-            let totalLevels = 0;
-            let completedTopics = 0;
-
-            for (const topic of topics ?? []) {
-              const progress = await getAllLevelProgressForTopic(
-                db,
-                existing.user_id,
-                topic.topic_id,
-              );
-              let allLevelsCompleted = true;
-              for (const level of LEVELS) {
-                totalLevels += 1;
-                if (progress[level]?.status === "completed") {
-                  completedLevels += 1;
-                } else {
-                  allLevelsCompleted = false;
-                }
-              }
-              if (allLevelsCompleted && LEVELS.length > 0) {
-                completedTopics += 1;
-              }
-            }
-
-            const totalJourneyExercises = Object.values(
-              journeyProgress ?? {},
-            ).reduce(
-              (sum, progress) => sum + (progress?.totalExercises ?? 0),
-              0,
-            );
-            const completedJourneyExercises = Object.values(
-              journeyProgress ?? {},
-            ).reduce(
-              (sum, progress) => sum + (progress?.completedExercises ?? 0),
-              0,
-            );
-            const learningProgress =
-              totalJourneyExercises > 0
-                ? Math.round(
-                    (completedJourneyExercises / totalJourneyExercises) * 100,
-                  )
-                : totalLevels > 0
-                  ? Math.round((completedLevels / totalLevels) * 100)
-                  : 0;
-
-            stats = {
-              completedTopics,
-              badges: completedTopics,
-              learningProgress,
-              streak: streakData?.current_streak ?? 0,
-              totalXP,
-            };
+          if (!existing) {
+            setProfileStats(null);
+            setAchievements([]);
+            return;
           }
 
-          let userAchievements: {
+          const userId = existing.user_id;
+          // Every remaining source is independent local SQLite, so they run
+          // together instead of one await after another.
+          const [
+            totalXP,
+            journeyProgress,
+            streakData,
+            levelProgressByTopic,
+            rawAchievements,
+          ] = await Promise.all([
+            getTotalEarnedXP(db, userId),
+            getAllJourneyProgressForUser(db, userId),
+            getStreakByUserId(db, userId),
+            getLevelProgressForAllTopics(db, userId),
+            getTopicAchievementsByUserId(db, userId),
+          ]);
+
+          let completedLevels = 0;
+          let totalLevels = 0;
+          let completedTopics = 0;
+
+          for (const topic of topics ?? []) {
+            const progress = levelProgressByTopic[topic.topic_id];
+            let allLevelsCompleted = LEVELS.length > 0;
+            for (const level of LEVELS) {
+              totalLevels += 1;
+              if (progress?.[level]?.status === "completed") {
+                completedLevels += 1;
+              } else {
+                allLevelsCompleted = false;
+              }
+            }
+            if (allLevelsCompleted) {
+              completedTopics += 1;
+            }
+          }
+
+          const journeyProgressValues = Object.values(
+            (journeyProgress ?? {}) as Record<
+              number,
+              {
+                totalExercises?: number;
+                completedExercises?: number;
+              }
+            >,
+          );
+          const totalJourneyExercises = journeyProgressValues.reduce(
+            (sum, progress) => sum + (progress?.totalExercises ?? 0),
+            0,
+          );
+          const completedJourneyExercises = journeyProgressValues.reduce(
+            (sum, progress) => sum + (progress?.completedExercises ?? 0),
+            0,
+          );
+          const learningProgress =
+            totalJourneyExercises > 0
+              ? Math.round(
+                  (completedJourneyExercises / totalJourneyExercises) * 100,
+                )
+              : totalLevels > 0
+                ? Math.round((completedLevels / totalLevels) * 100)
+                : 0;
+
+          const stats: ProfileStats = {
+            completedTopics,
+            badges: completedTopics,
+            learningProgress,
+            streak: streakData?.current_streak ?? 0,
+            totalXP,
+          };
+
+          const topicTitleById = new Map<number, string>(
+            (topics ?? []).map((t: any) => [t.topic_id, t.title as string]),
+          );
+          const userAchievements: {
             topic_title: string;
             achieved_at: string;
-          }[] = [];
-          if (existing) {
-            const rawAchievements = await getTopicAchievementsByUserId(
-              db,
-              existing.user_id,
+          }[] = (rawAchievements ?? [])
+            .map((a: any) => ({
+              topic_title: topicTitleById.get(a.topic_id) ?? "Unknown Topic",
+              achieved_at: a.achieved_at ?? "",
+            }))
+            .sort(
+              (a: { achieved_at: string }, b: { achieved_at: string }) =>
+                new Date(b.achieved_at).getTime() -
+                new Date(a.achieved_at).getTime(),
             );
-            userAchievements = rawAchievements
-              .map((a: any) => {
-                const topic = topics?.find(
-                  (t: any) => t.topic_id === a.topic_id,
-                );
-                return {
-                  topic_title: topic?.title ?? "Unknown Topic",
-                  achieved_at: a.achieved_at ?? "",
-                };
-              })
-              .sort(
-                (a, b) =>
-                  new Date(b.achieved_at).getTime() -
-                  new Date(a.achieved_at).getTime(),
-              );
-          }
 
           if (isActive) {
-            setProfile(existing);
             setProfileStats(stats);
             setAchievements(userAchievements);
-            if (existing) {
-              setFirstname(existing.firstname ?? "");
-              setMiddlename(existing.middlename ?? "");
-              setLastname(existing.lastname ?? "");
-              setNameExt(existing.name_ext ?? "");
-              setBirthdate(existing.birthdate ?? "");
-              setGender(existing.gender ?? "");
-              setAddress(existing.address ?? "");
-            }
           }
         } catch (error) {
           console.error("Failed to load profile", error);
         } finally {
-          if (isActive) setLoading(false);
+          if (isActive) {
+            setLoadingStats(false);
+            setLoading(false);
+          }
         }
       }
 
@@ -464,18 +487,42 @@ export default function ProfilePage() {
     totalXP: 0,
   };
 
+  const statsArePending = loadingStats && !profileStats;
+
+  const renderSummarySkeleton = () => (
+    <View style={[styles.section, styles.skeletonSection]}>
+      <View style={styles.skeletonLineNarrow} />
+      <View style={styles.statGrid}>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <View key={`stat-skeleton-${index}`} style={styles.statCard}>
+            <View style={styles.skeletonLineNarrow} />
+            <View style={styles.skeletonStatValue} />
+          </View>
+        ))}
+      </View>
+      <View style={styles.skeletonProgressTrack} />
+    </View>
+  );
+
   // Follows the stored gender, and reacts instantly while the gender is edited.
   const avatarSource = useMemo(
     () => getAvatarForGender(isEditing ? gender : (profile?.gender ?? gender)),
     [isEditing, gender, profile?.gender],
   );
 
-  if (loading) {
+  // The page shell renders as soon as the profile row is ready; only the
+  // summary numbers wait on the heavier progress queries.
+  if (loading && !profileReady) {
     return (
       <ScreenMotion>
-      <ThemedView style={styles.container}>
-        <AppHeader onHelpPress={() => setShowTutorial(true)} />
-        <ThemedText style={styles.loadingText}>Loading profile...</ThemedText>
+        <ThemedView style={styles.container}>
+          <AppHeader onHelpPress={() => setShowTutorial(true)} />
+          <View style={styles.skeletonWrapper}>
+            <View style={styles.skeletonAvatar} />
+            <View style={styles.skeletonLineWide} />
+            <View style={styles.skeletonLineNarrow} />
+            {renderSummarySkeleton()}
+          </View>
         </ThemedView>
       </ScreenMotion>
     );
@@ -525,7 +572,9 @@ export default function ProfilePage() {
                )}
              </View>
 
-            {stats && (
+            {statsArePending ? (
+              renderSummarySkeleton()
+            ) : (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <ThemedText style={styles.sectionTitle}>
@@ -999,6 +1048,47 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       textAlign: "center",
       marginTop: 24,
       color: theme.onSurfaceVariant,
+    },
+    skeletonWrapper: {
+      paddingHorizontal: 20,
+      gap: 14,
+      opacity: 0.6,
+    },
+    skeletonSection: {
+      marginTop: 20,
+      gap: 14,
+    },
+    skeletonAvatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: theme.surfaceContainerHigh,
+      alignSelf: "center",
+      marginVertical: 8,
+    },
+    skeletonLineWide: {
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: theme.surfaceContainerHigh,
+      width: "70%",
+      alignSelf: "center",
+    },
+    skeletonLineNarrow: {
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: theme.surfaceContainerHigh,
+      width: "40%",
+      alignSelf: "center",
+    },
+    skeletonStatValue: {
+      height: 28,
+      borderRadius: 8,
+      backgroundColor: theme.surfaceContainerHigh,
+    },
+    skeletonProgressTrack: {
+      height: 8,
+      borderRadius: 999,
+      backgroundColor: theme.surfaceContainerHigh,
     },
     profileHeader: {
       alignItems: "center",
