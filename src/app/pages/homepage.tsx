@@ -977,10 +977,10 @@ export default function HomePage() {
               entering={FadeInUp.duration(400)
                 .easing(Easing.out(Easing.quad))
                 .delay(120)}
-              style={cardStyle}
             >
-              <Pressable
-                style={styles.continueLearningCard}
+              <Animated.View style={cardStyle}>
+                <Pressable
+                  style={styles.continueLearningCard}
                 onPress={handleContinueLearning}
                 onPressIn={() => {
                   // eslint-disable-next-line react-hooks/immutability
@@ -1048,6 +1048,7 @@ export default function HomePage() {
                   </View>
                 </View>
               </Pressable>
+              </Animated.View>
             </Animated.View>
           )}
 
