@@ -313,3 +313,58 @@ export async function markDailyTriviaSeen(today: string): Promise<void> {
     console.error("Failed to mark trivia seen", error);
   }
 }
+
+export async function getAppKvValue(key: string): Promise<string | null> {
+  try {
+    const db = await getDatabase();
+    const row = await db.getFirstAsync(
+      "SELECT value FROM app_kv WHERE key = ?",
+      key,
+    );
+    return row?.value ?? null;
+  } catch (error) {
+    console.error(`Failed to read app_kv key ${key}`, error);
+    return null;
+  }
+}
+
+export async function setAppKvValue(
+  key: string,
+  value: string,
+): Promise<void> {
+  try {
+    const db = await getDatabase();
+    await db.runAsync(
+      "INSERT INTO app_kv (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      key,
+      value,
+    );
+  } catch (error) {
+    console.error(`Failed to write app_kv key ${key}`, error);
+  }
+}
+
+export async function getAllAppKvKeys(): Promise<string[]> {
+  const db = await getDatabase();
+  const rows = await db.getAllAsync("SELECT key FROM app_kv ORDER BY key ASC");
+  return (rows ?? []).map((row: any) => row.key as string);
+}
+
+/**
+ * Removes one or more app_kv flags. Only these lightweight UI flags are
+ * touched - learning data (journeys, topics, exercises, progress) is never
+ * affected, so a delete can always be recovered from by re-importing.
+ */
+export async function deleteAppKvKeys(keys: string[]): Promise<number> {
+  const targets = (keys ?? []).filter(
+    (key) => typeof key === "string" && key.length > 0,
+  );
+  if (targets.length === 0) return 0;
+  const db = await getDatabase();
+  const placeholders = targets.map(() => "?").join(", ");
+  const result = await db.runAsync(
+    `DELETE FROM app_kv WHERE key IN (${placeholders})`,
+    ...targets,
+  );
+  return result?.changes ?? 0;
+}
