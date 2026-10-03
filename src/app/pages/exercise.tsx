@@ -9,7 +9,14 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Image,
+  ImageSourcePropType,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { getTopicById } from "@/backend/Topic";
 import {
@@ -36,10 +43,18 @@ interface Topic {
 
 const LEVELS = ["beginner", "intermediate", "advanced"] as const;
 
+// Each difficulty has its own artwork, keyed by the same level value stored
+// with every exercise.
+const LEVEL_IMAGES: Record<string, ImageSourcePropType> = {
+  beginner: require("@/assets/images/beginner.png"),
+  intermediate: require("@/assets/images/intermediate.png"),
+  advanced: require("@/assets/images/advanced.png"),
+};
+
 interface LevelDisplay {
   title: string;
   description: string;
-  icon: any;
+  icon: ImageSourcePropType;
   iconBg: string;
   iconColor: string;
   badgeColor: string;
@@ -67,11 +82,7 @@ const LEVEL_BASE: Record<
     title: "Beginner",
     description:
       "Basic vocabulary & simple phrases. Checking in and finding your gate.",
-    icon: {
-      ios: "checkmark.circle",
-      android: "check_circle",
-      web: "check_circle",
-    },
+    icon: LEVEL_IMAGES.beginner,
     iconBg: "#dcfce7",
     iconColor: "#15803d",
     progressColor: "#22c55e",
@@ -80,7 +91,7 @@ const LEVEL_BASE: Record<
     title: "Intermediate",
     description:
       "Conversational dialogues. Handling delays, lost baggage, and security questions.",
-    icon: { ios: "play.fill", android: "play_arrow", web: "play_arrow" },
+    icon: LEVEL_IMAGES.intermediate,
     iconBg: "#dcfce7",
     iconColor: "#15803d",
     progressColor: "#22c55e",
@@ -89,11 +100,7 @@ const LEVEL_BASE: Record<
     title: "Advanced",
     description:
       "Complex dialogues & technical terms. Negotiating upgrades and resolving disputes.",
-    icon: {
-      ios: "checkmark.circle",
-      android: "check_circle",
-      web: "check_circle",
-    },
+    icon: LEVEL_IMAGES.advanced,
     iconBg: "#dcfce7",
     iconColor: "#15803d",
     progressColor: "#22c55e",
@@ -147,22 +154,12 @@ function buildLevelDisplay(
   };
 }
 
-const JOURNEY_ICONS: Record<number, any> = {
-  1: { ios: "house.fill", android: "home", web: "home" },
-  2: { ios: "book.fill", android: "school", web: "school" },
-  3: { ios: "cart.fill", android: "restaurant_menu", web: "restaurant_menu" },
-  4: { ios: "cup.fill", android: "coffee", web: "coffee" },
-  5: { ios: "cart.fill", android: "shopping_cart", web: "shopping_cart" },
-  6: { ios: "cart.fill", android: "storefront", web: "storefront" },
-};
-
 export default function ExercisePage() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { topic_id } = useLocalSearchParams<{ topic_id: string }>();
   const router = useRouter();
   const [topicTitle, setTopicTitle] = useState<string>("Exercises");
-  const [journeyId, setJourneyId] = useState<number | null>(null);
   const [levelProgress, setLevelProgress] = useState<
     Record<string, LevelProgressInfo>
   >({});
@@ -179,7 +176,6 @@ export default function ExercisePage() {
           const profile = await getUserProfile(db);
           if (isActive) {
             setTopicTitle(topic?.title ?? "Exercises");
-            setJourneyId(topic?.journey_id ?? null);
             if (profile) {
               const progress = await getAllLevelProgressForTopic(
                 db,
@@ -247,10 +243,11 @@ export default function ExercisePage() {
 
           <View style={styles.introSection}>
             <View style={styles.iconContainer}>
-              <SymbolView
-                name={JOURNEY_ICONS[journeyId ?? 1]}
-                size={48}
-                tintColor={theme.secondaryContainer}
+              <Image
+                source={require("@/assets/images/topic_level.png")}
+                style={styles.introImage}
+                resizeMode="contain"
+                accessibilityLabel="Choose a difficulty level"
               />
             </View>
             <ThemedText style={styles.introTitle}>Select Difficulty</ThemedText>
@@ -274,10 +271,11 @@ export default function ExercisePage() {
                         { backgroundColor: meta.iconBg },
                       ]}
                     >
-                      <SymbolView
-                        name={meta.icon as any}
-                        size={28}
-                        tintColor={meta.iconColor}
+                      <Image
+                        source={meta.icon}
+                        style={styles.levelIconImage}
+                        resizeMode="contain"
+                        accessibilityLabel={`${meta.title} level`}
                       />
                     </View>
                     <View style={styles.levelContent}>
@@ -450,12 +448,14 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       gap: 12,
     },
     iconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: theme.surfaceContainerHigh,
+      width: 150,
+      height: 150,
       alignItems: "center",
       justifyContent: "center",
+    },
+    introImage: {
+      width: "100%",
+      height: "100%",
     },
     introTitle: {
       color: theme.onSurface,
@@ -505,12 +505,15 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       padding: 16,
     },
     levelIconCircle: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: 52,
+      height: 52,
       alignItems: "center",
       justifyContent: "center",
       flexShrink: 0,
+    },
+    levelIconImage: {
+      width: "100%",
+      height: "100%",
     },
     levelContent: {
       flex: 1,

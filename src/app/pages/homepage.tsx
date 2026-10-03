@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BackHandler,
   Image,
+  ImageSourcePropType,
   Modal,
   Platform,
   Pressable,
@@ -67,7 +68,7 @@ interface StatCard {
   id: string;
   value: string;
   label: string;
-  icon: any;
+  icon: ImageSourcePropType;
   iconBg: string;
   iconColor: string;
   dynamic?: boolean;
@@ -130,7 +131,7 @@ function getStatCards(
       id: "3",
       value: "1.2k",
       label: "Total XP",
-      icon: { ios: "star.fill", android: "stars", web: "stars" },
+      icon: require("@/assets/images/xp.png"),
       iconBg: theme.surface,
       iconColor: theme.secondary,
     },
@@ -138,7 +139,7 @@ function getStatCards(
       id: "4",
       value: String(totalExercises),
       label: "Exercises",
-      icon: { ios: "doc.text", android: "description", web: "description" },
+      icon: require("@/assets/images/files.png"),
       iconBg: theme.surface,
       iconColor: theme.tertiary,
       dynamic: true,
@@ -679,7 +680,12 @@ export default function HomePage() {
           <View
             style={[styles.statIconContainer, { backgroundColor: "#ffffff30" }]}
           >
-            <SymbolView name={card.icon} size={28} tintColor={card.iconColor} />
+            <Image
+              source={card.icon}
+              style={styles.statIconImage}
+              resizeMode="contain"
+              accessibilityLabel={card.label}
+            />
           </View>
           <ThemedText style={styles.statValue}>{displayValue}</ThemedText>
           <ThemedText style={styles.statLabel}>{card.label}</ThemedText>
@@ -999,6 +1005,12 @@ export default function HomePage() {
                 accessibilityLabel={`Continue learning ${continueLearningJourney.title}`}
               >
                 <View style={styles.continueLearningContent}>
+                  <Image
+                    source={require("@/assets/images/books.png")}
+                    style={styles.continueLearningImage}
+                    resizeMode="contain"
+                    accessibilityLabel="Continue learning"
+                  />
                   <View style={styles.continueLearningText}>
                     <ThemedText style={styles.continueLearningLabel}>
                       Continue Learning
@@ -1006,8 +1018,6 @@ export default function HomePage() {
                     <ThemedText style={styles.continueLearningTitle}>
                       {continueLearningJourney.title}
                     </ThemedText>
-                  </View>
-                  <View style={styles.continueLearningProgress}>
                     <View
                       style={[
                         styles.continueLearningProgressBarTrack,
@@ -1022,25 +1032,25 @@ export default function HomePage() {
                         ]}
                       />
                     </View>
-                    <ThemedText style={styles.continueLearningProgressText}>
-                      {journeyProgress[continueLearningJourney.journey_id]
-                        ?.percent ?? 0}
-                      % Complete
-                    </ThemedText>
+                    <View style={styles.continueLearningProgress}>
+                      <ThemedText style={styles.continueLearningProgressText}>
+                        {journeyProgress[continueLearningJourney.journey_id]
+                          ?.percent ?? 0}
+                        % Complete
+                      </ThemedText>
+                      <SymbolView
+                        name={
+                          {
+                            ios: "chevron.right",
+                            android: "chevron_right",
+                            web: "chevron_right",
+                          } as any
+                        }
+                        size={16}
+                        tintColor={theme.primary}
+                      />
+                    </View>
                   </View>
-                </View>
-                <View style={styles.continueLearningArrow}>
-                  <SymbolView
-                    name={
-                      {
-                        ios: "chevron.right",
-                        android: "chevron_right",
-                        web: "chevron_right",
-                      } as any
-                    }
-                    size={20}
-                    tintColor={theme.primary}
-                  />
                 </View>
               </Pressable>
             </Animated.View>
@@ -1535,9 +1545,12 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     statIconContainer: {
       width: 44,
       height: 44,
-      borderRadius: 22,
       alignItems: "center",
       justifyContent: "center",
+    },
+    statIconImage: {
+      width: "100%",
+      height: "100%",
     },
     statValue: {
       color: theme.onSurface,
@@ -2021,9 +2034,16 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     },
     continueLearningContent: {
       flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    continueLearningImage: {
+      width: 84,
+      height: 56,
     },
     continueLearningText: {
-      marginBottom: 10,
+      flex: 1,
     },
     continueLearningLabel: {
       fontSize: 12,
@@ -2038,12 +2058,16 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       color: theme.primary,
     },
     continueLearningProgress: {
-      gap: 6,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
+      marginTop: 6,
     },
     continueLearningProgressBarTrack: {
       height: 6,
       borderRadius: 3,
       overflow: "hidden",
+      marginTop: 10,
     },
     continueLearningProgressBarFill: {
       height: "100%",

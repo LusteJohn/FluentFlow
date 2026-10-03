@@ -11,6 +11,8 @@ import Animated, {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  Image,
+  ImageSourcePropType,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -50,6 +52,26 @@ interface UserProfile {
   birthdate: string | null;
   gender: string | null;
   address: string | null;
+}
+
+const AVATAR_MALE = require("@/assets/images/avatar_male.jpeg");
+const AVATAR_FEMALE = require("@/assets/images/avatar_female.jpeg");
+
+// Gender is stored as free text, so anything female-sounding maps to the female
+// avatar and everything else (including null) falls back to the male avatar.
+function getAvatarForGender(
+  gender: string | null | undefined,
+): ImageSourcePropType {
+  if (typeof gender !== "string") return AVATAR_MALE;
+  const normalized = gender.trim().toLowerCase();
+  if (
+    normalized === "female" ||
+    normalized === "f" ||
+    normalized.startsWith("fem")
+  ) {
+    return AVATAR_FEMALE;
+  }
+  return AVATAR_MALE;
 }
 
 const GENDER_OPTIONS = [
@@ -437,10 +459,16 @@ export default function ProfilePage() {
     totalXP: 0,
   };
 
+  // Follows the stored gender, and reacts instantly while the gender is edited.
+  const avatarSource = useMemo(
+    () => getAvatarForGender(isEditing ? gender : (profile?.gender ?? gender)),
+    [isEditing, gender, profile?.gender],
+  );
+
   if (loading) {
     return (
       <ScreenMotion>
-      <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
+      <ThemedView style={styles.container}>
         <AppHeader />
         <ThemedText style={styles.loadingText}>Loading profile...</ThemedText>
         </ThemedView>
@@ -450,8 +478,8 @@ export default function ProfilePage() {
 
    return (
      <ScreenMotion>
-       <ThemedView style={[styles.container, { paddingTop: insets.top }]}>
-         <AppHeader />
+<ThemedView style={styles.container}>
+          <AppHeader />
 
          <KeyboardAvoidingView
            style={[
@@ -470,20 +498,15 @@ export default function ProfilePage() {
              showsVerticalScrollIndicator={false}
              keyboardShouldPersistTaps="handled"
            >
-             <View style={styles.profileHeader}>
-               <View style={styles.avatarContainer}>
-                 <View style={styles.avatar}>
-                   <SymbolView
-                     name={{
-                       ios: "person.fill",
-                       android: "person",
-                       web: "person",
-                     }}
-                     size={48}
-                     tintColor={theme.onPrimaryContainer}
-                   />
-                 </View>
-               </View>
+<View style={styles.profileHeader}>
+                <View style={styles.avatarContainer}>
+                  <Image
+                    source={avatarSource}
+                    style={styles.avatar}
+                    resizeMode="cover"
+                    accessibilityLabel="Profile avatar"
+                  />
+                </View>
                <ThemedText style={styles.profileName}>
                  {fullName || "Your Profile"}
                </ThemedText>

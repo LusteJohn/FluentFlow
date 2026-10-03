@@ -1,7 +1,7 @@
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
-import { Image } from "expo-image";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -21,7 +21,7 @@ export default function IndexPage() {
     <ThemedView style={styles.container}>
       <View style={styles.content}>
         <Image
-          source={require("@/assets/images/logo.png")}
+          source={require("@/assets/images/logo.jpeg")}
           style={styles.logo}
           contentFit="contain"
         />
