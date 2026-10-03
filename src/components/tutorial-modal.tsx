@@ -1,6 +1,13 @@
 import { SymbolView } from "expo-symbols";
 import { useMemo } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import {
+  Image,
+  ImageSourcePropType,
+  Modal,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { useTheme } from "@/contexts/theme-context";
@@ -9,6 +16,8 @@ export interface TutorialStep {
   number: number;
   title: string;
   description: string;
+  /** Artwork shown beside the step, sized to fit the step row. */
+  image?: ImageSourcePropType;
 }
 
 const WELCOMING_PHRASES = [
@@ -29,12 +38,14 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Import Data Resources",
     description:
       'Open the Settings page from the bottom navigation and tap "Import All Data" to load the lessons, vocabulary, and exercises.',
+    image: require("@/assets/images/import.png"),
   },
   {
     number: 2,
     title: "Create Your User Profile",
     description:
       "After importing, create your user profile so the app can track your progress, XP, and completed exercises.",
+    image: require("@/assets/images/update.png"),
   },
 ];
 
@@ -107,6 +118,14 @@ export default function TutorialModal({
                     {step.description}
                   </ThemedText>
                 </View>
+                {step.image && (
+                  <Image
+                    source={step.image}
+                    style={styles.stepImage}
+                    resizeMode="contain"
+                    accessibilityLabel={step.title}
+                  />
+                )}
               </View>
             ))}
           </View>
@@ -221,6 +240,11 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     stepText: {
       flex: 1,
       gap: 4,
+    },
+    stepImage: {
+      width: 56,
+      height: 56,
+      alignSelf: "center",
     },
     stepTitle: {
       color: "#15803d",
