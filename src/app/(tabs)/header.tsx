@@ -146,7 +146,7 @@ export default function AppHeader({ onHelpPress }: AppHeaderProps) {
               accessibilityLabel="Profile avatar"
             />
           </View>
-          <ThemedText type="title" style={styles.headerTitle}>
+          <ThemedText type="title" style={styles.headerTitle} numberOfLines={1}>
             FluentFlow
           </ThemedText>
         </View>
@@ -269,7 +269,7 @@ export default function AppHeader({ onHelpPress }: AppHeaderProps) {
 function createStyles(theme: ReturnType<typeof useTheme>) {
   return StyleSheet.create({
     header: {
-      flex: 1,
+      alignSelf: "stretch",
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
@@ -297,7 +297,12 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       width: 32,
       height: 32,
     },
-    headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+    headerLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      flexShrink: 0,
+    },
     avatarContainer: { width: 40, height: 40 },
     avatar: {
       width: 40,
