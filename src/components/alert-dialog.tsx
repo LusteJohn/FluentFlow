@@ -1,4 +1,11 @@
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import {
+  Image,
+  ImageSourcePropType,
+  Modal,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SymbolView } from "expo-symbols";
 import Animated, {
   FadeIn,
@@ -21,6 +28,8 @@ type AlertDialogProps = {
   cancelText?: string;
   onConfirm: () => void;
   onCancel?: () => void;
+  /** Overrides the built-in symbol icon when provided. */
+  iconImage?: ImageSourcePropType;
 };
 
 const SUCCESS_COLOR = "#1ca65a";
@@ -35,6 +44,7 @@ export default function AlertDialog({
   cancelText,
   onConfirm,
   onCancel,
+  iconImage,
 }: AlertDialogProps) {
   const theme = useTheme();
 
@@ -98,11 +108,20 @@ export default function AlertDialog({
             ]}
           >
             <View style={styles.content}>
-              <SymbolView
-                name={iconName as any}
-                size={64}
-                tintColor={accentColor}
-              />
+              {iconImage ? (
+                <Image
+                  source={iconImage}
+                  style={styles.iconImage}
+                  resizeMode="contain"
+                  accessibilityLabel={title}
+                />
+              ) : (
+                <SymbolView
+                  name={iconName as any}
+                  size={64}
+                  tintColor={accentColor}
+                />
+              )}
               <ThemedText
                 type="subtitle"
                 style={[styles.title, { color: theme.onSurface }]}
@@ -189,6 +208,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 28,
     gap: 16,
+  },
+  iconImage: {
+    width: 72,
+    height: 72,
   },
   title: {
     textAlign: "center",

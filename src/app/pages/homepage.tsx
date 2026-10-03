@@ -936,16 +936,11 @@ export default function HomePage() {
             onPress={() => setShowTutorial(true)}
             hitSlop={8}
           >
-            <SymbolView
-              name={
-                {
-                  ios: "questionmark.circle",
-                  android: "help",
-                  web: "help",
-                } as any
-              }
-              size={24}
-              tintColor="#15803d"
+            <Image
+              source={require("@/assets/images/question.jpeg")}
+              style={styles.helpButtonIcon}
+              resizeMode="contain"
+              accessibilityLabel="Open tutorial"
             />
           </Pressable>
         </View>
@@ -1367,6 +1362,7 @@ export default function HomePage() {
           cancelText="Cancel"
           onConfirm={handleExit}
           onCancel={handleCancel}
+          iconImage={require("@/assets/images/logout.jpeg")}
         />
 
         <TutorialModal
@@ -2008,11 +2004,13 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     helpButton: {
       width: 36,
       height: 36,
-      borderRadius: 18,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: "#dcfce7",
       marginTop: 8,
+    },
+    helpButtonIcon: {
+      width: 32,
+      height: 32,
     },
     continueLearningSection: {
       marginBottom: 20,
