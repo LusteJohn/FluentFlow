@@ -1391,6 +1391,13 @@ export default function HomePage() {
                 style={styles.triviaCard}
                 onPress={(e) => e.stopPropagation()}
               >
+                <Image
+                  source={require("@/assets/images/trivia.jpeg")}
+                  style={styles.triviaImage}
+                  resizeMode="contain"
+                  accessibilityLabel="Grammar tip"
+                />
+
                 <View style={styles.triviaHeader}>
                   <View
                     style={[
@@ -2092,6 +2099,11 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       shadowOpacity: 0.15,
       shadowRadius: 24,
       elevation: 12,
+    },
+    triviaImage: {
+      width: "100%",
+      height: 140,
+      backgroundColor: theme.primaryContainer,
     },
     triviaHeader: {
       padding: 20,

@@ -444,8 +444,28 @@ export default function SettingsPage() {
           shadowOpacity: 0.12,
           shadowRadius: 24,
           elevation: 8,
-          maxHeight: "90%",
+          maxHeight: "85%",
           zIndex: 2,
+        },
+        dialogHeader: {
+          alignItems: "center",
+          gap: 12,
+          paddingHorizontal: 28,
+          paddingTop: 28,
+          paddingBottom: 8,
+        },
+        dialogBodyScroll: {
+          flexGrow: 0,
+          flexShrink: 1,
+          paddingHorizontal: 28,
+        },
+        dialogBodyContent: {
+          paddingBottom: 8,
+        },
+        dialogFooter: {
+          paddingHorizontal: 28,
+          paddingTop: 8,
+          paddingBottom: 28,
         },
         dialogContent: {
           alignItems: "center",
@@ -490,7 +510,6 @@ export default function SettingsPage() {
         confirmButtonRow: {
           flexDirection: "row",
           gap: 12,
-          marginTop: 8,
         },
         confirmButton: {
           flex: 1,
@@ -1220,14 +1239,14 @@ return (
                   },
                 ]}
               >
-                <View style={styles.dialogContent}>
+                <View style={styles.dialogHeader}>
                   <SymbolView
                     name={{
                       ios: "exclamationmark.triangle.fill",
                       android: "warning",
                       web: "warning",
                     }}
-                    size={64}
+                    size={56}
                     tintColor={theme.tertiary}
                   />
                   <ThemedText
@@ -1236,6 +1255,14 @@ return (
                   >
                     Reset Topic Level
                   </ThemedText>
+                </View>
+
+                <ScrollView
+                  style={styles.dialogBodyScroll}
+                  contentContainerStyle={styles.dialogBodyContent}
+                  showsVerticalScrollIndicator={false}
+                  bounces={false}
+                >
                   <ThemedText
                     type="small"
                     style={[styles.dialogMessage, { color: theme.onSurfaceVariant }]}
@@ -1244,6 +1271,9 @@ return (
                       "\n\n" +
                       "This will delete your exercise answers, progress, and topic achievement for this level. You can start it again from scratch."}
                   </ThemedText>
+                </ScrollView>
+
+                <View style={styles.dialogFooter}>
                   <View style={styles.confirmButtonRow}>
                     <Pressable
                       style={({ pressed }) => [
