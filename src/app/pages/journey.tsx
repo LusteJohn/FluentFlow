@@ -141,6 +141,11 @@ export default function JourneyPage() {
   });
   const inProgressIndex = firstInProgressIndex >= 0 ? firstInProgressIndex : -1;
 
+  const suggestedJourney = useMemo(
+    () => journeys[inProgressIndex] ?? journeys[0] ?? null,
+    [journeys, inProgressIndex],
+  );
+
   return (
     <ScreenMotion>
       <ThemedView style={styles.container}>
@@ -164,6 +169,41 @@ export default function JourneyPage() {
             </ThemedText>
             <ThemedText type="default" style={styles.pageSubtitle}>
               Master real-world situations
+            </ThemedText>
+          </View>
+
+          <View style={styles.heroCard}>
+            <View style={styles.heroBadge}>
+              <ThemedText type="small" style={styles.heroBadgeText}>
+                Step {Math.min((inProgressIndex >= 0 ? inProgressIndex : 0) + 1, journeys.length)} of {journeys.length}
+              </ThemedText>
+            </View>
+            <View style={styles.heroImageWrapper}>
+              <Image
+                source={require("@/assets/images/journey.png")}
+                style={styles.heroImage}
+                contentFit="contain"
+                transition={200}
+              />
+            </View>
+            <View style={styles.heroContent}>
+              <ThemedText type="default" style={styles.heroTitle}>
+                What journey should I start?
+              </ThemedText>
+              <ThemedText type="small" style={styles.heroSubtitle}>
+                {suggestedJourney
+                  ? `We recommend ${suggestedJourney.title}. Pick any unlocked journey below to begin.`
+                  : "Pick any unlocked journey below to begin."}
+              </ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.stepsHeader}>
+            <ThemedText type="default" style={styles.stepsTitle}>
+              Your Journeys
+            </ThemedText>
+            <ThemedText type="small" style={styles.stepsSubtitle}>
+              Complete one to unlock the next step.
             </ThemedText>
           </View>
 
@@ -422,7 +462,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     titleSection: {
       alignItems: "center",
       marginTop: 32,
-      marginBottom: 40,
+      marginBottom: 20,
     },
     pageTitle: {
       color: theme.onSurface,
@@ -434,6 +474,72 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       color: theme.onSurfaceVariant,
       fontSize: 16,
       fontWeight: "500",
+    },
+    heroCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      backgroundColor: theme.surfaceContainerLowest,
+      borderRadius: 20,
+      padding: 12,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: theme.surfaceContainer,
+    },
+    heroBadge: {
+      position: "absolute",
+      top: -12,
+      right: 12,
+      backgroundColor: theme.primary,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+      zIndex: 1,
+    },
+    heroBadgeText: {
+      color: theme.onPrimary,
+      fontSize: 12,
+      fontWeight: "600",
+      lineHeight: 16,
+    },
+    heroImageWrapper: {
+      width: 132,
+      height: 132,
+      borderRadius: 16,
+      overflow: "hidden",
+      backgroundColor: theme.surfaceContainerLowest,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    heroImage: {
+      width: "100%",
+      height: "100%",
+    },
+    heroContent: {
+      flex: 1,
+      gap: 4,
+    },
+    heroTitle: {
+      color: theme.onSurface,
+      fontWeight: "600",
+    },
+    heroSubtitle: {
+      color: theme.onSurfaceVariant,
+      lineHeight: 18,
+    },
+    stepsHeader: {
+      marginTop: 28,
+      marginBottom: 20,
+      gap: 4,
+    },
+    stepsTitle: {
+      color: theme.onSurface,
+      fontSize: 18,
+      fontWeight: "600",
+    },
+    stepsSubtitle: {
+      color: theme.onSurfaceVariant,
+      fontSize: 13,
     },
     pathContainer: {
       position: "relative",
