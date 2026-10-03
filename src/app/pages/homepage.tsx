@@ -3,6 +3,7 @@ import { SymbolView } from "expo-symbols";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BackHandler,
+  Image,
   Modal,
   Platform,
   Pressable,
@@ -122,33 +123,9 @@ function getStatCards(
   totalExercises: number,
   totalJourneys: number,
 ): StatCard[] {
+  void totalJourneys;
+  void totalTopics;
   return [
-    {
-      id: "1",
-      value: String(totalJourneys),
-      label: "Total Journey",
-      icon: {
-        ios: "sailboat.fill",
-        android: "sailing",
-        web: "sailing",
-      },
-      iconBg: theme.surface,
-      iconColor: theme.primary,
-      dynamic: true,
-    },
-    {
-      id: "2",
-      value: String(totalTopics),
-      label: "Total Topics",
-      icon: {
-        ios: "list.bullet.rectangle",
-        android: "menu_book",
-        web: "menu_book",
-      },
-      iconBg: theme.surface,
-      iconColor: theme.primary,
-      dynamic: true,
-    },
     {
       id: "3",
       value: "1.2k",
@@ -612,13 +589,13 @@ export default function HomePage() {
     }
   }, [continueLearningJourney, journeyProgress, progressAnim]);
 
-   const handleContinueLearning = () => {
-     if (continueLearningJourney) {
-       router.push(
-         `/pages/topic?journey_id=${continueLearningJourney.journey_id}` as any,
-       );
-     }
-   };
+  const handleContinueLearning = () => {
+    if (continueLearningJourney) {
+      router.push(
+        `/pages/topic?journey_id=${continueLearningJourney.journey_id}` as any,
+      );
+    }
+  };
 
   const handleDayPress = async (dayIndex: number) => {
     if (!userId) return;
@@ -993,13 +970,16 @@ export default function HomePage() {
         >
           <View style={styles.statsSection}>
             <ThemedText style={styles.sectionTitle}>Your Stats</ThemedText>
-            <View style={styles.statGrid}>
-              <View style={styles.statGridRow}>
-                {statCards.slice(0, 2).map(renderStatCard)}
-              </View>
-              <View style={styles.statGridRow}>
-                {statCards.slice(2, 4).map(renderStatCard)}
-              </View>
+            <View style={styles.dashboardImageCard}>
+              <Image
+                source={require("@/assets/images/dashboard.png")}
+                style={styles.dashboardImage}
+                resizeMode="cover"
+                accessibilityLabel="Dashboard illustration"
+              />
+            </View>
+            <View style={styles.statGridRow}>
+              {statCards.map(renderStatCard)}
             </View>
           </View>
 
@@ -1520,6 +1500,22 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       flexDirection: "row",
       gap: 12,
     },
+    statGridColumn: {
+      flex: 1,
+      gap: 12,
+    },
+    dashboardImageCard: {
+      height: 200,
+      borderRadius: 16,
+      overflow: "hidden",
+      backgroundColor: theme.surfaceContainerLow,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    dashboardImage: {
+      width: "100%",
+      height: "100%",
+    },
     statCard: {
       borderRadius: 16,
       padding: 16,
@@ -1587,10 +1583,10 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
       justifyContent: "center",
       backgroundColor: theme.primaryFixed,
     },
-        weekArrowButtonPressed: {
-          opacity: 0.7,
-          backgroundColor: theme.primaryFixedDim,
-        },
+    weekArrowButtonPressed: {
+      opacity: 0.7,
+      backgroundColor: theme.primaryFixedDim,
+    },
     weekArrowButtonDisabled: {
       backgroundColor: theme.surfaceContainer,
       opacity: 0.65,
