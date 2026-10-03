@@ -1,5 +1,13 @@
-import { useMemo, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Image,
+  ImageSourcePropType,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SymbolView } from "expo-symbols";
 
 import { ThemedText } from "@/components/themed-text";
@@ -11,163 +19,60 @@ import { getAllJourneys } from "@/backend/Journey";
 import { getTopicAchievementsByUserId } from "@/backend/TopicAchievement";
 import { getJourneyAchievementsByUserId } from "@/backend/JournryAchievement";
 
+const AVATAR_MALE = require("@/assets/images/avatar_male.jpeg");
+const AVATAR_FEMALE = require("@/assets/images/avatar_female.jpeg");
+
+const DEFAULT_AVATAR: ImageSourcePropType = AVATAR_MALE;
+
+interface Achievement {
+  title: string;
+  type: "topic" | "journey";
+  achieved_at: string;
+}
+
+// The profile stores gender as free text, so any of these read as female and
+// everything else (including null) falls back to the male avatar.
+function getAvatarForGender(gender: string | null | undefined): ImageSourcePropType {
+  if (typeof gender !== "string") return DEFAULT_AVATAR;
+  const normalized = gender.trim().toLowerCase();
+  if (
+    normalized === "female" ||
+    normalized === "f" ||
+    normalized.startsWith("fem")
+  ) {
+    return AVATAR_FEMALE;
+  }
+  return AVATAR_MALE;
+}
+
 export default function AppHeader() {
   const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [showAchievements, setShowAchievements] = useState(false);
-  const [achievements, setAchievements] = useState<
-    { title: string; type: "topic" | "journey"; achieved_at: string }[]
-  >([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loadingAchievements, setLoadingAchievements] = useState(false);
+  const [avatarSource, setAvatarSource] =
+    useState<ImageSourcePropType>(DEFAULT_AVATAR);
 
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        header: {
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingHorizontal: 24,
-          paddingTop: 16,
-          paddingBottom: 12,
-          backgroundColor: theme.surface,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.outlineVariant,
-        },
-        headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
-        avatarContainer: { position: "relative", width: 40, height: 40 },
-        avatar: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: theme.primaryContainer,
-          alignItems: "center",
-          justifyContent: "center",
-          borderWidth: 2,
-          borderColor: theme.primaryFixed,
-        },
-        avatarText: {
-          color: theme.onPrimaryContainer,
-          fontSize: 18,
-          fontWeight: "700",
-        },
-        levelBadge: {
-          position: "absolute",
-          bottom: -4,
-          right: -4,
-          backgroundColor: theme.secondaryContainer,
-          paddingHorizontal: 4,
-          paddingVertical: 1,
-          borderRadius: 4,
-          borderWidth: 1,
-          borderColor: theme.surface,
-        },
-        levelText: {
-          color: theme.onSecondaryContainer,
-          fontSize: 10,
-          fontWeight: "700",
-        },
-        headerTitle: { color: theme.primary, fontSize: 20, fontWeight: "700" },
-        notificationButton: {
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: theme.surfaceContainerLow,
-        },
-        notificationIcon: { fontSize: 20 },
-        modalOverlay: {
-          flex: 1,
-          backgroundColor: "rgba(0, 0, 0, 0.6)",
-          alignItems: "center",
-          justifyContent: "center",
-          paddingHorizontal: 24,
-        },
-        modalBackdrop: {
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.4)",
-        },
-        modalCard: {
-          backgroundColor: theme.surfaceContainerHigh,
-          borderRadius: 20,
-          width: "100%",
-          maxWidth: 400,
-          maxHeight: "75%",
-          shadowColor: theme.onSurface,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.12,
-          shadowRadius: 24,
-          elevation: 8,
-          overflow: "hidden",
-        },
-        modalHeader: {
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 20,
-          paddingVertical: 16,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.outlineVariant,
-        },
-        modalTitle: {
-          fontSize: 18,
-          fontWeight: "600",
-          color: theme.onSurface,
-        },
-        modalCloseButton: {
-          padding: 4,
-        },
-        modalContent: {
-          paddingHorizontal: 20,
-        },
-        achievementItem: {
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 12,
-          paddingVertical: 14,
-          borderBottomWidth: 1,
-          borderBottomColor: theme.outlineVariant,
-        },
-        achievementIconContainer: {
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: theme.primaryContainer,
-        },
-        achievementInfo: {
-          flex: 1,
-        },
-        achievementTitle: {
-          fontSize: 15,
-          fontWeight: "600",
-          color: theme.onSurface,
-        },
-        achievementType: {
-          fontSize: 12,
-          color: theme.onSurfaceVariant,
-          marginTop: 2,
-        },
-        achievementDate: {
-          fontSize: 12,
-          color: theme.onSurfaceVariant,
-        },
-        emptyText: {
-          fontSize: 14,
-          color: theme.onSurfaceVariant,
-          textAlign: "center",
-          paddingVertical: 24,
-        },
-      }),
-    [theme],
-  );
+  // The avatar is picked from the stored profile as soon as it is available.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const db = await getDatabase();
+        const profile = await getUserProfile(db);
+        if (cancelled) return;
+        setAvatarSource(getAvatarForGender(profile?.gender));
+      } catch (error) {
+        console.error("Failed to load avatar", error);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const loadAchievements = async () => {
+  const loadAchievements = useCallback(async () => {
     setLoadingAchievements(true);
     try {
       const db = await getDatabase();
@@ -192,7 +97,7 @@ export default function AppHeader() {
         (journeys ?? []).map((j: any) => [j.journey_id, j.title]),
       );
 
-      const combined = [
+      const combined: Achievement[] = [
         ...topicAchievements.map((a: any) => ({
           title: topicMap.get(a.topic_id) ?? "Unknown Topic",
           type: "topic" as const,
@@ -215,29 +120,25 @@ export default function AppHeader() {
     } finally {
       setLoadingAchievements(false);
     }
-  };
+  }, []);
 
-  const handleOpen = () => {
+  const handleOpen = useCallback(() => {
     setShowAchievements(true);
     loadAchievements();
-  };
+  }, [loadAchievements]);
 
-  const handleClose = () => setShowAchievements(false);
+  const handleClose = useCallback(() => setShowAchievements(false), []);
 
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
         <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <ThemedText type="smallBold" style={styles.avatarText}>
-              U
-            </ThemedText>
-          </View>
-          <View style={styles.levelBadge}>
-            <ThemedText type="small" style={styles.levelText}>
-              L3
-            </ThemedText>
-          </View>
+          <Image
+            source={avatarSource}
+            style={styles.avatar}
+            resizeMode="cover"
+            accessibilityLabel="Profile avatar"
+          />
         </View>
         <ThemedText type="title" style={styles.headerTitle}>
           FluentFlow
@@ -280,7 +181,10 @@ export default function AppHeader() {
                 />
               </Pressable>
             </View>
-            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.modalContent}
+              showsVerticalScrollIndicator={false}
+            >
               {achievements.length === 0 ? (
                 <ThemedText style={styles.emptyText}>
                   {loadingAchievements
@@ -289,7 +193,10 @@ export default function AppHeader() {
                 </ThemedText>
               ) : (
                 achievements.map((item, index) => (
-                  <View key={`${item.type}-${item.title}-${index}`} style={styles.achievementItem}>
+                  <View
+                    key={`${item.type}-${item.title}-${index}`}
+                    style={styles.achievementItem}
+                  >
                     <View style={styles.achievementIconContainer}>
                       <SymbolView
                         name={
@@ -334,4 +241,126 @@ export default function AppHeader() {
       </Modal>
     </View>
   );
+}
+
+function createStyles(theme: ReturnType<typeof useTheme>) {
+  return StyleSheet.create({
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 24,
+      paddingTop: 16,
+      paddingBottom: 12,
+      backgroundColor: theme.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.outlineVariant,
+    },
+    headerLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
+    avatarContainer: { width: 40, height: 40 },
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.primaryContainer,
+      borderWidth: 2,
+      borderColor: theme.primaryFixed,
+    },
+    headerTitle: { color: theme.primary, fontSize: 20, fontWeight: "700" },
+    notificationButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.surfaceContainerLow,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.6)",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+    },
+    modalBackdrop: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.4)",
+    },
+    modalCard: {
+      backgroundColor: theme.surfaceContainerHigh,
+      borderRadius: 20,
+      width: "100%",
+      maxWidth: 400,
+      maxHeight: "75%",
+      shadowColor: theme.onSurface,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.12,
+      shadowRadius: 24,
+      elevation: 8,
+      overflow: "hidden",
+    },
+    modalHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.outlineVariant,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: theme.onSurface,
+    },
+    modalCloseButton: {
+      padding: 4,
+    },
+    modalContent: {
+      paddingHorizontal: 20,
+    },
+    achievementItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.outlineVariant,
+    },
+    achievementIconContainer: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: theme.primaryContainer,
+    },
+    achievementInfo: {
+      flex: 1,
+    },
+    achievementTitle: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: theme.onSurface,
+    },
+    achievementType: {
+      fontSize: 12,
+      color: theme.onSurfaceVariant,
+      marginTop: 2,
+    },
+    achievementDate: {
+      fontSize: 12,
+      color: theme.onSurfaceVariant,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: theme.onSurfaceVariant,
+      textAlign: "center",
+      paddingVertical: 24,
+    },
+  });
 }
