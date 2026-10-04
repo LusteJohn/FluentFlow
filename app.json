@@ -27,7 +27,10 @@
     "plugins": [
       "expo-router",
       "expo-sqlite",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-image",
+      "expo-splash-screen",
+      "expo-web-browser"
     ],
     "updates": {
       "fallbackToCacheTimeout": 0
