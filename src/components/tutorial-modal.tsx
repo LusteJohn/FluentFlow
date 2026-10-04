@@ -38,7 +38,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     title: "Import Data Resources",
     description:
       'Open the Settings page from the bottom navigation and tap "Import All Data" to load the lessons, vocabulary, and exercises.',
-    image: require("@/assets/images/import.png"),
+    image: require("@/assets/images/import_guide.png"),
   },
   {
     number: 2,
