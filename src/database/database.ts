@@ -36,7 +36,7 @@ export async function getDatabase() {
 
         try {
           await db.runAsync("ALTER TABLE journeys ADD COLUMN bg_image TEXT");
-        } catch (e) {}
+        } catch {}
 
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS topics (topic_id INTEGER PRIMARY KEY AUTOINCREMENT, journey_id INTEGER NOT NULL, title TEXT NOT NULL, grammar_focus TEXT NOT NULL, order_index INTEGER, FOREIGN KEY(journey_id) REFERENCES journeys(journey_id))",
@@ -54,7 +54,7 @@ export async function getDatabase() {
           await db.runAsync(
             "ALTER TABLE topic_vocabulary ADD COLUMN part_of_speech TEXT",
           );
-        } catch (e) {}
+        } catch {}
 
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS exercises (exercise_id INTEGER PRIMARY KEY AUTOINCREMENT, topic_id INTEGER NOT NULL, level TEXT NOT NULL CHECK (level IN ('beginner', 'intermediate', 'advanced')), type TEXT NOT NULL CHECK (type IN ('sentence_builder', 'spelling', 'fill_blank_spelling')), prompt TEXT NOT NULL, context_sentence TEXT, order_index INTEGER, xp INTEGER DEFAULT 5, FOREIGN KEY(topic_id) REFERENCES topics(topic_id))",
@@ -64,7 +64,7 @@ export async function getDatabase() {
           await db.runAsync(
             "ALTER TABLE exercises ADD COLUMN xp INTEGER DEFAULT 5",
           );
-        } catch (e) {}
+        } catch {}
 
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS exercise_answers (answer_id INTEGER PRIMARY KEY AUTOINCREMENT, exercise_id INTEGER NOT NULL, answer_text TEXT NOT NULL, is_primary INTEGER DEFAULT 0, match_type TEXT DEFAULT 'exact' CHECK (match_type IN ('exact', 'case_insensitive', 'fuzzy')), FOREIGN KEY (exercise_id) REFERENCES exercises(exercise_id))",
@@ -82,7 +82,7 @@ export async function getDatabase() {
           await db.runAsync(
             "ALTER TABLE user_exercise_progress ADD COLUMN recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
           );
-        } catch (e) {}
+        } catch {}
 
         await db.runAsync(
           "CREATE TABLE IF NOT EXISTS user_level_progress (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, topic_id INTEGER NOT NULL, level TEXT NOT NULL CHECK (level IN ('beginner', 'intermediate', 'advanced')), completed_count INTEGER NOT NULL DEFAULT 0, is_completed INTEGER NOT NULL DEFAULT 0 CHECK (is_completed IN (0, 1)), completed_at TEXT, UNIQUE(user_id, topic_id, level), FOREIGN KEY (user_id) REFERENCES user_profiles(user_id), FOREIGN KEY (topic_id) REFERENCES topics(topic_id))",
