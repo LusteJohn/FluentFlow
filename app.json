@@ -14,8 +14,8 @@
       "icon": "./assets/images/logo_app.png",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/logo_app.png",
+        "monochromeImage": "./assets/images/logo_app.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.thy.johnmark23.FluentFlow"

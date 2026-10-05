@@ -21,7 +21,7 @@ export default function IndexPage() {
     <ThemedView style={styles.container}>
       <View style={styles.content}>
         <Image
-          source={require("@/assets/images/logo.jpeg")}
+          source={require("@/assets/images/logo_app.png")}
           style={styles.logo}
           contentFit="contain"
         />
